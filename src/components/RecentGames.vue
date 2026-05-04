@@ -1,0 +1,79 @@
+<script setup>
+import { computed } from 'vue'
+import { colorIcons } from '../mana.js'
+import ChartCard from './ChartCard.vue'
+
+const props = defineProps({ games: Array })
+
+const recent = computed(() => [...props.games].reverse().slice(0, 20))
+
+const ROLE_STYLE = {
+  King: 'bg-amber-900/30 text-amber-300 border-amber-700/40',
+  Knight: 'bg-blue-900/30 text-blue-300 border-blue-700/40',
+  Goblin: 'bg-red-900/30 text-red-300 border-red-700/40',
+  Lord: 'bg-purple-900/30 text-purple-300 border-purple-700/40',
+}
+
+const PLAYER_COLORS = {
+  Ralf: '#a47be0',
+  Markus: '#5ba3d9',
+  Hannes: '#6ab86a',
+  Ivan: '#e2b84a',
+  David: '#d95555',
+  Leo: '#d98ec8',
+  Mariusz: '#52bfbf',
+}
+</script>
+
+<template>
+  <ChartCard>
+    <template #title>Recent Battles</template>
+    <!-- Legend -->
+    <div class="mb-4 flex flex-wrap gap-x-5 gap-y-1 text-sm font-body text-mtg-text-dim">
+      <span class="inline-flex items-center gap-1"><span class="bg-mtg-gold/10 border border-mtg-gold/30 rounded px-1.5 text-xs text-mtg-gold font-beleren">W</span> Victory</span>
+      <span class="inline-flex items-center gap-1"><span class="bg-amber-900/30 text-amber-300 border border-amber-700/40 rounded px-1.5 text-xs">King</span></span>
+      <span class="inline-flex items-center gap-1"><span class="bg-blue-900/30 text-blue-300 border border-blue-700/40 rounded px-1.5 text-xs">Knight</span></span>
+      <span class="inline-flex items-center gap-1"><span class="bg-red-900/30 text-red-300 border border-red-700/40 rounded px-1.5 text-xs">Goblin</span> (team of 2)</span>
+      <span class="inline-flex items-center gap-1"><span class="bg-purple-900/30 text-purple-300 border border-purple-700/40 rounded px-1.5 text-xs">Lord</span></span>
+      <span class="inline-flex items-center gap-1">&#x1F9DF; Zombified</span>
+      <span class="inline-flex items-center gap-1">&#x1F9EC; Cloned</span>
+      <span class="inline-flex items-center gap-1">&#x1F480; Suicide</span>
+    </div>
+
+    <div class="space-y-4 max-h-[700px] overflow-y-auto pr-2">
+      <div
+        v-for="(game, i) in recent"
+        :key="i"
+        class="bg-mtg-dark/70 rounded-lg p-5 border border-mtg-border"
+      >
+        <div class="text-sm text-mtg-text-dim mb-3 font-body italic">{{ game.date }}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+          <div
+            v-for="p in game.players"
+            :key="p.player"
+            class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-base font-body border transition-colors"
+            :class="p.result === 'Win' ? 'bg-mtg-gold/10 border-mtg-gold/30' : 'bg-mtg-dark/50 border-mtg-border/50'"
+          >
+            <span
+              class="font-beleren text-base truncate flex-1"
+              :style="{ color: p.result === 'Win' ? PLAYER_COLORS[p.player] || '#c9a54e' : '#8a7e66' }"
+            >{{ p.player }}</span>
+            <span
+              class="text-xs px-1.5 py-0.5 rounded border font-body"
+              :class="ROLE_STYLE[p.role] || 'bg-mtg-dark text-mtg-text-dim border-mtg-border'"
+            >{{ p.role }}</span>
+            <span v-if="p.firstKO === 'Zombie'" class="text-green-400/80 text-xs" title="Turned into Zombie by Lord">&#x1F9DF;</span>
+            <span v-else-if="p.firstKO === 'Clone'" class="text-blue-400/80 text-xs" title="Turned into Clone by Clone Lord">&#x1F9EC;</span>
+            <span v-else-if="p.firstKO === 'Clone Lord'" class="text-purple-400/80 text-xs" title="Clone Lord">&#x1F9EC;</span>
+            <span v-else-if="p.firstKO === 'Suicide'" class="text-mtg-text-dim/60 text-xs" title="Self-elimination">&#x1F480;</span>
+            <span v-if="p.result === 'Win'" class="text-mtg-gold font-beleren text-sm">W</span>
+            <span v-else-if="p.result === 'Loss'" class="text-mtg-text-dim/30 text-sm">L</span>
+          </div>
+        </div>
+        <div v-if="game.players.some(p => p.deck)" class="mt-3 text-sm text-mtg-text-dim/60 font-body italic leading-relaxed">
+          {{ game.players.filter(p => p.deck).map(p => p.player + ': ' + p.deck).join(' · ') }}
+        </div>
+      </div>
+    </div>
+  </ChartCard>
+</template>

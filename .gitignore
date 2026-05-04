@@ -1,0 +1,21 @@
+# Deny everything by default
+*
+
+# Allow project config
+!.gitignore
+!.env.example
+!AGENTS.md
+!README.md
+!index.html
+!package.json
+!package-lock.json
+!vite.config.js
+
+# Allow source
+!src/
+!src/**
+
+# Allow public assets
+!public/
+!public/**
+

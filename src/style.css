@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@import "mana-font/css/mana.css";
+
+@theme {
+  --font-beleren: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  --font-body: 'EB Garamond', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+
+  --color-parchment-50: #faf6ed;
+  --color-parchment-100: #f0e8d4;
+  --color-parchment-200: #e2d4b0;
+  --color-parchment-300: #c9b584;
+  --color-parchment-400: #b49a5e;
+  --color-parchment-500: #9a7d42;
+
+  --color-mtg-dark: #1a1612;
+  --color-mtg-darker: #12100d;
+  --color-mtg-card: #231f1a;
+  --color-mtg-card-alt: #2a2520;
+  --color-mtg-border: #3d3529;
+  --color-mtg-gold: #c9a54e;
+  --color-mtg-gold-light: #e2c878;
+  --color-mtg-text: #d4c8a8;
+  --color-mtg-text-dim: #8a7e66;
+
+  --color-mana-w: #f9faf4;
+  --color-mana-u: #0e68ab;
+  --color-mana-b: #150b00;
+  --color-mana-r: #d3202a;
+  --color-mana-g: #00733e;
+}
+
+html {
+  font-size: 18px;
+}
+
+body {
+  margin: 0;
+  background: var(--color-mtg-dark);
+}
