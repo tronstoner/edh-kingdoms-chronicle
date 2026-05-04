@@ -1,4 +1,4 @@
-# EDH Kingdoms Log
+# EDH Kingdoms Chronicle
 
 Analytics dashboard for tracking Magic: The Gathering games using the **Kingdoms** variant (similar to Bang!, 5-6 players).
 

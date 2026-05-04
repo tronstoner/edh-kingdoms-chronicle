@@ -69,7 +69,7 @@ function handleSignOut() {
     <header class="border-b-2 border-mtg-gold/30 bg-mtg-dark/90 backdrop-blur sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
         <i class="ms ms-saga ms-2x text-mtg-gold"></i>
-        <h1 class="text-2xl font-beleren text-mtg-gold tracking-wide">EDH Kingdoms</h1>
+        <h1 class="text-2xl font-beleren text-mtg-gold tracking-wide">EDH Kingdoms Chronicle</h1>
         <span class="text-sm text-mtg-text-dim ml-auto hidden sm:inline font-body italic">Commander &middot; Kingdoms Variant</span>
         <button
           v-if="signedIn"
@@ -92,7 +92,7 @@ function handleSignOut() {
             <i class="ms ms-r ms-cost ms-shadow"></i>
             <i class="ms ms-g ms-cost ms-shadow"></i>
           </div>
-          <h2 class="text-3xl font-beleren text-mtg-gold tracking-wide">Kingdoms Chronicle</h2>
+          <h2 class="text-3xl font-beleren text-mtg-gold tracking-wide">EDH Kingdoms Chronicle</h2>
           <p class="text-mtg-text-dim font-body text-lg italic leading-relaxed">
             "The throne room echoes with the clash of alliances forged and broken.
             Sign in to reveal the annals of your kingdom."

@@ -4,7 +4,7 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-EDH Kingdoms Log — a Vue 3 SPA that displays analytics for Magic: The Gathering Commander games using the Kingdoms variant. Data is fetched live from a private Google Sheet via OAuth.
+EDH Kingdoms Chronicle — a Vue 3 SPA that displays analytics for Magic: The Gathering Commander games using the Kingdoms variant. Data is fetched live from a private Google Sheet via OAuth.
 
 ## Repository Structure
 
