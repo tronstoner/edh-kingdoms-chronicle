@@ -40,7 +40,7 @@ const colorStats = computed(() => {
     ...COLOR_META[c],
     ...s,
     winRate: s.games > 0 ? s.wins / s.games : null,
-  }))
+  })).sort((a, b) => (b.winRate ?? 0) - (a.winRate ?? 0))
 })
 
 // Color pair analysis - which 2-color combos perform best

@@ -9,7 +9,7 @@ const recent = computed(() => [...props.games].reverse().slice(0, 20))
 
 const ROLE_STYLE = {
   King: 'bg-amber-900/30 text-amber-300 border-amber-700/40',
-  Knight: 'bg-blue-900/30 text-blue-300 border-blue-700/40',
+  Knight: 'bg-green-900/30 text-green-300 border-green-700/40',
   Goblin: 'bg-red-900/30 text-red-300 border-red-700/40',
   Lord: 'bg-purple-900/30 text-purple-300 border-purple-700/40',
 }

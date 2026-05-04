@@ -7,7 +7,7 @@ const roles = ['King', 'Knight', 'Goblin', 'Lord']
 
 const ROLE_COLORS = {
   King: '#e2b84a',
-  Knight: '#5ba3d9',
+  Knight: '#6ab86a',
   Goblin: '#d95555',
   Lord: '#a47be0',
 }
