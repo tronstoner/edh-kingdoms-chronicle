@@ -68,7 +68,12 @@ function handleSignOut() {
     <!-- Header -->
     <header class="border-b-2 border-mtg-gold/30 bg-mtg-dark/90 backdrop-blur sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
-        <i class="ms ms-saga ms-2x text-mtg-gold"></i>
+        <svg class="w-8 h-8 shrink-0" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 34 L4 16 L14 24 L24 8 L34 24 L44 16 L40 34Z" fill="currentColor" class="text-mtg-gold"/>
+          <rect x="8" y="34" width="32" height="6" rx="2" fill="currentColor" class="text-mtg-gold"/>
+          <circle cx="4" cy="15" r="3" fill="#c0392b"/><circle cx="24" cy="7" r="3.5" fill="#c0392b"/><circle cx="44" cy="15" r="3" fill="#c0392b"/>
+          <circle cx="16" cy="37" r="1.5" fill="#c0392b" opacity="0.8"/><circle cx="24" cy="37" r="1.5" fill="#c0392b" opacity="0.8"/><circle cx="32" cy="37" r="1.5" fill="#c0392b" opacity="0.8"/>
+        </svg>
         <h1 class="text-2xl font-beleren text-mtg-gold tracking-wide">EDH Kingdoms Chronicle</h1>
         <span class="text-sm text-mtg-text-dim ml-auto hidden sm:inline font-body italic">Commander &middot; Kingdoms Variant</span>
         <button
