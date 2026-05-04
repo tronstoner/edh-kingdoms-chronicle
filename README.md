@@ -5,17 +5,19 @@ Analytics dashboard for tracking Magic: The Gathering games using the **Kingdoms
 ## Features
 
 - **Live data from Google Sheets** — authenticates via Google OAuth and reads game data directly from a shared spreadsheet
+- **Player profiles** — individual pages with role distribution, streaks, nemesis, trusted/cursed ally, team partner breakdown, and full deck arsenal
 - **Player statistics** — win/loss records, win rates, per-role performance heatmap
 - **Role balance analysis** — King, Knight, Goblin (team of 2), Lord (Zombie/Clone) win rates with rules explanation
 - **Color performance** — WUBRG stats with mana symbols, color combination breakdowns
-- **Deck stats** — filterable/sortable deck performance with mana color pips
+- **Deck stats** — filterable/sortable deck performance with mana color pips and Moxfield links
 - **Cumulative win timeline** — line chart tracking player victories over time
 - **Recent games** — detailed game log with role badges and zombie/clone conversion markers
-- **MTG-themed UI** — Cinzel font, mana symbols (Andrew Gioia's Mana font), dark parchment palette
+- **MTG-themed UI** — Cinzel + EB Garamond fonts, mana symbols (Andrew Gioia's Mana font, MIT/OFL), dark parchment palette
 
 ## Tech Stack
 
 - Vue 3 (Composition API, `<script setup>`)
+- Vue Router
 - Vite
 - TailwindCSS v4
 - Chart.js + vue-chartjs

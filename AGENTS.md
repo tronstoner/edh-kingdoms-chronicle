@@ -10,19 +10,24 @@ EDH Kingdoms Chronicle — a Vue 3 SPA that displays analytics for Magic: The Ga
 
 ```
 src/
-  App.vue               # Root component — auth flow, layout, data loading
-  data.js               # Google Sheets API fetch + data parsing
+  App.vue               # Root shell — auth flow, header, provides data to routes
+  main.js               # Vue app entry point (mounts router)
+  router.js             # Vue Router — dashboard + player profile routes
+  data.js               # Google Sheets API fetch + data parsing + hyperlink extraction
+  analysis.js           # Derived stats: role distribution, streaks, nemesis, partners, deck diversity
   google-auth.js        # Google OAuth (Identity Services) with session persistence
   mana.js               # Mana symbol helpers (WUBRG color icons)
   style.css             # TailwindCSS v4 + custom MTG theme tokens + font imports
-  main.js               # Vue app entry point
+  pages/
+    Dashboard.vue       # Main dashboard with all overview charts
+    PlayerProfile.vue   # Individual player page with detailed stats
   components/
     ChartCard.vue       # Shared card wrapper for all sections
-    PlayerStats.vue     # Player win/loss table + stacked bar chart
+    PlayerStats.vue     # Player win/loss table + stacked bar chart (names link to profiles)
     PlayerRoleHeatmap.vue  # Win rate grid: players x roles
     RoleBalance.vue     # Role win rates + Kingdoms rules explanation
     ColorStats.vue      # WUBRG color performance + color combo analysis
-    DeckStats.vue       # Filterable/sortable deck performance with mana pips
+    DeckStats.vue       # Filterable/sortable deck performance with mana pips + Moxfield links
     GameTimeline.vue    # Cumulative wins line chart over time
     RecentGames.vue     # Reverse-chronological game log
 index.html
@@ -41,7 +46,9 @@ npm run preview    # Preview production build locally
 
 ## Key Technical Decisions
 
+- **Vue Router** — client-side routing for dashboard (`/`) and player profiles (`/player/:name`). Data is loaded once in App.vue and provided via `provide/inject`.
 - **Google Sheets API v4 with browser OAuth** — no backend needed. Users sign in with Google, the app reads sheets directly. Token persisted in `sessionStorage` to survive page reloads.
+- **Hyperlink extraction** — deck Moxfield URLs are embedded as hyperlinks in the spreadsheet. Fetched via the `spreadsheets.get` endpoint with `fields=sheets.data.rowData.values(hyperlink,formattedValue)`.
 - **`valueRenderOption=UNFORMATTED_VALUE`** — critical: the Sheets API must return raw numbers, not formatted strings, otherwise percentage values get double-multiplied.
 - **TailwindCSS v4** with `@theme` block for custom design tokens (MTG color palette).
 - **Chart.js via vue-chartjs** — all charts use the Cinzel/EB Garamond fonts and the MTG color scheme.
@@ -56,6 +63,7 @@ Understanding the game format is important for correct data interpretation:
 - **Goblins are a team** — they always win or lose together. Both get a "Win" in the data.
 - **Lord** plays alone. Killed players become Zombies/Clones (20 life, fight for the Lord). Lord wins by killing the King last (or everyone at once). If the Lord dies, all minions die too.
 - The `First KO` column tracks zombie/clone conversions and suicides.
+- **Team partner analysis** detects Goblin pairs and King/Knight pairings from the game log.
 
 ## Conventions
 
