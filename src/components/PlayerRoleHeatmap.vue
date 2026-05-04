@@ -51,7 +51,9 @@ function pct(v) {
         </thead>
         <tbody>
           <tr v-for="p in players" :key="p.name" class="border-b border-mtg-border/40">
-            <td class="py-3 pr-6 font-beleren text-mtg-text text-lg">{{ p.name }}</td>
+            <td class="py-3 pr-6 font-beleren text-lg">
+              <router-link :to="'/player/' + p.name" class="text-mtg-text no-underline hover:text-mtg-gold transition-colors">{{ p.name }}</router-link>
+            </td>
             <td v-for="r in roles" :key="r" class="text-center py-3 px-2">
               <div
                 v-if="getRoleData(p, r).games"

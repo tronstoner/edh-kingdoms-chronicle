@@ -90,9 +90,9 @@ function pct(v) {
         <tbody>
           <tr v-for="(p, i) in sorted" :key="p.name" class="border-b border-mtg-border/40 hover:bg-mtg-gold/5 transition-colors">
             <td class="py-3 pr-4 text-lg">
-              <span class="font-beleren" :style="{ color: PLAYER_COLORS[p.name] }">
+              <router-link :to="'/player/' + p.name" class="font-beleren no-underline hover:underline" :style="{ color: PLAYER_COLORS[p.name] }">
                 {{ p.name }}
-              </span>
+              </router-link>
               <span v-if="i === 0" class="ml-1 text-mtg-gold text-sm">&#x1F451;</span>
             </td>
             <td class="text-right py-3 px-3 text-lg text-mtg-text">{{ p.games }}</td>

@@ -122,7 +122,10 @@ function pct(v) {
         </thead>
         <tbody>
           <tr v-for="d in filtered" :key="d.name" class="border-b border-mtg-border/40 hover:bg-mtg-gold/5 transition-colors">
-            <td class="py-2.5 pr-3 font-beleren text-mtg-text">{{ d.name }}</td>
+            <td class="py-2.5 pr-3 font-beleren">
+              <a v-if="d.url" :href="d.url" target="_blank" rel="noopener noreferrer" class="text-mtg-text hover:text-mtg-gold transition-colors no-underline hover:underline">{{ d.name }}</a>
+              <span v-else class="text-mtg-text">{{ d.name }}</span>
+            </td>
             <td class="py-2.5 px-2 text-center">
               <span class="inline-flex gap-0.5">
                 <i

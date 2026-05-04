@@ -79,27 +79,31 @@ function parsePlayers(rows) {
     }))
 }
 
-function parseDecks(rows) {
+function parseDecks(rows, linkMap) {
   return rows
-    .filter(r => str(r['Deck']) && num(r['Games']) > 0)
-    .map(r => ({
-      name: str(r['Deck']),
-      colors: str(r['Colors']),
-      owner: str(r['Owner']),
-      budget: num(r['Budget']),
-      games: num(r['Games']),
-      wins: num(r['Wins']),
-      losses: num(r['Losses']),
-      winRate: num(r['Win Rate']),
-      kingGames: num(r['King Games']),
-      kingWinRate: num(r['King Win Rate']),
-      knightGames: num(r['# Knight Games']),
-      knightWinRate: num(r['Knight Win Rate']),
-      goblinGames: num(r['# Goblin Games']),
-      goblinWinRate: num(r['Goblin Win Rate']),
-      lordGames: num(r['Lord Games']),
-      lordWinRate: num(r['Lord Win Rate']),
-    }))
+    .filter(r => str(r['Deck']))
+    .map(r => {
+      const name = str(r['Deck'])
+      return {
+        name,
+        colors: str(r['Colors']),
+        owner: str(r['Owner']),
+        budget: num(r['Budget']),
+        games: num(r['Games']),
+        wins: num(r['Wins']),
+        losses: num(r['Losses']),
+        winRate: num(r['Win Rate']),
+        kingGames: num(r['King Games']),
+        kingWinRate: num(r['King Win Rate']),
+        knightGames: num(r['# Knight Games']),
+        knightWinRate: num(r['Knight Win Rate']),
+        goblinGames: num(r['# Goblin Games']),
+        goblinWinRate: num(r['Goblin Win Rate']),
+        lordGames: num(r['Lord Games']),
+        lordWinRate: num(r['Lord Win Rate']),
+        url: linkMap[name] || null,
+      }
+    })
 }
 
 function parseRoles(rows) {
@@ -113,22 +117,42 @@ function parseRoles(rows) {
     }))
 }
 
+async function fetchDeckLinks(decksSheetName) {
+  const token = getAccessToken()
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?ranges=${encodeURIComponent(decksSheetName)}&fields=sheets.data.rowData.values(hyperlink,formattedValue)`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return {}
+  const json = await res.json()
+  const linkMap = {}
+  const rows = json.sheets?.[0]?.data?.[0]?.rowData || []
+  for (let i = 1; i < rows.length; i++) {
+    const cell = rows[i]?.values?.[0]
+    if (cell?.hyperlink && cell?.formattedValue) {
+      linkMap[cell.formattedValue] = cell.hyperlink
+    }
+  }
+  return linkMap
+}
+
 export async function fetchAllData() {
   if (!SPREADSHEET_ID) {
     throw new Error('Set VITE_SHEET_ID in .env')
   }
 
-  const [kingdomsRaw, playersRaw, decksRaw, rolesRaw] = await Promise.all([
+  const [kingdomsRaw, playersRaw, decksRaw, rolesRaw, deckLinks] = await Promise.all([
     fetchSheet('Kingdoms'),
     fetchSheet('Players'),
     fetchSheet('Decks'),
     fetchSheet('Roles'),
+    fetchDeckLinks('Decks'),
   ])
 
   return {
     games: parseGames(kingdomsRaw),
     players: parsePlayers(playersRaw),
-    decks: parseDecks(decksRaw),
+    decks: parseDecks(decksRaw, deckLinks),
     roles: parseRoles(rolesRaw),
   }
 }
