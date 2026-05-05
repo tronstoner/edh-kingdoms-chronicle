@@ -21,7 +21,9 @@ const {
   changeCommanderDamage,
   toggleDeathOverride,
   advanceTurn,
-  finishGame,
+  saveGame,
+  getCompletedGames,
+  clearCompletedGames,
   resumeOrNew,
   discardSaved,
 } = useLifetrackerState()
@@ -140,11 +142,22 @@ function handleDeathRevealRole(seatIndex) {
   rolePickerSeat.value = seatIndex
 }
 
-// Export
+// Export & save
 const showExport = ref(false)
+const completedGames = ref([])
 
-function handleFinishGame() {
-  finishGame()
+function handleSaveGame() {
+  saveGame()
+}
+
+function handleShowExport() {
+  completedGames.value = getCompletedGames()
+  showExport.value = true
+}
+
+function handleClearGames() {
+  clearCompletedGames()
+  completedGames.value = []
   showExport.value = false
 }
 </script>
@@ -230,17 +243,17 @@ function handleFinishGame() {
       <!-- Export modal -->
       <ExportModal
         v-if="showExport"
-        :seats="state.seats"
-        :turn-count="state.turnCount"
+        :games="completedGames"
         @close="showExport = false"
-        @finish="handleFinishGame"
+        @clear-games="handleClearGames"
       />
 
       <!-- Game menu -->
       <GameMenu
         :turn-count="state.turnCount"
         @advance-turn="advanceTurn"
-        @export="showExport = true"
+        @save-game="handleSaveGame"
+        @export="handleShowExport"
         @new-game="discardSaved"
         @back="handleBack"
       />

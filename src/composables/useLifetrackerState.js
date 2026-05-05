@@ -223,10 +223,20 @@ export function useLifetrackerState() {
     state.turnCount++
   }
 
-  function finishGame() {
-    state.phase = 'finished'
+  function saveGame() {
     saveCompleted(JSON.parse(JSON.stringify(state)))
-    clearCurrent()
+    // Reset to setup for next game, keeping player/deck setup via memory
+    const count = state.playerCount
+    const layout = state.layoutId
+    newGame(count, layout)
+  }
+
+  function getCompletedGames() {
+    return loadCompleted()
+  }
+
+  function clearCompletedGames() {
+    localStorage.removeItem(LS_COMPLETED)
   }
 
   function resumeOrNew() {
@@ -250,7 +260,9 @@ export function useLifetrackerState() {
     setWinner,
     setDead,
     advanceTurn,
-    finishGame,
+    saveGame,
+    getCompletedGames,
+    clearCompletedGames,
     resumeOrNew,
     discardSaved,
     checkDeath,

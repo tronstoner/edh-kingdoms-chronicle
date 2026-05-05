@@ -2,50 +2,56 @@
 import { ref, computed } from 'vue'
 
 const props = defineProps({
-  seats: Array,
-  turnCount: Number,
+  games: Array,
 })
 
-const emit = defineEmits(['close', 'finish'])
-
-const now = new Date()
-const date = ref(`${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`)
-const autoFirstKO = (() => {
-  const deaths = props.seats
-    .filter(s => s.deathTurn !== null)
-    .sort((a, b) => a.deathTurn - b.deathTurn)
-  return deaths.length > 0 ? String(deaths[0].deathTurn) : ''
-})()
-
-const firstKO = ref(autoFirstKO)
-const gameEnd = ref(String(props.turnCount || ''))
-const gameNotes = ref('')
-const copied = ref(false)
+const emit = defineEmits(['close', 'clearGames'])
 
 const ROLES = ['', 'King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
 const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
 
-// Editable overrides per seat
-const overrides = ref(props.seats.map(s => ({
-  role: s.role || '',
-  result: s.isWinner ? 'Win' : 'Loss',
-  roleNotes: s.roleNotes || '',
-})))
+const copied = ref(false)
+
+// Editable state per game
+const gameData = ref(props.games.map(g => {
+  const now = new Date(g.startTime || Date.now())
+  const autoFirstKO = (() => {
+    const deaths = g.seats.filter(s => s.deathTurn !== null).sort((a, b) => a.deathTurn - b.deathTurn)
+    return deaths.length > 0 ? String(deaths[0].deathTurn) : ''
+  })()
+  return {
+    selected: true,
+    date: `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`,
+    firstKO: autoFirstKO,
+    gameEnd: String(g.turnCount || ''),
+    gameNotes: '',
+    seats: g.seats.map(s => ({
+      player: s.player || '',
+      deck: s.deck?.name || '',
+      role: s.role || '',
+      result: s.isWinner ? 'Win' : 'Loss',
+      roleNotes: s.roleNotes || '',
+    })),
+  }
+}))
+
+function toggleResult(gi, si) {
+  gameData.value[gi].seats[si].result = gameData.value[gi].seats[si].result === 'Win' ? 'Loss' : 'Win'
+}
 
 const exportText = computed(() => {
-  const lines = props.seats.map((s, i) => {
-    const d = i === 0 ? date.value : ''
-    const player = s.player || ''
-    const deck = s.deck?.name || ''
-    const role = overrides.value[i].role
-    const result = overrides.value[i].result
-    const rNotes = overrides.value[i].roleNotes
-    const fko = i === 0 ? firstKO.value : ''
-    const gEnd = i === 0 ? gameEnd.value : ''
-    const gNotes = i === 0 ? gameNotes.value : ''
-    return [d, player, deck, role, result, rNotes, fko, gEnd, gNotes].join('\t')
-  })
-  return lines.join('\n')
+  return gameData.value
+    .filter(g => g.selected)
+    .map(g => {
+      return g.seats.map((s, i) => {
+        const d = i === 0 ? g.date : ''
+        const fko = i === 0 ? g.firstKO : ''
+        const gEnd = i === 0 ? g.gameEnd : ''
+        const gNotes = i === 0 ? g.gameNotes : ''
+        return [d, s.player, s.deck, s.role, s.result, s.roleNotes, fko, gEnd, gNotes].join('\t')
+      }).join('\n')
+    })
+    .join('\n')
 })
 
 async function copyToClipboard() {
@@ -54,7 +60,6 @@ async function copyToClipboard() {
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
   } catch {
-    // fallback
     const ta = document.createElement('textarea')
     ta.value = exportText.value
     document.body.appendChild(ta)
@@ -65,60 +70,56 @@ async function copyToClipboard() {
     setTimeout(() => { copied.value = false }, 2000)
   }
 }
-
-function toggleResult(i) {
-  overrides.value[i].result = overrides.value[i].result === 'Win' ? 'Loss' : 'Win'
-}
 </script>
 
 <template>
   <div class="export-overlay" @click.self="emit('close')">
     <div class="export-panel">
-      <h3 class="font-beleren text-mtg-gold mb-4">Export Game</h3>
+      <h3 class="font-beleren text-mtg-gold mb-4">Export Session ({{ games.length }} games)</h3>
 
-      <!-- Date -->
-      <div class="export-field">
-        <label class="field-label">Date</label>
-        <input v-model="date" class="field-input" />
+      <div v-if="!games.length" class="no-games">
+        <p class="font-body text-mtg-text-dim">No saved games yet. Save a game first.</p>
       </div>
 
-      <!-- Player rows -->
-      <div class="export-rows">
-        <div v-for="(s, i) in seats" :key="i" class="export-row">
-          <span class="export-player font-beleren">{{ s.player }}</span>
-          <span class="export-deck">{{ s.deck?.name }}</span>
-          <select v-model="overrides[i].role" class="export-select">
-            <option v-for="r in ROLES" :key="r" :value="r">{{ r || '—' }}</option>
-          </select>
-          <button
-            class="export-result"
-            :class="overrides[i].result === 'Win' ? 'result-win' : 'result-loss'"
-            @click="toggleResult(i)"
-          >{{ overrides[i].result }}</button>
-          <select v-model="overrides[i].roleNotes" class="export-select">
-            <option v-for="rn in ROLE_NOTES" :key="rn" :value="rn">{{ rn || '—' }}</option>
-          </select>
-        </div>
-      </div>
+      <div v-else class="games-list">
+        <div v-for="(g, gi) in gameData" :key="gi" class="game-block" :class="{ deselected: !g.selected }">
+          <!-- Game header -->
+          <div class="game-header">
+            <label class="game-check">
+              <input type="checkbox" v-model="g.selected" />
+              <span class="font-beleren">Game {{ gi + 1 }}</span>
+            </label>
+            <div class="game-fields">
+              <label class="game-field"><span class="field-label">Date</span><input v-model="g.date" class="field-input field-input-date" /></label>
+              <label class="game-field"><span class="field-label">1st KO</span><input v-model="g.firstKO" class="field-input field-input-narrow" /></label>
+              <label class="game-field"><span class="field-label">End</span><input v-model="g.gameEnd" class="field-input field-input-narrow" /></label>
+              <label class="game-field"><span class="field-label">Notes</span><input v-model="g.gameNotes" class="field-input" /></label>
+            </div>
+          </div>
 
-      <!-- Game fields -->
-      <div class="export-game-fields">
-        <div class="export-field">
-          <label class="field-label">First KO</label>
-          <input v-model="firstKO" class="field-input field-input-narrow" />
-        </div>
-        <div class="export-field">
-          <label class="field-label">Game End</label>
-          <input v-model="gameEnd" class="field-input field-input-narrow" />
-        </div>
-        <div class="export-field">
-          <label class="field-label">Game Notes</label>
-          <input v-model="gameNotes" class="field-input field-input-wide" placeholder="Optional notes" />
+          <!-- Player rows -->
+          <div class="game-rows">
+            <div v-for="(s, si) in g.seats" :key="si" class="export-row">
+              <span class="export-player font-beleren">{{ s.player }}</span>
+              <span class="export-deck">{{ s.deck }}</span>
+              <select v-model="s.role" class="export-select">
+                <option v-for="r in ROLES" :key="r" :value="r">{{ r || '—' }}</option>
+              </select>
+              <button
+                class="export-result"
+                :class="s.result === 'Win' ? 'result-win' : 'result-loss'"
+                @click="toggleResult(gi, si)"
+              >{{ s.result }}</button>
+              <select v-model="s.roleNotes" class="export-select">
+                <option v-for="rn in ROLE_NOTES" :key="rn" :value="rn">{{ rn || '—' }}</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Preview -->
-      <div class="export-preview">
+      <div v-if="games.length" class="export-preview">
         <table class="preview-table">
           <thead>
             <tr>
@@ -126,28 +127,32 @@ function toggleResult(i) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(s, i) in seats" :key="i">
-              <td>{{ i === 0 ? date : '' }}</td>
-              <td>{{ s.player }}</td>
-              <td>{{ s.deck?.name }}</td>
-              <td>{{ overrides[i].role }}</td>
-              <td>{{ overrides[i].result }}</td>
-              <td>{{ overrides[i].roleNotes }}</td>
-              <td>{{ i === 0 ? firstKO : '' }}</td>
-              <td>{{ i === 0 ? gameEnd : '' }}</td>
-              <td>{{ i === 0 ? gameNotes : '' }}</td>
-            </tr>
+            <template v-for="(g, gi) in gameData" :key="gi">
+              <template v-if="g.selected">
+                <tr v-for="(s, si) in g.seats" :key="`${gi}-${si}`">
+                  <td>{{ si === 0 ? g.date : '' }}</td>
+                  <td>{{ s.player }}</td>
+                  <td>{{ s.deck }}</td>
+                  <td>{{ s.role }}</td>
+                  <td>{{ s.result }}</td>
+                  <td>{{ s.roleNotes }}</td>
+                  <td>{{ si === 0 ? g.firstKO : '' }}</td>
+                  <td>{{ si === 0 ? g.gameEnd : '' }}</td>
+                  <td>{{ si === 0 ? g.gameNotes : '' }}</td>
+                </tr>
+              </template>
+            </template>
           </tbody>
         </table>
       </div>
 
       <!-- Actions -->
       <div class="export-actions">
-        <button class="export-btn export-btn-copy" @click="copyToClipboard">
+        <button v-if="games.length" class="export-btn export-btn-copy" @click="copyToClipboard">
           {{ copied ? 'Copied!' : 'Copy to Clipboard' }}
         </button>
-        <button class="export-btn export-btn-finish" @click="emit('finish')">Save & End Game</button>
-        <button class="export-btn export-btn-cancel" @click="emit('close')">Cancel</button>
+        <button v-if="games.length" class="export-btn export-btn-clear" @click="emit('clearGames')">Clear All Games</button>
+        <button class="export-btn export-btn-cancel" @click="emit('close')">Close</button>
       </div>
     </div>
   </div>
@@ -171,49 +176,107 @@ function toggleResult(i) {
   padding: 24px;
   width: 98vw;
   max-width: 1200px;
-  max-height: 85vh;
+  max-height: 90vh;
   overflow-y: auto;
 }
 
-.export-field {
-  margin-bottom: 12px;
+.no-games {
+  text-align: center;
+  padding: 24px;
+}
+
+.games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.game-block {
+  border: 1px solid #3d3529;
+  border-radius: 3px;
+  padding: 12px;
+  background: #1a1612;
+}
+
+.game-block.deselected {
+  opacity: 0.4;
+}
+
+.game-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.game-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #c9a54e;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.game-check input {
+  accent-color: #c9a54e;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.game-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.game-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .field-label {
   font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #8a7e66;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  display: block;
-  margin-bottom: 4px;
+  letter-spacing: 0.05em;
 }
 
 .field-input {
   font-family: 'EB Garamond', serif;
-  font-size: 1rem;
-  padding: 8px 12px;
+  font-size: 0.9rem;
+  padding: 4px 8px;
   border-radius: 3px;
   border: 1px solid #3d3529;
-  background: #1a1612;
+  background: #231f1a;
   color: #d4c8a8;
   outline: none;
-  width: 120px;
-}
-
-.field-input-narrow {
-  width: 60px;
+  width: 100px;
 }
 
 .field-input:focus {
   border-color: #c9a54e66;
 }
 
-.export-rows {
+.field-input-date {
+  width: 90px;
+}
+
+.field-input-narrow {
+  width: 50px;
+  text-align: center;
+}
+
+.game-rows {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 4px;
 }
 
 .export-row {
@@ -221,16 +284,16 @@ function toggleResult(i) {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  padding: 8px 12px;
-  background: #1a1612;
-  border: 1px solid #3d352966;
+  padding: 6px 8px;
+  background: #231f1a;
+  border: 1px solid #3d352944;
   border-radius: 3px;
 }
 
 .export-player {
   font-size: 0.9rem;
   color: #d4c8a8;
-  min-width: 70px;
+  min-width: 65px;
 }
 
 .export-deck {
@@ -283,17 +346,6 @@ function toggleResult(i) {
   color: #8a7e66;
   border-color: #3d3529;
   background: none;
-}
-
-
-.export-game-fields {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.field-input-wide {
-  width: 200px;
 }
 
 .export-preview {
@@ -358,14 +410,14 @@ function toggleResult(i) {
   border-color: #c9a54e;
 }
 
-.export-btn-finish {
-  color: #d4c8a8;
-  border-color: #3d3529;
-  background: #231f1a;
+.export-btn-clear {
+  color: #d95555;
+  border-color: #d9555544;
+  background: none;
 }
 
-.export-btn-finish:hover {
-  border-color: #8a7e66;
+.export-btn-clear:hover {
+  border-color: #d95555;
 }
 
 .export-btn-cancel {
