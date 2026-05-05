@@ -53,8 +53,7 @@ function createGame(playerCount, layoutId) {
   const seats = []
   for (let i = 0; i < playerCount; i++) {
     const seat = createSeat(i, playerCount)
-    // Pre-fill from last setup if same player count
-    if (lastSetup && lastSetup.playerCount === playerCount && lastSetup.seats[i]) {
+    if (lastSetup && lastSetup.seats[i]) {
       seat.player = lastSetup.seats[i].player
       seat.deck = lastSetup.seats[i].deck
     }
