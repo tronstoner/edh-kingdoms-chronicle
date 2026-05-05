@@ -69,7 +69,14 @@ const panelClasses = computed(() => {
 
     <!-- Player name & deck (tappable to edit) -->
     <div class="panel-header" @pointerdown.stop @click.stop="emit('openSeat')">
-      <div class="player-name">{{ seat.player || 'Empty Seat' }}</div>
+      <div class="name-row">
+        <span
+          v-if="seat.role && seat.roleRevealed"
+          class="role-inline"
+          :style="{ color: roleColor }"
+        >{{ seat.role }}</span>
+        <span class="player-name">{{ seat.player || 'Empty Seat' }}</span>
+      </div>
       <div v-if="seat.deck" class="deck-info">
         <span class="deck-name">{{ seat.deck.name }}</span>
         <span v-if="manaIcons.length" class="mana-icons">
@@ -81,25 +88,6 @@ const panelClasses = computed(() => {
     <!-- Life total -->
     <div class="life-total" :class="{ 'life-danger': seat.life <= 10 && seat.life > 0, 'life-lethal': seat.life <= 0 }">
       {{ seat.life }}
-    </div>
-
-    <!-- Role badge (tap to reveal) -->
-    <div
-      v-if="seat.role && seat.roleRevealed"
-      class="role-badge"
-      :style="{ backgroundColor: roleColor + '33', color: roleColor, borderColor: roleColor + '66' }"
-      @pointerdown.stop
-      @click.stop="emit('revealRole')"
-    >
-      {{ seat.role }}
-    </div>
-    <div
-      v-else-if="seat.role"
-      class="role-badge role-hidden"
-      @pointerdown.stop
-      @click.stop="emit('revealRole')"
-    >
-      ?
     </div>
 
     <!-- Non-zero counters (only shown when relevant) -->
@@ -238,23 +226,18 @@ const panelClasses = computed(() => {
   color: #d95555;
 }
 
-.role-badge {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.65rem, 1.8vw, 0.85rem);
-  padding: 6px 12px;
-  border-radius: 3px;
-  cursor: pointer;
-  border: 1px solid;
-  z-index: 2;
+.name-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
 }
 
-.role-hidden {
-  background-color: #3d352966;
-  color: #8a7e66;
-  border-color: #3d3529;
+.role-inline {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.55rem, 1.5vw, 0.7rem);
+  white-space: nowrap;
 }
 
 .counter-badges {
