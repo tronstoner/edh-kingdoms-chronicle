@@ -109,8 +109,8 @@ const panelClasses = computed(() => {
     </div>
 
     <!-- Commander damage mini-map (whole box tappable) -->
-    <div class="cmd-minimap" :style="rotated ? { transform: 'rotate(180deg)' } : undefined" @pointerdown.stop @click.stop="emit('openCmdDamage')">
-      <div v-for="(row, ri) in layoutRows" :key="ri" class="minimap-row">
+    <div class="cmd-minimap" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+      <div v-for="(row, ri) in (rotated ? [...layoutRows].reverse() : layoutRows)" :key="ri" class="minimap-row">
         <div
           v-for="si in row.seats"
           :key="si"
