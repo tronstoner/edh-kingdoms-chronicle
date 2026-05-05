@@ -87,9 +87,9 @@ function select(role) {
   background: #231f1a;
   border: 2px solid #3d3529;
   border-radius: 3px;
-  padding: 24px;
-  width: 80vw;
-  max-width: 400px;
+  padding: 32px;
+  width: 92vw;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -97,7 +97,7 @@ function select(role) {
 }
 
 .role-title {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: #d4c8a8;
 }
 
@@ -120,8 +120,8 @@ function select(role) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 24px 20px;
   border-radius: 3px;
   border: 2px solid #3d3529;
   background: #1a1612;
@@ -136,12 +136,12 @@ function select(role) {
 }
 
 .role-icon {
-  font-size: 2rem;
+  font-size: 3rem;
 }
 
 .role-name {
   font-family: 'Cinzel', serif;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .role-clear-btn {
@@ -163,8 +163,8 @@ function select(role) {
 
 .role-close-btn {
   font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  padding: 12px 28px;
+  font-size: 1.1rem;
+  padding: 16px 36px;
   border-radius: 3px;
   border: 1px solid #3d3529;
   background: none;
