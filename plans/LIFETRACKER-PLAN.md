@@ -264,11 +264,20 @@ The lifetracker must work across different screen shapes — portrait phones, la
 20. `ExportModal.vue` + completed game storage
 21. Manual win/death controls in `GameMenu`
 
-### Phase 7: Polish
+### Phase 7: Polish & Responsiveness
 22. `useWakeLock.js`
 23. Animations (life changes, death, role reveal flip)
 24. Haptic feedback
 25. Resume-game prompt on page load
+26. **Responsive layout overhaul**:
+    - Test and fix all views on small phones, large phones, tablets (portrait + landscape)
+    - Player panel content: life total, name, deck, minimap, badges must scale and reflow per panel size
+    - Commander damage modal: counter boxes, layout seats, and progress bars must adapt to viewport
+    - Setup screen and deck picker must be usable on small screens
+    - Use container queries or aspect-ratio media queries where clamp() isn't sufficient
+    - Ensure touch targets are minimum 44px on all screen sizes
+    - Test minimap readability at all sizes
+    - Fullscreen API integration to hide browser chrome
 
 ---
 
