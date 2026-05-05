@@ -152,6 +152,7 @@ function handleCmdTax(delta) {
         :seat="state.seats[cmdDamageTarget]"
         :all-seats="state.seats"
         :layout-rows="LAYOUTS[state.layoutId].rows"
+        :rotated="LAYOUTS[state.layoutId].rows[0].seats.includes(cmdDamageTarget)"
         @change="handleCmdDamageChange"
         @toggle-partners="handleTogglePartners"
         @change-poison="handleCmdPoison"

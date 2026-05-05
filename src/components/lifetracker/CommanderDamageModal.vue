@@ -7,6 +7,7 @@ const props = defineProps({
   seat: Object,
   allSeats: Array,
   layoutRows: Array,
+  rotated: Boolean,
 })
 
 const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'close'])
@@ -25,7 +26,7 @@ const poisonCounter = useLifeCounter((delta) => { emit('changePoison', delta) })
 
 function poisonDown(event) {
   if (!poisonEl.value) return
-  const sign = poisonCounter.getSign(event, poisonEl.value, false)
+  const sign = poisonCounter.getSign(event, poisonEl.value, props.rotated)
   poisonFlash.value = sign < 0 ? 'left' : 'right'
   clearTimeout(poisonFlashTimeout)
   poisonFlashTimeout = setTimeout(() => { poisonFlash.value = null }, 150)
@@ -41,7 +42,7 @@ const taxCounter = useLifeCounter((delta) => { emit('changeTax', delta) })
 
 function taxDown(event) {
   if (!taxEl.value) return
-  const sign = taxCounter.getSign(event, taxEl.value, false)
+  const sign = taxCounter.getSign(event, taxEl.value, props.rotated)
   taxFlash.value = sign < 0 ? 'left' : 'right'
   clearTimeout(taxFlashTimeout)
   taxFlashTimeout = setTimeout(() => { taxFlash.value = null }, 150)
@@ -65,7 +66,7 @@ function handleDown(event, si, cmdIdx) {
   if (!el) return
   activeSeat.value = si
   activeCmd.value = cmdIdx || 1
-  const sign = getSign(event, el, false)
+  const sign = getSign(event, el, props.rotated)
   // Reversed: left = plus (receiving damage), right = minus (correcting)
   flashSide.value = { key, side: sign < 0 ? 'left' : 'right' }
   clearTimeout(flashTimeout)
@@ -123,7 +124,7 @@ onUnmounted(() => {
 
 <template>
   <div class="cmd-overlay" :class="{ closing }" @click.self="!closing && handleClose()">
-    <div class="cmd-panel" :class="{ closing }" @click.stop>
+    <div class="cmd-panel" :class="{ closing }" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }" @click.stop>
       <!-- Counters row -->
       <div class="counters-row">
         <div
