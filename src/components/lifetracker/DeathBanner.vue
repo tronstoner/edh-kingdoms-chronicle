@@ -11,6 +11,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUn
 <template>
   <div class="death-banner" @click.stop @pointerdown.stop>
     <i class="ms ms-graveyard death-skull"></i>
+    <span class="death-label font-beleren">DEAD</span>
     <div class="death-actions">
       <button v-if="!roleRevealed" class="death-btn" @click="emit('revealRole')">Reveal role</button>
       <button v-if="!roleNotes" class="death-btn death-btn-zombie" @click="emit('zombify')">&#x1F9DF; Zombified</button>
@@ -24,7 +25,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUn
 .death-banner {
   position: absolute;
   inset: 0;
-  background: #00000090;
+  background: #000000c0;
   backdrop-filter: grayscale(100%);
   display: flex;
   flex-direction: column;
@@ -36,6 +37,12 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUn
 .death-skull {
   font-size: clamp(2.5rem, 8vw, 4rem);
   color: #d4c8a8;
+}
+
+.death-label {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  color: #d4c8a8;
+  letter-spacing: 0.2em;
 }
 
 .death-actions {
