@@ -165,8 +165,8 @@ function toggleResult(i) {
   border: 2px solid #3d3529;
   border-radius: 3px;
   padding: 24px;
-  width: 96vw;
-  max-width: 900px;
+  width: 98vw;
+  max-width: 1200px;
   max-height: 85vh;
   overflow-y: auto;
 }
@@ -345,9 +345,9 @@ function toggleResult(i) {
 
 .export-actions {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
-  align-items: center;
+  justify-content: center;
 }
 
 .export-btn {
@@ -358,8 +358,6 @@ function toggleResult(i) {
   border: 1px solid;
   cursor: pointer;
   transition: all 0.2s;
-  width: 100%;
-  max-width: 280px;
 }
 
 .export-btn-copy {
