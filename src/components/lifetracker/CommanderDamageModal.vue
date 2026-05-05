@@ -136,12 +136,14 @@ onUnmounted(() => {
           @pointercancel="poisonUp"
           @pointerleave="poisonUp"
         >
-          <div class="counter-flash counter-flash-left" :class="{ flash: poisonFlash === 'left' }"><span class="counter-hint">&minus;</span></div>
-          <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"><span class="counter-hint">+</span></div>
-          <div class="counter-icon-top"><i class="ms ms-ability-phyrexian counter-icon poison-icon"></i></div>
+          <div class="counter-flash counter-flash-left" :class="{ flash: poisonFlash === 'left' }"></div>
+          <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"></div>
           <div class="counter-center">
+            <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
             <span class="counter-val" :class="{ active: seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poison }}</span>
           </div>
+          <span class="counter-hint counter-hint-left">&minus;</span>
+          <span class="counter-hint counter-hint-right">+</span>
         </div>
         <div
           ref="taxEl"
@@ -152,12 +154,14 @@ onUnmounted(() => {
           @pointercancel="taxUp"
           @pointerleave="taxUp"
         >
-          <div class="counter-flash counter-flash-left" :class="{ flash: taxFlash === 'left' }"><span class="counter-hint">&minus;</span></div>
-          <div class="counter-flash counter-flash-right" :class="{ flash: taxFlash === 'right' }"><span class="counter-hint">+</span></div>
-          <div class="counter-icon-top"><i class="ms ms-commander counter-icon tax-icon"></i></div>
+          <div class="counter-flash counter-flash-left" :class="{ flash: taxFlash === 'left' }"></div>
+          <div class="counter-flash counter-flash-right" :class="{ flash: taxFlash === 'right' }"></div>
           <div class="counter-center">
+            <i class="ms ms-commander counter-icon tax-icon"></i>
             <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
           </div>
+          <span class="counter-hint counter-hint-left">&minus;</span>
+          <span class="counter-hint counter-hint-right">+</span>
         </div>
       </div>
 
@@ -326,14 +330,21 @@ onUnmounted(() => {
 }
 
 .counter-hint {
+  position: absolute;
+  bottom: 30%;
   font-family: 'Cinzel', serif;
   font-size: 1.3rem;
   color: #8a7e6633;
   pointer-events: none;
+  z-index: 2;
 }
 
-.counter-flash.flash .counter-hint {
-  color: #8a7e6666;
+.counter-hint-left {
+  left: 12%;
+}
+
+.counter-hint-right {
+  right: 12%;
 }
 
 .counter-flash-left {
@@ -352,23 +363,16 @@ onUnmounted(() => {
   background: #d9555522;
 }
 
-.counter-icon-top {
-  position: absolute;
-  top: 8px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  pointer-events: none;
-  z-index: 2;
-}
-
 .counter-center {
   position: absolute;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   pointer-events: none;
+  z-index: 1;
 }
 
 .counter-icon {
