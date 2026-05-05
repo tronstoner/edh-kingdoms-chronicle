@@ -9,7 +9,7 @@ const props = defineProps({
   layoutRows: Array,
 })
 
-const emit = defineEmits(['change', 'changePoison', 'togglePoison', 'changeTax', 'close'])
+const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'togglePoison', 'changeTax', 'close'])
 
 // Per-seat tap interaction
 const activeSeat = ref(null)
@@ -28,7 +28,6 @@ const { start, stop, getSign } = useLifeCounter((delta) => {
 })
 
 function handleDown(event, si) {
-  if (si === props.seat.index) return
   const el = counterEls.value[si]
   if (!el) return
   activeSeat.value = si
@@ -88,7 +87,7 @@ onUnmounted(() => {
       <!-- Counters row -->
       <div class="counters-row">
         <div class="counter-item">
-          <i class="ms ms-ability-toxic ms-cost counter-icon poison-icon"></i>
+          <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
           <div class="counter-controls">
             <button class="counter-btn" @click="emit('changePoison', -1)" :disabled="!seat.poisonEnabled || seat.poison <= 0">&minus;</button>
             <span class="counter-val" :class="{ active: seat.poisonEnabled && seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poisonEnabled ? seat.poison : 'off' }}</span>
@@ -96,7 +95,7 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="counter-item">
-          <i class="ms ms-commander ms-cost counter-icon tax-icon"></i>
+          <i class="ms ms-commander counter-icon tax-icon"></i>
           <div class="counter-controls">
             <button class="counter-btn" @click="emit('changeTax', -1)" :disabled="seat.commanderTax <= 0">&minus;</button>
             <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
@@ -124,12 +123,11 @@ onUnmounted(() => {
             <div class="cmd-seat-flash cmd-flash-right" :class="{ flash: isFlash(si, 'right') }"></div>
             <div class="cmd-seat-content">
               <div class="cmd-seat-name">{{ allSeats[si]?.player }}</div>
-              <div v-if="si !== seat.index" class="cmd-seat-dmg" :class="{ 'has-dmg': dmgFrom(si) > 0, lethal: cmd1From(si) >= 21 || cmd2From(si) >= 21 }">
+              <div class="cmd-seat-dmg" :class="{ 'has-dmg': dmgFrom(si) > 0, lethal: cmd1From(si) >= 21 || cmd2From(si) >= 21 }">
                 {{ hasPartners(si) ? cmd1From(si) + ' / ' + cmd2From(si) : cmd1From(si) }}
               </div>
-              <div v-else class="cmd-seat-dmg cmd-seat-you">you</div>
               <!-- Progress bar(s) -->
-              <div v-if="si !== seat.index" class="cmd-bars">
+              <div class="cmd-bars">
                 <div class="cmd-bar-wrap">
                   <div class="cmd-bar" :class="{ danger: cmd1From(si) >= 16 }" :style="{ width: Math.min(cmd1From(si) / 21 * 100, 100) + '%' }"></div>
                 </div>
@@ -137,6 +135,10 @@ onUnmounted(() => {
                   <div class="cmd-bar" :class="{ danger: cmd2From(si) >= 16 }" :style="{ width: Math.min(cmd2From(si) / 21 * 100, 100) + '%' }"></div>
                 </div>
               </div>
+              <!-- Partner toggle -->
+              <button class="partner-toggle" @pointerdown.stop @click.stop="emit('togglePartners', seat.index, si)">
+                {{ hasPartners(si) ? '2 cmdrs' : '1 cmdr' }}
+              </button>
             </div>
           </div>
         </div>
@@ -160,10 +162,9 @@ onUnmounted(() => {
   background: #231f1a;
   border: 2px solid #3d3529;
   border-radius: 14px;
-  padding: 20px;
-  width: 50%;
-  min-width: 300px;
-  max-width: 500px;
+  padding: 24px;
+  width: 80vw;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -193,16 +194,15 @@ onUnmounted(() => {
 }
 
 .counter-icon {
-  font-size: 1.1rem;
-  opacity: 0.7;
+  font-size: 1.2rem;
 }
 
 .poison-icon {
-  color: #00733e;
+  color: #4ec88a;
 }
 
 .tax-icon {
-  color: #c9a54e;
+  color: #e2c878;
 }
 
 .counter-controls {
@@ -270,7 +270,7 @@ onUnmounted(() => {
 .cmd-seat {
   flex: 1;
   position: relative;
-  height: clamp(90px, 20vw, 140px);
+  height: clamp(100px, 25vw, 180px);
   overflow: hidden;
   border-radius: 6px;
   touch-action: none;
@@ -327,14 +327,14 @@ onUnmounted(() => {
 
 .cmd-seat-name {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.8vw, 0.85rem);
+  font-size: clamp(0.7rem, 2.2vw, 1rem);
   color: #d4c8a888;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .cmd-seat-dmg {
   font-family: 'Cinzel', serif;
-  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  font-size: clamp(2rem, 6vw, 3.5rem);
   font-weight: 700;
   color: #d4c8a844;
   line-height: 1.1;
@@ -346,12 +346,6 @@ onUnmounted(() => {
 
 .cmd-seat-dmg.lethal {
   color: #d95555;
-}
-
-.cmd-seat-you {
-  font-size: clamp(0.7rem, 1.8vw, 0.9rem);
-  font-weight: 400;
-  color: #8a7e6644;
 }
 
 /* Progress bars */
@@ -378,5 +372,26 @@ onUnmounted(() => {
 
 .cmd-bar.danger {
   background: #d95555;
+}
+
+.partner-toggle {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+  font-family: 'EB Garamond', serif;
+  font-size: clamp(0.55rem, 1.3vw, 0.7rem);
+  padding: 2px 8px;
+  margin-top: 2px;
+  border-radius: 4px;
+  border: 1px solid #3d352966;
+  background: #1a161288;
+  color: #8a7e6688;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.partner-toggle:hover {
+  border-color: #8a7e66;
+  color: #d4c8a8;
 }
 </style>

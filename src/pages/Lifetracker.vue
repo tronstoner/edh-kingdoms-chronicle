@@ -81,6 +81,12 @@ function handleCmdDamageChange(targetSeat, fromSeat, cmdIndex, delta) {
   changeCommanderDamage(targetSeat, fromSeat, cmdIndex, delta)
 }
 
+function handleTogglePartners(targetSeat, fromSeat) {
+  const dmg = state.seats[targetSeat].commanderDamage[fromSeat]
+  dmg.hasPartners = !dmg.hasPartners
+  if (!dmg.hasPartners) dmg.cmd2 = 0
+}
+
 function handleCmdPoison(delta) {
   changePoison(cmdDamageTarget.value, delta)
 }
@@ -151,6 +157,7 @@ function handleCmdTax(delta) {
         :all-seats="state.seats"
         :layout-rows="LAYOUTS[state.layoutId].rows"
         @change="handleCmdDamageChange"
+        @toggle-partners="handleTogglePartners"
         @change-poison="handleCmdPoison"
         @toggle-poison="handleCmdTogglePoison"
         @change-tax="handleCmdTax"
