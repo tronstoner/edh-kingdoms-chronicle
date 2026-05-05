@@ -8,6 +8,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
 
 <template>
   <div class="death-banner" @click.stop @pointerdown.stop>
+    <span class="death-skull">&#x1F480;</span>
     <div class="death-actions">
       <button class="death-btn" @click="emit('revealRole')">Reveal role</button>
       <button class="death-btn death-btn-zombie" @click="emit('zombify')">&#x1F9DF; Zombified</button>
@@ -27,6 +28,10 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
   align-items: center;
   justify-content: center;
   z-index: 6;
+}
+
+.death-skull {
+  font-size: clamp(2.5rem, 8vw, 4rem);
 }
 
 .death-actions {
