@@ -167,9 +167,9 @@ onUnmounted(() => {
 
       <!-- Enlarged table layout -->
       <div class="cmd-layout">
-        <div v-for="(row, ri) in layoutRows" :key="ri" class="cmd-row">
+        <div v-for="(row, ri) in (rotated ? [...layoutRows].reverse() : layoutRows)" :key="ri" class="cmd-row">
           <!-- Single commander seat -->
-          <template v-for="si in row.seats" :key="si">
+          <template v-for="si in (rotated ? [...row.seats].reverse() : row.seats)" :key="si">
             <div v-if="!hasPartners(si)" class="cmd-seat" :class="{ 'cmd-self': si === seat.index }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
               <!-- Tap zone -->
