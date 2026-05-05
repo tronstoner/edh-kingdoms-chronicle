@@ -254,8 +254,9 @@ const panelClasses = computed(() => {
   align-items: center;
   gap: 1px;
   padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid;
+  border-radius: 3px;
+  border: 1px solid #3d352966;
+  background: #1a161288;
 }
 
 .badge-icon {
@@ -270,14 +271,10 @@ const panelClasses = computed(() => {
 
 .badge-poison {
   color: #7de830;
-  background: #7de83022;
-  border-color: #7de83044;
 }
 
 .badge-tax {
   color: #e2c878;
-  background: #e2c87822;
-  border-color: #e2c87844;
 }
 
 .cmd-minimap {
@@ -289,7 +286,7 @@ const panelClasses = computed(() => {
   flex-direction: column;
   gap: 2px;
   padding: 4px;
-  border-radius: 8px;
+  border-radius: 3px;
   border: 1px solid #3d352966;
   background: #1a161288;
   cursor: pointer;

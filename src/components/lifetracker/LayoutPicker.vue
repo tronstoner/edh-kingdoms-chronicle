@@ -51,7 +51,7 @@ const layouts = layoutsForCount(props.playerCount)
   align-items: center;
   gap: 10px;
   padding: 18px 24px;
-  border-radius: 8px;
+  border-radius: 3px;
   border: 2px solid #3d3529;
   background: #231f1a;
   cursor: pointer;

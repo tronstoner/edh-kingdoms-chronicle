@@ -216,7 +216,7 @@ function handleCmdTax(delta) {
   font-family: 'Cinzel', serif;
   font-size: 1.1rem;
   padding: 0.75rem 2rem;
-  border-radius: 6px;
+  border-radius: 3px;
   border: 1px solid #3d3529;
   background: #231f1a;
   color: #d4c8a8;
@@ -252,7 +252,7 @@ function handleCmdTax(delta) {
   background: #231f1aee;
   border: 1px solid #3d3529;
   border-bottom: none;
-  border-radius: 10px 10px 0 0;
+  border-radius: 3px 3px 0 0;
   z-index: 120;
 }
 
@@ -266,7 +266,7 @@ function handleCmdTax(delta) {
   border: none;
   color: #8a7e66;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 3px;
   transition: all 0.2s;
   font-size: 1.3rem;
 }

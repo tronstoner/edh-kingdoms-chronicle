@@ -31,7 +31,7 @@ const emit = defineEmits(['override'])
   font-family: 'Cinzel', serif;
   font-size: clamp(0.9rem, 2.5vw, 1.1rem);
   padding: 12px 28px;
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid #8a7e6644;
   background: #231f1a;
   color: #8a7e66;

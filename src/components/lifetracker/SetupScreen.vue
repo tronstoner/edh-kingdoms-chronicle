@@ -132,7 +132,7 @@ function handleSeatSelect({ player, deck }) {
   font-size: 1.4rem;
   width: 64px;
   height: 64px;
-  border-radius: 8px;
+  border-radius: 3px;
   border: 2px solid #3d3529;
   background: #231f1a;
   color: #d4c8a8;
@@ -161,7 +161,7 @@ function handleSeatSelect({ player, deck }) {
   align-items: center;
   gap: 12px;
   padding: 16px 18px;
-  border-radius: 8px;
+  border-radius: 3px;
   border: 1px solid #3d3529;
   background: #1a1612;
   cursor: pointer;
@@ -227,7 +227,7 @@ function handleSeatSelect({ player, deck }) {
   font-family: 'Cinzel', serif;
   font-size: 1.2rem;
   padding: 16px 40px;
-  border-radius: 8px;
+  border-radius: 3px;
   border: 2px solid #c9a54e66;
   background: #c9a54e22;
   color: #c9a54e;
@@ -249,7 +249,7 @@ function handleSeatSelect({ player, deck }) {
   font-family: 'Cinzel', serif;
   font-size: 1rem;
   padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: 3px;
   border: 1px solid #3d3529;
   background: none;
   color: #8a7e66;

@@ -283,7 +283,7 @@ onUnmounted(() => {
 .cmd-panel {
   background: #231f1a;
   border: 2px solid #3d3529;
-  border-radius: 14px;
+  border-radius: 3px;
   padding: 24px;
   width: 92vw;
   max-width: 800px;
@@ -305,7 +305,7 @@ onUnmounted(() => {
   height: clamp(100px, 22vw, 160px);
   background: #1a1612;
   border: 1px solid #3d3529;
-  border-radius: 8px;
+  border-radius: 3px;
   overflow: hidden;
   position: relative;
   touch-action: none;
@@ -381,7 +381,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  border-radius: 10px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
@@ -395,7 +395,7 @@ onUnmounted(() => {
   position: relative;
   height: clamp(120px, 30vw, 220px);
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 3px;
   touch-action: none;
   -webkit-touch-callout: none;
   user-select: none;
@@ -525,7 +525,7 @@ onUnmounted(() => {
   pointer-events: auto;
   font-size: 0.7rem;
   padding: 4px 6px;
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid #3d352966;
   background: #1a161288;
   color: #8a7e6688;

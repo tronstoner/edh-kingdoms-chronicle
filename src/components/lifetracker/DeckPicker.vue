@@ -143,7 +143,7 @@ function isUsed(name) {
 .picker-content {
   background: #231f1a;
   border: 2px solid #3d3529;
-  border-radius: 12px;
+  border-radius: 3px;
   padding: 24px;
   max-width: 400px;
   width: 90%;
@@ -170,7 +170,7 @@ function isUsed(name) {
   font-family: 'Cinzel', serif;
   font-size: 1rem;
   padding: 12px 18px;
-  border-radius: 8px;
+  border-radius: 3px;
   border: 1px solid #3d3529;
   background: #1a1612;
   color: #d4c8a8;
@@ -204,7 +204,7 @@ function isUsed(name) {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-radius: 8px;
+  border-radius: 3px;
   border: 1px solid #3d3529;
   background: #1a1612;
   color: #d4c8a8;
@@ -251,7 +251,7 @@ function isUsed(name) {
   font-family: 'EB Garamond', serif;
   font-size: 1.1rem;
   padding: 12px 16px;
-  border-radius: 6px;
+  border-radius: 3px;
   border: 1px solid #3d3529;
   background: #1a1612;
   color: #d4c8a8;
@@ -289,7 +289,7 @@ function isUsed(name) {
 .confirm-btn {
   font-family: 'Cinzel', serif;
   padding: 14px 24px;
-  border-radius: 6px;
+  border-radius: 3px;
   border: 1px solid #c9a54e66;
   background: #c9a54e22;
   color: #c9a54e;
@@ -306,7 +306,7 @@ function isUsed(name) {
   font-family: 'Cinzel', serif;
   font-size: 1rem;
   padding: 12px 24px;
-  border-radius: 6px;
+  border-radius: 3px;
   border: 1px solid #3d3529;
   background: none;
   color: #8a7e66;
