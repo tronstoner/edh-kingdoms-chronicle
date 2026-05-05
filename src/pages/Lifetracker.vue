@@ -69,21 +69,18 @@ function handleGameSeatSelect({ player, deck }) {
   editingSeatInGame.value = null
 }
 
-// Poison
-function handleTogglePoison(i) {
-  state.seats[i].poisonEnabled = !state.seats[i].poisonEnabled
+// Commander damage overlay
+const cmdDamageTarget = ref(null)
+const cmdDamageFrom = ref(null)
+
+function handleOpenCmdDamage(targetSeat, fromSeat) {
+  cmdDamageTarget.value = targetSeat
+  cmdDamageFrom.value = fromSeat
 }
 
-// Commander tax
-function handleChangeTax(i, delta) {
-  state.seats[i].commanderTax = Math.max(0, state.seats[i].commanderTax + delta)
-}
-
-// Commander damage
-const cmdDamageSeat = ref(null)
-
-function handleOpenCmdDamage(i) {
-  cmdDamageSeat.value = i
+function closeCmdDamage() {
+  cmdDamageTarget.value = null
+  cmdDamageFrom.value = null
 }
 
 function handleCmdDamageChange(targetSeat, fromSeat, cmdIndex, delta) {
@@ -94,6 +91,18 @@ function handleTogglePartners(targetSeat, fromSeat) {
   const dmg = state.seats[targetSeat].commanderDamage[fromSeat]
   dmg.hasPartners = !dmg.hasPartners
   if (!dmg.hasPartners) dmg.cmd2 = 0
+}
+
+function handleCmdPoison(delta) {
+  changePoison(cmdDamageTarget.value, delta)
+}
+
+function handleCmdTogglePoison() {
+  state.seats[cmdDamageTarget.value].poisonEnabled = !state.seats[cmdDamageTarget.value].poisonEnabled
+}
+
+function handleCmdTax(delta) {
+  state.seats[cmdDamageTarget.value].commanderTax = Math.max(0, state.seats[cmdDamageTarget.value].commanderTax + delta)
 }
 </script>
 
@@ -133,9 +142,6 @@ function handleTogglePartners(targetSeat, fromSeat) {
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
-        @change-poison="(i, delta) => changePoison(i, delta)"
-        @toggle-poison="handleTogglePoison"
-        @change-tax="handleChangeTax"
         @open-cmd-damage="handleOpenCmdDamage"
       />
 
@@ -150,14 +156,18 @@ function handleTogglePartners(targetSeat, fromSeat) {
         @close="editingSeatInGame = null"
       />
 
-      <!-- Commander damage modal -->
+      <!-- Commander damage overlay -->
       <CommanderDamageModal
-        v-if="cmdDamageSeat !== null"
-        :seat="state.seats[cmdDamageSeat]"
-        :all-seats="state.seats"
+        v-if="cmdDamageTarget !== null"
+        :seat="state.seats[cmdDamageTarget]"
+        :from-seat="state.seats[cmdDamageFrom]"
+        :from-index="cmdDamageFrom"
         @change="handleCmdDamageChange"
         @toggle-partners="handleTogglePartners"
-        @close="cmdDamageSeat = null"
+        @change-poison="handleCmdPoison"
+        @toggle-poison="handleCmdTogglePoison"
+        @change-tax="handleCmdTax"
+        @close="closeCmdDamage"
       />
 
       <!-- Floating menu button -->

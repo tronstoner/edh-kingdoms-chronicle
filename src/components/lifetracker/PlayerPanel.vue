@@ -4,14 +4,15 @@ import { useManaGradient } from '../../composables/useManaGradient.js'
 import { colorIcons } from '../../mana.js'
 import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
-import PoisonCounter from './PoisonCounter.vue'
 
 const props = defineProps({
   seat: Object,
   rotated: Boolean,
+  allSeats: Array,
+  layoutRows: Array,
 })
 
-const emit = defineEmits(['changeLife', 'override', 'openSeat', 'changePoison', 'togglePoison', 'changeTax', 'openCmdDamage'])
+const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage'])
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -36,6 +37,12 @@ const roleColor = computed(() => {
   if (!props.seat.role || !props.seat.roleRevealed) return null
   return ROLE_COLORS[props.seat.role]
 })
+
+function cmdDmgFrom(fromIndex) {
+  const d = props.seat.commanderDamage[fromIndex]
+  if (!d) return 0
+  return d.cmd1 + d.cmd2
+}
 
 const panelClasses = computed(() => {
   const c = ['player-panel']
@@ -81,25 +88,26 @@ const panelClasses = computed(() => {
       ?
     </div>
 
-    <!-- Poison counter -->
-    <PoisonCounter
-      :count="seat.poison"
-      :enabled="seat.poisonEnabled"
-      @change="(delta) => emit('changePoison', delta)"
-      @toggle="emit('togglePoison')"
-    />
-
-    <!-- Commander tax -->
-    <div class="tax-wrap" @pointerdown.stop>
-      <button class="tax-btn" @click="emit('changeTax', -1)" :disabled="seat.commanderTax <= 0">&minus;</button>
-      <span class="tax-label">Tax {{ seat.commanderTax }}</span>
-      <button class="tax-btn" @click="emit('changeTax', 1)">+</button>
+    <!-- Non-zero counters (only shown when relevant) -->
+    <div class="counter-badges">
+      <span v-if="seat.poison > 0" class="badge badge-poison">&#x2620; {{ seat.poison }}</span>
+      <span v-if="seat.commanderTax > 0" class="badge badge-tax">Tax {{ seat.commanderTax }}</span>
     </div>
 
-    <!-- Commander damage button -->
-    <button class="cmd-dmg-btn" @pointerdown.stop @click.stop="emit('openCmdDamage')">
-      CMD
-    </button>
+    <!-- Commander damage mini-map -->
+    <div class="cmd-minimap" @pointerdown.stop>
+      <div v-for="(row, ri) in layoutRows" :key="ri" class="minimap-row">
+        <div
+          v-for="si in row.seats"
+          :key="si"
+          class="minimap-cell"
+          :class="{ 'minimap-self': si === seat.index, 'has-damage': si !== seat.index && cmdDmgFrom(si) > 0 }"
+          @click.stop="si !== seat.index && emit('openCmdDamage', si)"
+        >
+          <template v-if="si !== seat.index">{{ cmdDmgFrom(si) || '' }}</template>
+        </div>
+      </div>
+    </div>
 
     <!-- Life counter tap zones -->
     <LifeCounter :rotated="rotated" @change-life="(delta) => emit('changeLife', delta)" />
@@ -216,70 +224,78 @@ const panelClasses = computed(() => {
   border-color: #3d3529;
 }
 
-.tax-wrap {
+.counter-badges {
   position: absolute;
   top: 8px;
   right: 8px;
   display: flex;
-  align-items: center;
-  gap: 4px;
+  gap: 6px;
   z-index: 4;
 }
 
-.tax-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: 1px solid #3d352966;
-  background: #1a161288;
-  color: #8a7e66;
+.badge {
   font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+  font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
 }
 
-.tax-btn:hover:not(:disabled) {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+.badge-poison {
+  color: #00733e;
+  background: #00733e22;
+  border-color: #00733e44;
 }
 
-.tax-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.tax-label {
-  font-family: 'EB Garamond', serif;
-  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+.badge-tax {
   color: #8a7e66;
-  min-width: 36px;
-  text-align: center;
+  background: #3d352944;
+  border-color: #3d352966;
 }
 
-.cmd-dmg-btn {
+.cmd-minimap {
   position: absolute;
   bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.3vw, 0.75rem);
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid #3d352966;
-  background: #1a161288;
-  color: #8a7e6688;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   z-index: 4;
+}
+
+.minimap-row {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.minimap-cell {
+  width: clamp(20px, 5vw, 28px);
+  height: clamp(14px, 3vw, 20px);
+  border-radius: 3px;
+  border: 1px solid #3d352966;
+  background: #1a161266;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.5rem, 1.2vw, 0.65rem);
+  color: #8a7e6666;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
-.cmd-dmg-btn:hover {
-  border-color: #8a7e66;
+.minimap-cell.has-damage {
   color: #d4c8a8;
+  border-color: #c9a54e44;
+  background: #c9a54e11;
+}
+
+.minimap-self {
+  background: #d4c8a822;
+  border-color: #d4c8a844;
+  cursor: default;
 }
 
 .is-dead {

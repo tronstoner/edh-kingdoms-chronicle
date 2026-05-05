@@ -8,7 +8,7 @@ const props = defineProps({
   seats: Array,
 })
 
-const emit = defineEmits(['changeLife', 'openSeat', 'override', 'changePoison', 'togglePoison', 'changeTax', 'openCmdDamage'])
+const emit = defineEmits(['changeLife', 'openSeat', 'override', 'openCmdDamage'])
 
 const layout = computed(() => LAYOUTS[props.layoutId])
 </script>
@@ -30,13 +30,12 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           v-if="seats[seatIndex]"
           :seat="seats[seatIndex]"
           :rotated="row.rotate === 180"
+          :all-seats="seats"
+          :layout-rows="layout.rows"
           @change-life="(delta) => emit('changeLife', seatIndex, delta)"
           @override="emit('override', seatIndex)"
           @open-seat="emit('openSeat', seatIndex)"
-          @change-poison="(delta) => emit('changePoison', seatIndex, delta)"
-          @toggle-poison="emit('togglePoison', seatIndex)"
-          @change-tax="(delta) => emit('changeTax', seatIndex, delta)"
-          @open-cmd-damage="emit('openCmdDamage', seatIndex)"
+          @open-cmd-damage="(fromSeat) => emit('openCmdDamage', seatIndex, fromSeat)"
         />
       </div>
     </div>
