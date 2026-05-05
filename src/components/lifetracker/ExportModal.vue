@@ -22,8 +22,8 @@ const gameData = ref(props.games.map(g => {
   return {
     selected: true,
     date: `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`,
-    firstKO: autoFirstKO,
-    gameEnd: String(g.turnCount || ''),
+    firstKO: g.concludeData?.firstKO || autoFirstKO,
+    gameEnd: g.concludeData?.gameEnd || String(g.turnCount || ''),
     gameNotes: '',
     seats: g.seats.map(s => ({
       player: s.player || '',

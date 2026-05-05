@@ -5,7 +5,7 @@ const props = defineProps({
   turnCount: Number,
 })
 
-const emit = defineEmits(['advanceTurn', 'saveGame', 'export', 'newGame', 'back'])
+const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back'])
 
 const expanded = ref(false)
 </script>
@@ -21,7 +21,7 @@ const expanded = ref(false)
 
     <!-- Expanded menu -->
     <div v-if="expanded" class="menu-expanded">
-      <button class="menu-btn menu-btn-save" @click="emit('saveGame'); expanded = false">Save Game</button>
+      <button class="menu-btn menu-btn-save" @click="emit('endGame'); expanded = false">End Game</button>
       <button class="menu-btn" @click="emit('export'); expanded = false">Export Session</button>
       <button class="menu-btn" @click="emit('newGame'); expanded = false">New Game</button>
       <button class="menu-btn" @click="emit('back'); expanded = false">Back to Dashboard</button>

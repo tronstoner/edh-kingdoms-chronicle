@@ -10,6 +10,7 @@ import CommanderDamageModal from '../components/lifetracker/CommanderDamageModal
 import RolePicker from '../components/lifetracker/RolePicker.vue'
 import GameMenu from '../components/lifetracker/GameMenu.vue'
 import ExportModal from '../components/lifetracker/ExportModal.vue'
+import ConcludeModal from '../components/lifetracker/ConcludeModal.vue'
 
 const router = useRouter()
 const {
@@ -142,12 +143,26 @@ function handleDeathRevealRole(seatIndex) {
   rolePickerSeat.value = seatIndex
 }
 
-// Export & save
+// Conclude & export
+const showConclude = ref(false)
 const showExport = ref(false)
 const completedGames = ref([])
 
-function handleSaveGame() {
+function handleConcludeSave({ seats, firstKO, gameEnd }) {
+  // Update seats with conclude data before saving
+  for (let i = 0; i < state.seats.length; i++) {
+    state.seats[i].role = seats[i].role
+    state.seats[i].roleRevealed = !!seats[i].role
+    state.seats[i].isWinner = seats[i].result === 'Win'
+    state.seats[i].roleNotes = seats[i].roleNotes
+  }
+  state.concludeData = { firstKO, gameEnd }
   saveGame()
+  showConclude.value = false
+  // Reset to setup for next game
+  const count = state.playerCount
+  const layout = state.layoutId
+  newGame(count, layout)
 }
 
 function handleShowExport() {
@@ -249,10 +264,19 @@ function handleClearGames() {
       />
 
       <!-- Game menu -->
+      <!-- Conclude modal -->
+      <ConcludeModal
+        v-if="showConclude"
+        :seats="state.seats"
+        :turn-count="state.turnCount"
+        @save="handleConcludeSave"
+        @close="showConclude = false"
+      />
+
       <GameMenu
         :turn-count="state.turnCount"
         @advance-turn="advanceTurn"
-        @save-game="handleSaveGame"
+        @end-game="showConclude = true"
         @export="handleShowExport"
         @new-game="discardSaved"
         @back="handleBack"
