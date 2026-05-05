@@ -3,9 +3,15 @@ const props = defineProps({
   playerCount: Number,
   roleRevealed: Boolean,
   roleNotes: String,
-})
+});
 
-const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUndead'])
+const emit = defineEmits([
+  "override",
+  "revealRole",
+  "zombify",
+  "clone",
+  "clearUndead",
+]);
 </script>
 
 <template>
@@ -15,10 +21,30 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUn
       <span class="death-label font-beleren">DEAD</span>
     </div>
     <div class="death-actions">
-      <button v-if="!roleRevealed" class="death-btn" @click="emit('revealRole')">Reveal role</button>
-      <button v-if="!roleNotes" class="death-btn death-btn-zombie" @click="emit('zombify')">&#x1F9DF; Zombified</button>
-      <button v-if="!roleNotes && playerCount === 6" class="death-btn death-btn-clone" @click="emit('clone')">&#x1F9EC; Cloned</button>
-      <button class="death-btn death-btn-override" @click="emit('override')">I'm not actually dead</button>
+      <button
+        v-if="!roleRevealed"
+        class="death-btn"
+        @click="emit('revealRole')"
+      >
+        Reveal role
+      </button>
+      <button
+        v-if="!roleNotes"
+        class="death-btn death-btn-zombie"
+        @click="emit('zombify')"
+      >
+        &#x1F9DF; Zombified
+      </button>
+      <button
+        v-if="!roleNotes && playerCount === 6"
+        class="death-btn death-btn-clone"
+        @click="emit('clone')"
+      >
+        &#x1F9EC; Cloned
+      </button>
+      <button class="death-btn death-btn-override" @click="emit('override')">
+        I'm not actually dead
+      </button>
     </div>
   </div>
 </template>
@@ -33,7 +59,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUn
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 4px;
   z-index: 6;
 }
 
@@ -47,10 +73,13 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUn
 .death-skull {
   font-size: clamp(2.5rem, 8vw, 4rem);
   color: #d4c8a8;
+  text-shadow:
+    0 2px 12px #000000,
+    0 0 30px #00000080;
 }
 
 .death-label {
-  font-size: clamp(0.8rem, 2vw, 1rem);
+  font-size: clamp(1rem, 3vw, 1.4rem);
   color: #d4c8a8;
   letter-spacing: 0.2em;
 }
@@ -63,7 +92,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUn
 }
 
 .death-btn {
-  font-family: 'Cinzel', serif;
+  font-family: "Cinzel", serif;
   font-size: clamp(0.8rem, 2.2vw, 1rem);
   padding: 12px 28px;
   border-radius: 3px;
