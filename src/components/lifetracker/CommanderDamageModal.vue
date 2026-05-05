@@ -185,8 +185,8 @@ onUnmounted(() => {
                   <span class="zone-hint">+</span>
                 </div>
               </div>
+              <div class="cmd-seat-name-top">{{ allSeats[si]?.player }}</div>
               <div class="cmd-seat-content">
-                <div class="cmd-seat-name">{{ allSeats[si]?.player }}</div>
                 <div class="cmd-seat-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
               </div>
               <!-- Progress bar -->
@@ -488,11 +488,17 @@ onUnmounted(() => {
   z-index: 2;
 }
 
-.cmd-seat-name {
+.cmd-seat-name-top {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.7rem, 2.2vw, 1rem);
   color: #d4c8a888;
-  margin-bottom: 4px;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .cmd-seat-dmg {
