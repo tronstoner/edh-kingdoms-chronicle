@@ -134,9 +134,6 @@ function handleClone(seatIndex) {
 }
 
 function handleDeathRevealRole(seatIndex) {
-  const seat = state.seats[seatIndex]
-  seat.isDead = false
-  seat.deathOverridden = true
   rolePickerSeat.value = seatIndex
 }
 </script>
