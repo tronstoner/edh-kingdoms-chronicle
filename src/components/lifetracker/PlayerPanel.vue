@@ -97,7 +97,7 @@ const panelClasses = computed(() => {
     </div>
 
     <!-- Non-zero counters (only shown when relevant) -->
-    <div class="counter-badges">
+    <div class="counter-badges" @pointerdown.stop @click.stop="emit('openCmdDamage')">
       <div v-if="seat.poison > 0" class="badge badge-poison">
         <i class="ms ms-ability-phyrexian badge-icon"></i>
         <span class="badge-val">{{ seat.poison }}</span>
