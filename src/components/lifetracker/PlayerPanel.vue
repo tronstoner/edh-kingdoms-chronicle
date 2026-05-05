@@ -98,8 +98,14 @@ const panelClasses = computed(() => {
 
     <!-- Non-zero counters (only shown when relevant) -->
     <div class="counter-badges">
-      <span v-if="seat.poison > 0" class="badge badge-poison"><i class="ms ms-ability-phyrexian"></i> {{ seat.poison }}</span>
-      <span v-if="seat.commanderTax > 0" class="badge badge-tax"><i class="ms ms-commander"></i> {{ seat.commanderTax }}</span>
+      <div v-if="seat.poison > 0" class="badge badge-poison">
+        <i class="ms ms-ability-phyrexian badge-icon"></i>
+        <span class="badge-val">{{ seat.poison }}</span>
+      </div>
+      <div v-if="seat.commanderTax > 0" class="badge badge-tax">
+        <i class="ms ms-commander badge-icon"></i>
+        <span class="badge-val">{{ seat.commanderTax }}</span>
+      </div>
     </div>
 
     <!-- Commander damage mini-map (whole box tappable) -->
@@ -243,11 +249,23 @@ const panelClasses = computed(() => {
 }
 
 .badge {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.5vw, 0.75rem);
-  padding: 2px 8px;
-  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 8px;
+  border-radius: 6px;
   border: 1px solid;
+}
+
+.badge-icon {
+  font-size: clamp(1rem, 3vw, 1.4rem);
+}
+
+.badge-val {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  font-weight: 700;
 }
 
 .badge-poison {
@@ -257,9 +275,9 @@ const panelClasses = computed(() => {
 }
 
 .badge-tax {
-  color: #8a7e66;
-  background: #3d352944;
-  border-color: #3d352966;
+  color: #e2c878;
+  background: #e2c87822;
+  border-color: #e2c87844;
 }
 
 .cmd-minimap {

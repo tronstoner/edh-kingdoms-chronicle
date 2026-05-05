@@ -283,7 +283,7 @@ onUnmounted(() => {
 
 .counter-box {
   flex: 0 0 auto;
-  width: 100px;
+  width: 130px;
   height: clamp(100px, 22vw, 160px);
   background: #1a1612;
   border: 1px solid #3d3529;
@@ -332,7 +332,7 @@ onUnmounted(() => {
 }
 
 .counter-icon {
-  font-size: 2.2rem;
+  font-size: 4rem;
 }
 
 .poison-icon {
@@ -345,7 +345,7 @@ onUnmounted(() => {
 
 .counter-val {
   font-family: 'Cinzel', serif;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #8a7e6644;
 }
