@@ -111,7 +111,26 @@ function toggleResult(i) {
 
       <!-- Preview -->
       <div class="export-preview">
-        <pre class="preview-text">{{ exportText }}</pre>
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Player</th><th>Deck</th><th>Role</th><th>Result</th><th>Notes</th><th>1st KO</th><th>End</th><th>Game Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(s, i) in seats" :key="i">
+              <td>{{ i === 0 ? date : '' }}</td>
+              <td>{{ s.player }}</td>
+              <td>{{ s.deck?.name }}</td>
+              <td>{{ s.role || '' }}</td>
+              <td>{{ overrides[i].result }}</td>
+              <td>{{ overrides[i].roleNotes }}</td>
+              <td>{{ firstKO && firstKO.index === s.index ? `T${firstKO.deathTurn}` : '' }}</td>
+              <td>{{ i === 0 ? turnCount : '' }}</td>
+              <td>{{ i === 0 ? gameNotes : '' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Actions -->
@@ -278,18 +297,34 @@ function toggleResult(i) {
   background: #1a1612;
   border: 1px solid #3d3529;
   border-radius: 3px;
-  padding: 12px;
+  padding: 8px;
   margin-bottom: 16px;
   overflow-x: auto;
 }
 
-.preview-text {
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
   font-family: 'EB Garamond', serif;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #8a7e66;
-  white-space: pre;
-  margin: 0;
-  tab-size: 12;
+}
+
+.preview-table th {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  color: #8a7e6688;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 2px 6px;
+  border-bottom: 1px solid #3d352966;
+  white-space: nowrap;
+}
+
+.preview-table td {
+  padding: 2px 6px;
+  white-space: nowrap;
 }
 
 .export-actions {
