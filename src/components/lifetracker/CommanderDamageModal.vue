@@ -175,7 +175,7 @@ onUnmounted(() => {
         <button class="counter-box reveal-role-box" @click="emit('revealRole')">
           <div class="counter-center">
             <span class="reveal-icon">{{ seat.role ? (seat.roleRevealed ? '👁️' : '?') : '👁️' }}</span>
-            <span class="counter-val" :class="{ active: seat.role }" :style="seat.role && seat.roleRevealed ? { color: ROLE_COLORS[seat.role] } : {}">
+            <span class="reveal-label" :class="{ active: seat.role }" :style="seat.role && seat.roleRevealed ? { color: ROLE_COLORS[seat.role] } : {}">
               {{ seat.role && seat.roleRevealed ? seat.role : 'Role' }}
             </span>
           </div>
@@ -326,6 +326,18 @@ onUnmounted(() => {
 
 .reveal-role-box:hover {
   border-color: #8a7e66;
+}
+
+.reveal-label {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #8a7e6644;
+  white-space: nowrap;
+}
+
+.reveal-label.active {
+  color: #d4c8a8;
 }
 
 .reveal-icon {

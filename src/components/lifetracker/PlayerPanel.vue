@@ -62,7 +62,7 @@ const panelClasses = computed(() => {
 <template>
   <div
     :class="panelClasses"
-    :style="{ borderColor: roleColor || undefined }"
+    :style="roleColor ? { borderTopColor: roleColor, borderTopWidth: '3px' } : undefined"
   >
     <!-- Mana color gradient background -->
     <div v-if="gradientOverlay" class="gradient-bg" :style="{ background: gradientOverlay }"></div>
@@ -244,12 +244,12 @@ const panelClasses = computed(() => {
 
 .role-icon {
   font-size: clamp(0.7rem, 2vw, 1rem);
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .role-val {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.5rem, 1.2vw, 0.65rem);
+  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
   font-weight: 700;
 }
 
