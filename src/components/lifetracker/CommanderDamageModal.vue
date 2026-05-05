@@ -83,20 +83,28 @@ onUnmounted(() => {
 
       <!-- Counters row -->
       <div class="counters-row">
-        <div class="counter-box counter-poison" :class="{ disabled: !seat.poisonEnabled }" @click="!seat.poisonEnabled && emit('togglePoison')">
-          <div class="counter-icon-row"><i class="ms ms-ability-phyrexian counter-icon poison-icon"></i></div>
-          <div class="counter-tap">
-            <div class="counter-zone" @click.stop="seat.poisonEnabled && emit('changePoison', -1)"><span class="zone-hint">&minus;</span></div>
+        <div class="counter-box" :class="{ disabled: !seat.poisonEnabled }">
+          <div class="counter-zone" @click="seat.poisonEnabled ? emit('changePoison', -1) : emit('togglePoison')">
+            <span class="zone-hint">&minus;</span>
+          </div>
+          <div class="counter-center">
+            <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
             <span class="counter-val" :class="{ active: seat.poisonEnabled && seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poisonEnabled ? seat.poison : 'off' }}</span>
-            <div class="counter-zone" @click.stop="seat.poisonEnabled ? emit('changePoison', 1) : emit('togglePoison')"><span class="zone-hint">+</span></div>
+          </div>
+          <div class="counter-zone" @click="seat.poisonEnabled ? emit('changePoison', 1) : emit('togglePoison')">
+            <span class="zone-hint">+</span>
           </div>
         </div>
-        <div class="counter-box counter-tax">
-          <div class="counter-icon-row"><i class="ms ms-commander counter-icon tax-icon"></i></div>
-          <div class="counter-tap">
-            <div class="counter-zone" @click.stop="emit('changeTax', -1)"><span class="zone-hint">&minus;</span></div>
+        <div class="counter-box">
+          <div class="counter-zone" @click="emit('changeTax', -1)">
+            <span class="zone-hint">&minus;</span>
+          </div>
+          <div class="counter-center">
+            <i class="ms ms-commander counter-icon tax-icon"></i>
             <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
-            <div class="counter-zone" @click.stop="emit('changeTax', 1)"><span class="zone-hint">+</span></div>
+          </div>
+          <div class="counter-zone" @click="emit('changeTax', 1)">
+            <span class="zone-hint">+</span>
           </div>
         </div>
       </div>
@@ -239,41 +247,19 @@ onUnmounted(() => {
 }
 
 .counter-box {
-  flex: 1;
+  flex: 0 0 auto;
+  width: 100px;
+  height: 120px;
   background: #1a1612;
   border: 1px solid #3d3529;
   border-radius: 8px;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
 }
 
 .counter-box.disabled {
   opacity: 0.4;
-  cursor: pointer;
-}
-
-.counter-icon-row {
-  padding: 6px 0 2px;
-}
-
-.counter-icon {
-  font-size: 1.3rem;
-}
-
-.poison-icon {
-  color: #7de830;
-}
-
-.tax-icon {
-  color: #e2c878;
-}
-
-.counter-tap {
-  display: flex;
-  width: 100%;
-  align-items: center;
 }
 
 .counter-zone {
@@ -281,7 +267,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 0;
   cursor: pointer;
   transition: background-color 0.15s;
 }
@@ -296,13 +281,32 @@ onUnmounted(() => {
   color: #8a7e6633;
 }
 
+.counter-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.counter-icon {
+  font-size: 2.2rem;
+}
+
+.poison-icon {
+  color: #7de830;
+}
+
+.tax-icon {
+  color: #e2c878;
+}
+
 .counter-val {
   font-family: 'Cinzel', serif;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #8a7e6644;
-  min-width: 36px;
-  text-align: center;
 }
 
 .counter-val.active {
