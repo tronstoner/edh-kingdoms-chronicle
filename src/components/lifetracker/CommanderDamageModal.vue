@@ -66,7 +66,7 @@ function handleDown(event, si, cmdIdx) {
   if (!el) return
   activeSeat.value = si
   activeCmd.value = cmdIdx || 1
-  const sign = getSign(event, el, false)
+  const sign = getSign(event, el, props.rotated)
   // Reversed: left = plus (receiving damage), right = minus (correcting)
   flashSide.value = { key, side: sign < 0 ? 'left' : 'right' }
   clearTimeout(flashTimeout)
@@ -124,7 +124,7 @@ onUnmounted(() => {
 
 <template>
   <div class="cmd-overlay" :class="{ closing }" @click.self="!closing && handleClose()">
-    <div class="cmd-panel" :class="{ closing }" @click.stop>
+    <div class="cmd-panel" :class="{ closing }" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }" @click.stop>
       <!-- Counters row -->
       <div class="counters-row">
         <div
@@ -167,9 +167,9 @@ onUnmounted(() => {
 
       <!-- Enlarged table layout -->
       <div class="cmd-layout">
-        <div v-for="(row, ri) in (rotated ? [...layoutRows].reverse() : layoutRows)" :key="ri" class="cmd-row">
+        <div v-for="(row, ri) in layoutRows" :key="ri" class="cmd-row">
           <!-- Single commander seat -->
-          <template v-for="si in (rotated ? [...row.seats].reverse() : row.seats)" :key="si">
+          <template v-for="si in row.seats" :key="si">
             <div v-if="!hasPartners(si)" class="cmd-seat" :class="{ 'cmd-self': si === seat.index }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
               <!-- Tap zone -->
