@@ -27,10 +27,10 @@ const rows = ref(props.seats.map(s => ({
   roleNotes: s.roleNotes || '',
 })))
 
-const firstKO = ref(() => {
+const firstKO = ref((() => {
   const deaths = props.seats.filter(s => s.deathTurn !== null).sort((a, b) => a.deathTurn - b.deathTurn)
   return deaths.length > 0 ? String(deaths[0].deathTurn) : ''
-})()
+})())
 
 const gameEnd = ref(String(props.turnCount || ''))
 
