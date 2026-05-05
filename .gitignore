@@ -6,6 +6,8 @@
 !.env.example
 !AGENTS.md
 !LIFETRACKER.md
+!plans/
+!plans/**
 !README.md
 !index.html
 !package.json
