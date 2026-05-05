@@ -163,8 +163,8 @@ onUnmounted(() => {
   border: 2px solid #3d3529;
   border-radius: 14px;
   padding: 24px;
-  width: 80vw;
-  max-width: 600px;
+  width: 92vw;
+  max-width: 800px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -270,7 +270,7 @@ onUnmounted(() => {
 .cmd-seat {
   flex: 1;
   position: relative;
-  height: clamp(100px, 25vw, 180px);
+  height: clamp(120px, 30vw, 220px);
   overflow: hidden;
   border-radius: 6px;
   touch-action: none;
