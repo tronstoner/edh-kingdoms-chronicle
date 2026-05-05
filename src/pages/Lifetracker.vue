@@ -148,8 +148,7 @@ const showConclude = ref(false)
 const showExport = ref(false)
 const completedGames = ref([])
 
-function handleConcludeSave({ seats, firstKO, gameEnd }) {
-  // Update seats with conclude data before saving
+function applyConcludeData({ seats, firstKO, gameEnd }) {
   for (let i = 0; i < state.seats.length; i++) {
     state.seats[i].role = seats[i].role
     state.seats[i].roleRevealed = !!seats[i].role
@@ -157,12 +156,25 @@ function handleConcludeSave({ seats, firstKO, gameEnd }) {
     state.seats[i].roleNotes = seats[i].roleNotes
   }
   state.concludeData = { firstKO, gameEnd }
+}
+
+function handleConcludeSave(data) {
+  applyConcludeData(data)
   saveGame()
   showConclude.value = false
-  // Reset to setup for next game
   const count = state.playerCount
   const layout = state.layoutId
   newGame(count, layout)
+}
+
+function handleConcludeSaveAndExport(data) {
+  applyConcludeData(data)
+  saveGame()
+  showConclude.value = false
+  const count = state.playerCount
+  const layout = state.layoutId
+  newGame(count, layout)
+  handleShowExport()
 }
 
 function handleShowExport() {
@@ -201,6 +213,7 @@ function handleClearGames() {
         @set-layout="handleSetLayout"
         @set-seat="handleSetSeat"
         @start="startGame"
+        @export="handleShowExport"
         @back="handleBack"
       />
     </div>
@@ -255,21 +268,13 @@ function handleClearGames() {
         @close="rolePickerSeat = null"
       />
 
-      <!-- Export modal -->
-      <ExportModal
-        v-if="showExport"
-        :games="completedGames"
-        @close="showExport = false"
-        @clear-games="handleClearGames"
-      />
-
-      <!-- Game menu -->
       <!-- Conclude modal -->
       <ConcludeModal
         v-if="showConclude"
         :seats="state.seats"
         :turn-count="state.turnCount"
         @save="handleConcludeSave"
+        @save-and-export="handleConcludeSaveAndExport"
         @close="showConclude = false"
       />
 
@@ -282,6 +287,14 @@ function handleClearGames() {
         @back="handleBack"
       />
     </template>
+
+    <!-- Export modal (available in any phase) -->
+    <ExportModal
+      v-if="showExport"
+      :games="completedGames"
+      @close="showExport = false"
+      @clear-games="handleClearGames"
+    />
   </div>
 </template>
 

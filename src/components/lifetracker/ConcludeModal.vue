@@ -17,7 +17,7 @@ const props = defineProps({
   turnCount: Number,
 })
 
-const emit = defineEmits(['save', 'close'])
+const emit = defineEmits(['save', 'saveAndExport', 'close'])
 
 const rows = ref(props.seats.map(s => ({
   player: s.player,
@@ -43,12 +43,20 @@ function selectRole(i, role) {
   rows.value[i].role = rows.value[i].role === role ? '' : role
 }
 
-function handleSave() {
-  emit('save', {
+function getData() {
+  return {
     seats: rows.value,
     firstKO: firstKO.value,
     gameEnd: gameEnd.value,
-  })
+  }
+}
+
+function handleSave() {
+  emit('save', getData())
+}
+
+function handleSaveAndExport() {
+  emit('saveAndExport', getData())
 }
 </script>
 
@@ -95,6 +103,7 @@ function handleSave() {
 
       <div class="conclude-actions">
         <button class="conclude-btn conclude-btn-save" @click="handleSave">Save & Next Game</button>
+        <button class="conclude-btn conclude-btn-export" @click="handleSaveAndExport">Save & Export Session</button>
         <button class="conclude-btn conclude-btn-cancel" @click="emit('close')">Cancel</button>
       </div>
     </div>
@@ -304,6 +313,16 @@ function handleSave() {
 .conclude-btn-save:hover {
   background: #c9a54e33;
   border-color: #c9a54e;
+}
+
+.conclude-btn-export {
+  color: #d4c8a8;
+  border-color: #3d3529;
+  background: #231f1a;
+}
+
+.conclude-btn-export:hover {
+  border-color: #8a7e66;
 }
 
 .conclude-btn-cancel {

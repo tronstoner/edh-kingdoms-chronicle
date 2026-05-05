@@ -10,7 +10,7 @@ const props = defineProps({
   layoutId: String,
 })
 
-const emit = defineEmits(['setCount', 'setLayout', 'setSeat', 'start', 'back'])
+const emit = defineEmits(['setCount', 'setLayout', 'setSeat', 'start', 'export', 'back'])
 
 const editingSeat = ref(null)
 
@@ -89,6 +89,7 @@ function handleSeatSelect({ player, deck }) {
       >
         Start Game
       </button>
+      <button class="back-btn" @click="emit('export')">Export Session</button>
       <button class="back-btn" @click="emit('back')">Back to Dashboard</button>
     </div>
 
