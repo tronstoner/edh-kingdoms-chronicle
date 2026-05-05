@@ -5,6 +5,7 @@
 !.gitignore
 !.env.example
 !AGENTS.md
+!LIFETRACKER.md
 !README.md
 !index.html
 !package.json
