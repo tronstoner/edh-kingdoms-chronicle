@@ -214,6 +214,19 @@ Formats game data matching the spreadsheet columns: `Date | Player | Deck | Role
 
 `Lifetracker.vue` uses `position: fixed; inset: 0; z-index: 100` to overlay the entire viewport, bypassing App.vue header/footer. No conditional logic needed in App.vue. A back button in `GameMenu` navigates to `/`.
 
+**Browser Fullscreen API**: On game start (or via a `GameMenu` toggle), call `document.documentElement.requestFullscreen()` to hide browser chrome (address bar, tabs). Exit fullscreen when leaving the lifetracker. Maximizes screen real estate on mobile. Fall back gracefully if the API is unavailable or denied.
+
+## Aspect Ratio & Responsive Layout
+
+The lifetracker must work across different screen shapes — portrait phones, landscape phones, tablets.
+
+- Detect orientation/aspect ratio via `matchMedia('(orientation: portrait)')` or by comparing `innerWidth` vs `innerHeight`
+- **Portrait**: panels are wider than tall, life total dominates vertically, secondary counters (poison, tax) compact into a row
+- **Landscape**: panels are taller than wide, more vertical space for counters and commander damage badges
+- `PlayerPanel` content reflows based on panel aspect ratio using container queries (`@container`) or flex-wrap
+- `useTableLayouts.js` can offer different default layouts per orientation (e.g. 5-player portrait: 3 top + 2 bottom; landscape: 2 left + 3 right)
+- Life total font size scales with panel size via `clamp()` to stay readable at any dimension
+
 ---
 
 ## Implementation Phases
