@@ -46,7 +46,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
   font-size: clamp(0.8rem, 2.2vw, 1rem);
   padding: 12px 28px;
   border-radius: 3px;
-  border: 1px solid #d4c8a844;
+  border: 1px solid #3d3529;
   background: #231f1a;
   color: #d4c8a8;
   cursor: pointer;
@@ -55,13 +55,13 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
 }
 
 .death-btn:hover {
-  border-color: #c9a54e66;
+  border-color: #c9a54e;
   color: #c9a54e;
 }
 
 .death-btn-zombie {
   color: #a47be0;
-  border-color: #a47be066;
+  border-color: #a47be0;
 }
 
 .death-btn-zombie:hover {
@@ -70,7 +70,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
 
 .death-btn-clone {
   color: #5ba3d9;
-  border-color: #5ba3d966;
+  border-color: #5ba3d9;
 }
 
 .death-btn-clone:hover {
