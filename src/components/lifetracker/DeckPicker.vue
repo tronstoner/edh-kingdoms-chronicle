@@ -115,10 +115,18 @@ function isUsed(name) {
 function isGuest(name) {
   return !registeredPlayers.value.includes(name)
 }
+
+function dismissAndSave() {
+  if (selectedPlayer.value && selectedPlayer.value !== props.currentPlayer) {
+    emit('select', { player: selectedPlayer.value, deck: props.currentDeck || null })
+  } else {
+    emit('close')
+  }
+}
 </script>
 
 <template>
-  <div class="deck-picker" @click.self="emit('close')">
+  <div class="deck-picker" @click.self="dismissAndSave">
     <div class="picker-content">
       <h3 class="font-beleren text-mtg-gold mb-4">Seat {{ seatIndex + 1 }}</h3>
 
@@ -150,6 +158,13 @@ function isGuest(name) {
         />
         <button class="guest-add-btn" @click="addGuest">Add</button>
       </div>
+
+      <!-- Player-only confirm -->
+      <button
+        v-if="selectedPlayer && selectedPlayer !== currentPlayer"
+        class="player-confirm-btn mt-3"
+        @click="emit('select', { player: selectedPlayer, deck: currentDeck || null })"
+      >Seat {{ selectedPlayer }} without deck</button>
 
       <!-- Deck selection -->
       <template v-if="selectedPlayer">
@@ -303,6 +318,27 @@ function isGuest(name) {
   background: #c9a54e22;
   color: #c9a54e;
   cursor: pointer;
+}
+
+.player-confirm-btn {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  padding: 10px 16px;
+  border-radius: 3px;
+  border: 1px solid #3d352966;
+  background: none;
+  color: #8a7e66;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.player-confirm-btn:hover {
+  border-color: #8a7e66;
+  color: #d4c8a8;
 }
 
 .deck-list {
