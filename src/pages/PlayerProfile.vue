@@ -125,6 +125,12 @@ function matchupRate(opp) {
   return opp.gamesShared > 0 ? opp.myWins / opp.gamesShared : 0
 }
 
+const ROLE_ORDER = { King: 0, Knight: 1, Goblin: 2, Lord: 3, 'Clone Lord': 4 }
+
+function sortByRole(players) {
+  return [...players].sort((a, b) => (ROLE_ORDER[a.role] ?? 99) - (ROLE_ORDER[b.role] ?? 99))
+}
+
 const ROLE_STYLE = {
   King: 'bg-amber-900/30 text-amber-300 border-amber-700/40',
   Knight: 'bg-green-900/30 text-green-300 border-green-700/40',
@@ -401,7 +407,7 @@ const recentGames = computed(() =>
           </div>
           <div class="flex flex-wrap gap-1.5">
             <span
-              v-for="p in game.players.filter(p => p.player !== name)"
+              v-for="p in sortByRole(game.players.filter(p => p.player !== name))"
               :key="p.player"
               class="text-xs font-body px-2 py-0.5 rounded border"
               :class="p.result === 'Win' ? 'bg-mtg-gold/10 border-mtg-gold/30 text-mtg-gold' : 'bg-mtg-dark/50 border-mtg-border/50 text-mtg-text-dim'"

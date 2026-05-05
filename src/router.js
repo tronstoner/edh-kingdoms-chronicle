@@ -3,7 +3,7 @@ import Dashboard from './pages/Dashboard.vue'
 import PlayerProfile from './pages/PlayerProfile.vue'
 
 export default createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior() {
     return { top: 0 }
   },

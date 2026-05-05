@@ -23,6 +23,12 @@ function onScroll() {
 onMounted(() => container.value?.addEventListener('scroll', onScroll))
 onUnmounted(() => container.value?.removeEventListener('scroll', onScroll))
 
+const ROLE_ORDER = { King: 0, Knight: 1, Goblin: 2, Lord: 3, 'Clone Lord': 4 }
+
+function sortByRole(players) {
+  return [...players].sort((a, b) => (ROLE_ORDER[a.role] ?? 99) - (ROLE_ORDER[b.role] ?? 99))
+}
+
 const ROLE_STYLE = {
   King: 'bg-amber-900/30 text-amber-300 border-amber-700/40',
   Knight: 'bg-green-900/30 text-green-300 border-green-700/40',
@@ -65,7 +71,7 @@ const PLAYER_COLORS = {
         <div class="text-sm text-mtg-text-dim mb-3 font-body italic">{{ game.date }}</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
           <div
-            v-for="p in game.players"
+            v-for="p in sortByRole(game.players)"
             :key="p.player"
             class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-base font-body border transition-colors"
             :class="p.result === 'Win' ? 'bg-mtg-gold/10 border-mtg-gold/30' : 'bg-mtg-dark/50 border-mtg-border/50'"
