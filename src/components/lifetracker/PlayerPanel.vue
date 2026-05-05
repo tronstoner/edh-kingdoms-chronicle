@@ -95,11 +95,11 @@ const panelClasses = computed(() => {
         <span class="badge-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
         <span class="badge-val">{{ seat.role }}</span>
       </div>
-      <div v-if="seat.roleNotes === 'Zombie'" class="badge" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+      <div v-if="seat.roleNotes === 'Zombie'" class="badge" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
         <span class="badge-icon">&#x1F9DF;</span>
         <span class="badge-val">Zombie</span>
       </div>
-      <div v-else-if="seat.roleNotes === 'Clone'" class="badge" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+      <div v-else-if="seat.roleNotes === 'Clone'" class="badge" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('clearUndead')">
         <span class="badge-icon">&#x1F9EC;</span>
         <span class="badge-val">Clone</span>
       </div>

@@ -11,6 +11,7 @@ import RolePicker from '../components/lifetracker/RolePicker.vue'
 import GameMenu from '../components/lifetracker/GameMenu.vue'
 import ExportModal from '../components/lifetracker/ExportModal.vue'
 import ConcludeModal from '../components/lifetracker/ConcludeModal.vue'
+import ConfirmDialog from '../components/lifetracker/ConfirmDialog.vue'
 
 const router = useRouter()
 const {
@@ -134,11 +135,20 @@ function handleZombify(seatIndex) {
   seat.roleNotes = 'Zombie'
 }
 
+const clearUndeadSeat = ref(null)
+
 function handleClearUndead(seatIndex) {
-  const seat = state.seats[seatIndex]
+  clearUndeadSeat.value = seatIndex
+}
+
+function confirmClearUndead() {
+  const seat = state.seats[clearUndeadSeat.value]
   seat.roleNotes = null
-  seat.isDead = false
-  seat.deathOverridden = true
+  clearUndeadSeat.value = null
+}
+
+function cancelClearUndead() {
+  clearUndeadSeat.value = null
 }
 
 function handleClone(seatIndex) {
@@ -276,6 +286,19 @@ function handleClearGames() {
         @select="handleRoleSelect"
         @close="rolePickerSeat = null"
       />
+
+      <!-- Clear undead confirm -->
+      <Teleport to="body">
+        <ConfirmDialog
+          v-if="clearUndeadSeat !== null"
+          :title="`Clear ${state.seats[clearUndeadSeat]?.roleNotes}`"
+          :message="`Remove ${state.seats[clearUndeadSeat]?.roleNotes} status from ${state.seats[clearUndeadSeat]?.player}?`"
+          confirm-label="Clear"
+          :danger="true"
+          @confirm="confirmClearUndead"
+          @cancel="cancelClearUndead"
+        />
+      </Teleport>
 
       <!-- Conclude modal -->
       <ConcludeModal
