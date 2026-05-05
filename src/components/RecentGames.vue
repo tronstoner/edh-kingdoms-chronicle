@@ -76,24 +76,24 @@ const PLAYER_COLORS = {
             class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-base font-body border transition-colors"
             :class="p.result === 'Win' ? 'bg-mtg-gold/10 border-mtg-gold/30' : 'bg-mtg-dark/50 border-mtg-border/50'"
           >
-            <router-link
-              :to="'/player/' + p.player"
-              class="font-beleren text-base truncate flex-1 no-underline hover:underline transition-colors"
-              :style="{ color: p.result === 'Win' ? PLAYER_COLORS[p.player] || '#c9a54e' : '#8a7e66' }"
-            >{{ p.player }}</router-link>
+            <div class="flex-1 min-w-0">
+              <router-link
+                :to="'/player/' + p.player"
+                class="font-beleren text-base truncate block no-underline hover:underline transition-colors"
+                :style="{ color: p.result === 'Win' ? PLAYER_COLORS[p.player] || '#c9a54e' : '#8a7e66' }"
+              >{{ p.player }}</router-link>
+              <div v-if="p.deck" class="text-sm text-mtg-text-dim/50 truncate" style="font-style: italic">{{ p.deck }}</div>
+            </div>
             <span
               class="text-xs px-1.5 py-0.5 rounded border font-body"
               :class="ROLE_STYLE[p.role] || 'bg-mtg-dark text-mtg-text-dim border-mtg-border'"
             >{{ p.role }}</span>
             <span v-if="[p.roleNotes, p.firstKO].includes('Zombie')" class="text-mtg-text-dim text-xs" title="Turned into Zombie by Lord">&#x1F9DF;</span>
             <span v-else-if="[p.roleNotes, p.firstKO].includes('Clone')" class="text-mtg-text-dim text-xs" title="Turned into Clone by Clone Lord">&#x1F9EC;</span>
-            <span v-if="p.firstKO === 'Suicide'" class="text-mtg-text-dim/60 text-xs" title="Self-elimination">&#x1F480;</span>
+            <span v-if="[p.roleNotes, p.firstKO].includes('Suicide')" class="text-mtg-text-dim/60 text-xs" title="Self-elimination">&#x1F480;</span>
             <span v-if="p.result === 'Win'" class="text-mtg-gold font-beleren text-sm">W</span>
             <span v-else-if="p.result === 'Loss'" class="text-mtg-text-dim/30 text-sm">L</span>
           </div>
-        </div>
-        <div v-if="game.players.some(p => p.deck)" class="mt-3 text-sm text-mtg-text-dim/60 font-body italic leading-relaxed">
-          {{ game.players.filter(p => p.deck).map(p => p.player + ': ' + p.deck).join(' · ') }}
         </div>
       </div>
       <div v-if="hasMore" class="text-center py-4 text-mtg-text-dim/50 font-body text-sm italic">
