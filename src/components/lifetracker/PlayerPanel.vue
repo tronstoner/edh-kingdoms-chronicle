@@ -69,14 +69,7 @@ const panelClasses = computed(() => {
 
     <!-- Player name & deck (tappable to edit) -->
     <div class="panel-header" @pointerdown.stop @click.stop="emit('openSeat')">
-      <div class="name-row">
-        <span
-          v-if="seat.role && seat.roleRevealed"
-          class="role-inline"
-          :style="{ color: roleColor }"
-        >{{ seat.role }}</span>
-        <span class="player-name">{{ seat.player || 'Empty Seat' }}</span>
-      </div>
+      <div class="player-name">{{ seat.player || 'Empty Seat' }}</div>
       <div v-if="seat.deck" class="deck-info">
         <span class="deck-name">{{ seat.deck.name }}</span>
         <span v-if="manaIcons.length" class="mana-icons">
@@ -89,6 +82,13 @@ const panelClasses = computed(() => {
     <div class="life-total" :class="{ 'life-danger': seat.life <= 10 && seat.life > 0, 'life-lethal': seat.life <= 0 }">
       {{ seat.life }}
     </div>
+
+    <!-- Role badge (left side) -->
+    <div
+      v-if="seat.role && seat.roleRevealed"
+      class="role-badge"
+      :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
+    >{{ seat.role }}</div>
 
     <!-- Non-zero counters (only shown when relevant) -->
     <div class="counter-badges" @pointerdown.stop @click.stop="emit('openCmdDamage')">
@@ -226,18 +226,16 @@ const panelClasses = computed(() => {
   color: #d95555;
 }
 
-.name-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 8px;
-}
-
-.role-inline {
+.role-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.55rem, 1.5vw, 0.7rem);
-  white-space: nowrap;
+  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  padding: 3px 6px;
+  border: 1px solid;
+  border-radius: 3px;
+  z-index: 4;
 }
 
 .counter-badges {
