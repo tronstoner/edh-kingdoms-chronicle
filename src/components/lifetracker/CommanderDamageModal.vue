@@ -101,6 +101,16 @@ function isFlash(key, side) {
   return flashSide.value && flashSide.value.key === key && flashSide.value.side === side
 }
 
+const closing = ref(false)
+
+function handleClose() {
+  closing.value = true
+  stop()
+  poisonCounter.stop()
+  taxCounter.stop()
+  setTimeout(() => emit('close'), 300)
+}
+
 onUnmounted(() => {
   stop()
   poisonCounter.stop()
@@ -112,8 +122,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="cmd-overlay" @click.self="emit('close')">
-    <div class="cmd-panel" @click.stop>
+  <div class="cmd-overlay" :class="{ closing }" @click.self="!closing && handleClose()">
+    <div class="cmd-panel" :class="{ closing }" @click.stop>
       <!-- Counters row -->
       <div class="counters-row">
         <div
@@ -261,6 +271,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 200;
+  transition: opacity 0.3s;
+}
+
+.cmd-overlay.closing {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .cmd-panel {
