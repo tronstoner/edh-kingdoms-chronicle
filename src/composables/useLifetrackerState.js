@@ -234,6 +234,12 @@ export function useLifetrackerState() {
 
   function clearCompletedGames() {
     localStorage.removeItem(LS_COMPLETED)
+    localStorage.removeItem(LS_LAST_SETUP)
+    localStorage.removeItem('edhlog-lt-session-guests')
+  }
+
+  function persistSetup() {
+    saveLastSetup(state)
   }
 
   function resumeOrNew() {
@@ -260,6 +266,7 @@ export function useLifetrackerState() {
     saveGame,
     getCompletedGames,
     clearCompletedGames,
+    persistSetup,
     resumeOrNew,
     discardSaved,
     checkDeath,

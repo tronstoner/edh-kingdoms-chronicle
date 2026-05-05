@@ -23,6 +23,7 @@ const {
   toggleDeathOverride,
   advanceTurn,
   saveGame,
+  persistSetup,
   getCompletedGames,
   clearCompletedGames,
   resumeOrNew,
@@ -75,6 +76,7 @@ function handleGameSeatSelect({ player, deck }) {
   state.seats[editingSeatInGame.value].player = player
   state.seats[editingSeatInGame.value].deck = deck
   editingSeatInGame.value = null
+  persistSetup()
 }
 
 // Commander damage overlay
