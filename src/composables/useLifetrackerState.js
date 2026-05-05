@@ -110,7 +110,19 @@ export function useLifetrackerState() {
 
   function newGame(playerCount, layoutId) {
     const fresh = createGame(playerCount, layoutId)
-    Object.assign(state, fresh)
+    // Clear seats array and repopulate to maintain reactivity
+    state.seats.splice(0, state.seats.length, ...fresh.seats)
+    state.id = fresh.id
+    state.phase = fresh.phase
+    state.playerCount = fresh.playerCount
+    state.layoutId = fresh.layoutId
+    state.turnCount = fresh.turnCount
+    state.startTime = fresh.startTime
+    if (fresh.concludeData) {
+      state.concludeData = fresh.concludeData
+    } else {
+      delete state.concludeData
+    }
   }
 
   function startGame() {
@@ -247,8 +259,7 @@ export function useLifetrackerState() {
 
   function discardSaved() {
     clearCurrent()
-    const fresh = createGame(5, '5-3t2b')
-    Object.assign(state, fresh)
+    newGame(5, '5-3t2b')
   }
 
   return {
