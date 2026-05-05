@@ -103,12 +103,15 @@ function handleCmdPoison(delta) {
 
 function handleToggleDead() {
   const seat = state.seats[cmdDamageTarget.value]
-  seat.isDead = !seat.isDead
-  if (seat.isDead && seat.deathTurn === null) {
-    seat.deathTurn = state.turnCount
-  }
-  if (!seat.isDead) {
+  if (seat.isDead) {
+    seat.isDead = false
     seat.deathOverridden = true
+  } else {
+    seat.isDead = true
+    seat.deathOverridden = false
+    if (seat.deathTurn === null) {
+      seat.deathTurn = state.turnCount
+    }
   }
 }
 
