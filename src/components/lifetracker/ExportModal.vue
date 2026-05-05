@@ -22,8 +22,12 @@ const gameEnd = ref(String(props.turnCount || ''))
 const gameNotes = ref('')
 const copied = ref(false)
 
+const ROLES = ['', 'King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
+const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
+
 // Editable overrides per seat
 const overrides = ref(props.seats.map(s => ({
+  role: s.role || '',
   result: s.isWinner ? 'Win' : 'Loss',
   roleNotes: s.roleNotes || '',
 })))
@@ -33,7 +37,7 @@ const exportText = computed(() => {
     const d = i === 0 ? date.value : ''
     const player = s.player || ''
     const deck = s.deck?.name || ''
-    const role = s.role || ''
+    const role = overrides.value[i].role
     const result = overrides.value[i].result
     const rNotes = overrides.value[i].roleNotes
     const fko = i === 0 ? firstKO.value : ''
@@ -83,17 +87,17 @@ function toggleResult(i) {
         <div v-for="(s, i) in seats" :key="i" class="export-row">
           <span class="export-player font-beleren">{{ s.player }}</span>
           <span class="export-deck">{{ s.deck?.name }}</span>
-          <span class="export-role" v-if="s.role">{{ s.role }}</span>
+          <select v-model="overrides[i].role" class="export-select">
+            <option v-for="r in ROLES" :key="r" :value="r">{{ r || '—' }}</option>
+          </select>
           <button
             class="export-result"
             :class="overrides[i].result === 'Win' ? 'result-win' : 'result-loss'"
             @click="toggleResult(i)"
           >{{ overrides[i].result }}</button>
-          <input
-            v-model="overrides[i].roleNotes"
-            class="export-notes"
-            placeholder="Role Notes"
-          />
+          <select v-model="overrides[i].roleNotes" class="export-select">
+            <option v-for="rn in ROLE_NOTES" :key="rn" :value="rn">{{ rn || '—' }}</option>
+          </select>
         </div>
       </div>
 
@@ -126,7 +130,7 @@ function toggleResult(i) {
               <td>{{ i === 0 ? date : '' }}</td>
               <td>{{ s.player }}</td>
               <td>{{ s.deck?.name }}</td>
-              <td>{{ s.role || '' }}</td>
+              <td>{{ overrides[i].role }}</td>
               <td>{{ overrides[i].result }}</td>
               <td>{{ overrides[i].roleNotes }}</td>
               <td>{{ i === 0 ? firstKO : '' }}</td>
@@ -241,10 +245,20 @@ function toggleResult(i) {
   white-space: nowrap;
 }
 
-.export-role {
-  font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
-  color: #8a7e66;
+.export-select {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid #3d3529;
+  background: #231f1a;
+  color: #d4c8a8;
+  outline: none;
+  cursor: pointer;
+}
+
+.export-select:focus {
+  border-color: #c9a54e66;
 }
 
 .export-result {
@@ -269,35 +283,6 @@ function toggleResult(i) {
   background: none;
 }
 
-.export-notes {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
-  padding: 4px 8px;
-  border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
-  outline: none;
-  width: 80px;
-}
-
-.export-fko {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
-  padding: 4px 8px;
-  border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
-  outline: none;
-  width: 40px;
-  text-align: center;
-}
-
-.export-fko:focus,
-.export-notes:focus {
-  border-color: #c9a54e66;
-}
 
 .export-game-fields {
   display: flex;
