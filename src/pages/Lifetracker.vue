@@ -1,9 +1,10 @@
 <script setup>
-import { ref, provide } from 'vue'
+import { ref, provide, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLifetrackerState } from '../composables/useLifetrackerState.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
 import TableLayout from '../components/lifetracker/TableLayout.vue'
+import DeckPicker from '../components/lifetracker/DeckPicker.vue'
 
 const router = useRouter()
 const {
@@ -47,6 +48,23 @@ function handleSetSeat(index, player, deck) {
   state.seats[index].player = player
   state.seats[index].deck = deck
 }
+
+// Mid-game seat editing
+const editingSeatInGame = ref(null)
+
+const usedPlayers = computed(() =>
+  state.seats.filter(s => s.player).map(s => s.player)
+)
+
+function handleOpenSeat(i) {
+  editingSeatInGame.value = i
+}
+
+function handleGameSeatSelect({ player, deck }) {
+  state.seats[editingSeatInGame.value].player = player
+  state.seats[editingSeatInGame.value].deck = deck
+  editingSeatInGame.value = null
+}
 </script>
 
 <template>
@@ -84,6 +102,18 @@ function handleSetSeat(index, player, deck) {
         :seats="state.seats"
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
+        @open-seat="handleOpenSeat"
+      />
+
+      <!-- Mid-game seat editor -->
+      <DeckPicker
+        v-if="editingSeatInGame !== null"
+        :seat-index="editingSeatInGame"
+        :current-player="state.seats[editingSeatInGame]?.player"
+        :current-deck="state.seats[editingSeatInGame]?.deck"
+        :used-players="usedPlayers"
+        @select="handleGameSeatSelect"
+        @close="editingSeatInGame = null"
       />
 
       <!-- Floating menu button -->
@@ -140,7 +170,8 @@ function handleSetSeat(index, player, deck) {
 
 .lt-btn {
   font-family: 'Cinzel', serif;
-  padding: 0.5rem 1.5rem;
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
   border-radius: 6px;
   border: 1px solid #3d3529;
   background: #231f1a;
@@ -172,18 +203,18 @@ function handleSetSeat(index, player, deck) {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
+  gap: 6px;
+  padding: 6px 16px;
   background: #231f1aee;
   border: 1px solid #3d3529;
   border-bottom: none;
-  border-radius: 8px 8px 0 0;
+  border-radius: 10px 10px 0 0;
   z-index: 120;
 }
 
 .lt-menu-btn {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,8 +222,9 @@ function handleSetSeat(index, player, deck) {
   border: none;
   color: #8a7e66;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: all 0.2s;
+  font-size: 1.3rem;
 }
 
 .lt-menu-btn:hover {
@@ -202,8 +234,8 @@ function handleSetSeat(index, player, deck) {
 
 .lt-turn {
   color: #c9a54e;
-  font-size: 0.9rem;
-  min-width: 32px;
+  font-size: 1.1rem;
+  min-width: 40px;
   text-align: center;
 }
 </style>

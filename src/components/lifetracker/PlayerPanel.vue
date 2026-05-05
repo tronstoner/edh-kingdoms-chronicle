@@ -10,7 +10,7 @@ const props = defineProps({
   rotated: Boolean,
 })
 
-const emit = defineEmits(['changeLife', 'override'])
+const emit = defineEmits(['changeLife', 'override', 'openSeat'])
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -52,8 +52,8 @@ const panelClasses = computed(() => {
     <!-- Mana color gradient background -->
     <div v-if="gradientOverlay" class="gradient-bg" :style="{ background: gradientOverlay }"></div>
 
-    <!-- Player name & deck -->
-    <div class="panel-header">
+    <!-- Player name & deck (tappable to edit) -->
+    <div class="panel-header" @pointerdown.stop @click.stop="emit('openSeat')">
       <div class="player-name">{{ seat.player || 'Empty Seat' }}</div>
       <div v-if="seat.deck" class="deck-info">
         <span class="deck-name">{{ seat.deck.name }}</span>

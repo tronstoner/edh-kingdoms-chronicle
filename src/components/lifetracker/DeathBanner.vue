@@ -29,8 +29,8 @@ const emit = defineEmits(['override'])
 
 .override-btn {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
-  padding: 4px 16px;
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  padding: 12px 28px;
   border-radius: 4px;
   border: 1px solid #8a7e6644;
   background: #231f1a;

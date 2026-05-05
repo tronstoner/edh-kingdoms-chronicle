@@ -129,9 +129,9 @@ function handleSeatSelect({ player, deck }) {
 
 .count-btn {
   font-family: 'Cinzel', serif;
-  font-size: 1.2rem;
-  width: 48px;
-  height: 48px;
+  font-size: 1.4rem;
+  width: 64px;
+  height: 64px;
   border-radius: 8px;
   border: 2px solid #3d3529;
   background: #231f1a;
@@ -160,7 +160,7 @@ function handleSeatSelect({ player, deck }) {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 16px 18px;
   border-radius: 8px;
   border: 1px solid #3d3529;
   background: #1a1612;
@@ -225,8 +225,8 @@ function handleSeatSelect({ player, deck }) {
 
 .start-btn {
   font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  padding: 10px 32px;
+  font-size: 1.2rem;
+  padding: 16px 40px;
   border-radius: 8px;
   border: 2px solid #c9a54e66;
   background: #c9a54e22;
@@ -247,8 +247,8 @@ function handleSeatSelect({ player, deck }) {
 
 .back-btn {
   font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
-  padding: 6px 16px;
+  font-size: 1rem;
+  padding: 12px 24px;
   border-radius: 6px;
   border: 1px solid #3d3529;
   background: none;

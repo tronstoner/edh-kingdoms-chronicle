@@ -49,8 +49,8 @@ const layouts = layoutsForCount(props.playerCount)
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 18px 24px;
   border-radius: 8px;
   border: 2px solid #3d3529;
   background: #231f1a;
@@ -80,8 +80,8 @@ const layouts = layoutsForCount(props.playerCount)
 }
 
 .diagram-dot {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #8a7e66;
 }

@@ -32,7 +32,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           :rotated="row.rotate === 180"
           @change-life="(delta) => emit('changeLife', seatIndex, delta)"
           @override="emit('override', seatIndex)"
-          @click="emit('openSeat', seatIndex)"
+          @open-seat="emit('openSeat', seatIndex)"
         />
       </div>
     </div>

@@ -168,9 +168,9 @@ function isUsed(name) {
 
 .player-btn {
   font-family: 'Cinzel', serif;
-  font-size: 0.85rem;
-  padding: 6px 14px;
-  border-radius: 6px;
+  font-size: 1rem;
+  padding: 12px 18px;
+  border-radius: 8px;
   border: 1px solid #3d3529;
   background: #1a1612;
   color: #d4c8a8;
@@ -196,20 +196,20 @@ function isUsed(name) {
 .deck-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .deck-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: 6px;
+  padding: 14px 16px;
+  border-radius: 8px;
   border: 1px solid #3d3529;
   background: #1a1612;
   color: #d4c8a8;
   font-family: 'EB Garamond', serif;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s;
   text-align: left;
@@ -249,8 +249,8 @@ function isUsed(name) {
 
 .temp-input {
   font-family: 'EB Garamond', serif;
-  font-size: 0.95rem;
-  padding: 8px 12px;
+  font-size: 1.1rem;
+  padding: 12px 16px;
   border-radius: 6px;
   border: 1px solid #3d3529;
   background: #1a1612;
@@ -269,8 +269,8 @@ function isUsed(name) {
 }
 
 .color-toggle {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid #3d3529;
   background: #1a1612;
@@ -288,7 +288,7 @@ function isUsed(name) {
 
 .confirm-btn {
   font-family: 'Cinzel', serif;
-  padding: 8px 16px;
+  padding: 14px 24px;
   border-radius: 6px;
   border: 1px solid #c9a54e66;
   background: #c9a54e22;
@@ -304,8 +304,8 @@ function isUsed(name) {
 
 .close-btn {
   font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
-  padding: 6px 16px;
+  font-size: 1rem;
+  padding: 12px 24px;
   border-radius: 6px;
   border: 1px solid #3d3529;
   background: none;

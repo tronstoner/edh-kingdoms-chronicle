@@ -2,6 +2,7 @@ import { reactive, watch } from 'vue'
 
 const LS_CURRENT = 'edhlog-lt-current'
 const LS_COMPLETED = 'edhlog-lt-completed'
+const LS_LAST_SETUP = 'edhlog-lt-last-setup'
 
 function createSeat(index, playerCount) {
   const commanderDamage = {}
@@ -29,16 +30,42 @@ function createSeat(index, playerCount) {
   }
 }
 
+function loadLastSetup() {
+  try {
+    const raw = localStorage.getItem(LS_LAST_SETUP)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+function saveLastSetup(state) {
+  const setup = {
+    playerCount: state.playerCount,
+    layoutId: state.layoutId,
+    seats: state.seats.map(s => ({
+      player: s.player,
+      deck: s.deck,
+    })),
+  }
+  localStorage.setItem(LS_LAST_SETUP, JSON.stringify(setup))
+}
+
 function createGame(playerCount, layoutId) {
+  const lastSetup = loadLastSetup()
   const seats = []
   for (let i = 0; i < playerCount; i++) {
-    seats.push(createSeat(i, playerCount))
+    const seat = createSeat(i, playerCount)
+    // Pre-fill from last setup if same player count
+    if (lastSetup && lastSetup.playerCount === playerCount && lastSetup.seats[i]) {
+      seat.player = lastSetup.seats[i].player
+      seat.deck = lastSetup.seats[i].deck
+    }
+    seats.push(seat)
   }
   return {
     id: Date.now().toString(36),
     phase: 'setup',
     playerCount,
-    layoutId,
+    layoutId: (lastSetup && lastSetup.playerCount === playerCount) ? lastSetup.layoutId : layoutId,
     turnCount: 0,
     startTime: new Date().toISOString(),
     seats,
@@ -89,6 +116,7 @@ export function useLifetrackerState() {
   }
 
   function startGame() {
+    saveLastSetup(state)
     state.phase = 'playing'
   }
 
