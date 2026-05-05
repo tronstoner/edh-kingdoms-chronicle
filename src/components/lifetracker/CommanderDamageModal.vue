@@ -296,6 +296,7 @@ onUnmounted(() => {
 .counters-row {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 
 .counter-box {
@@ -409,7 +410,7 @@ onUnmounted(() => {
 }
 
 .cmd-self {
-  opacity: 0.4;
+  border: 2px solid #d9555566;
 }
 
 /* Single commander tap zone */
