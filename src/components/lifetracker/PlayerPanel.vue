@@ -88,6 +88,8 @@ const panelClasses = computed(() => {
       v-if="seat.role && seat.roleRevealed"
       class="role-badge"
       :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
+      @pointerdown.stop
+      @click.stop="emit('openCmdDamage')"
     >
       <span class="role-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
       <span class="role-val">{{ seat.role }}</span>
