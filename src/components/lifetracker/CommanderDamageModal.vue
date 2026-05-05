@@ -17,6 +17,38 @@ const flashSide = ref(null)
 let flashTimeout = null
 const counterEls = ref({})
 
+// Poison counter interaction
+const poisonEl = ref(null)
+const poisonFlash = ref(null)
+let poisonFlashTimeout = null
+const poisonCounter = useLifeCounter((delta) => { emit('changePoison', delta) })
+
+function poisonDown(event) {
+  if (!poisonEl.value) return
+  const sign = poisonCounter.getSign(event, poisonEl.value, false)
+  poisonFlash.value = sign < 0 ? 'left' : 'right'
+  clearTimeout(poisonFlashTimeout)
+  poisonFlashTimeout = setTimeout(() => { poisonFlash.value = null }, 150)
+  poisonCounter.start(sign)
+}
+function poisonUp() { poisonCounter.stop() }
+
+// Tax counter interaction
+const taxEl = ref(null)
+const taxFlash = ref(null)
+let taxFlashTimeout = null
+const taxCounter = useLifeCounter((delta) => { emit('changeTax', delta) })
+
+function taxDown(event) {
+  if (!taxEl.value) return
+  const sign = taxCounter.getSign(event, taxEl.value, false)
+  taxFlash.value = sign < 0 ? 'left' : 'right'
+  clearTimeout(taxFlashTimeout)
+  taxFlashTimeout = setTimeout(() => { taxFlash.value = null }, 150)
+  taxCounter.start(sign)
+}
+function taxUp() { taxCounter.stop() }
+
 function setCounterEl(key, el) {
   if (el) counterEls.value[key] = el
 }
@@ -71,40 +103,49 @@ function isFlash(key, side) {
 
 onUnmounted(() => {
   stop()
+  poisonCounter.stop()
+  taxCounter.stop()
   clearTimeout(flashTimeout)
+  clearTimeout(poisonFlashTimeout)
+  clearTimeout(taxFlashTimeout)
 })
 </script>
 
 <template>
   <div class="cmd-overlay" @click.self="emit('close')">
     <div class="cmd-panel" @click.stop>
-      <!-- Player name -->
-      <div class="cmd-title font-beleren">{{ seat.player }}</div>
-
       <!-- Counters row -->
       <div class="counters-row">
-        <div class="counter-box">
-          <div class="counter-zone" @click="emit('changePoison', -1)">
-            <span class="zone-hint">&minus;</span>
-          </div>
+        <div
+          ref="poisonEl"
+          class="counter-box"
+          @contextmenu.prevent
+          @pointerdown.prevent="poisonDown"
+          @pointerup.prevent="poisonUp"
+          @pointercancel="poisonUp"
+          @pointerleave="poisonUp"
+        >
+          <div class="counter-flash counter-flash-left" :class="{ flash: poisonFlash === 'left' }"></div>
+          <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"></div>
           <div class="counter-center">
             <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
             <span class="counter-val" :class="{ active: seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poison }}</span>
           </div>
-          <div class="counter-zone" @click="emit('changePoison', 1)">
-            <span class="zone-hint">+</span>
-          </div>
         </div>
-        <div class="counter-box">
-          <div class="counter-zone" @click="emit('changeTax', -1)">
-            <span class="zone-hint">&minus;</span>
-          </div>
+        <div
+          ref="taxEl"
+          class="counter-box"
+          @contextmenu.prevent
+          @pointerdown.prevent="taxDown"
+          @pointerup.prevent="taxUp"
+          @pointercancel="taxUp"
+          @pointerleave="taxUp"
+        >
+          <div class="counter-flash counter-flash-left" :class="{ flash: taxFlash === 'left' }"></div>
+          <div class="counter-flash counter-flash-right" :class="{ flash: taxFlash === 'right' }"></div>
           <div class="counter-center">
             <i class="ms ms-commander counter-icon tax-icon"></i>
             <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
-          </div>
-          <div class="counter-zone" @click="emit('changeTax', 1)">
-            <span class="zone-hint">+</span>
           </div>
         </div>
       </div>
@@ -234,12 +275,6 @@ onUnmounted(() => {
   gap: 14px;
 }
 
-.cmd-title {
-  text-align: center;
-  font-size: 1.1rem;
-  color: #c9a54e;
-}
-
 /* Counters row */
 .counters-row {
   display: flex;
@@ -249,35 +284,45 @@ onUnmounted(() => {
 .counter-box {
   flex: 0 0 auto;
   width: 100px;
-  height: 120px;
+  height: clamp(100px, 22vw, 160px);
   background: #1a1612;
   border: 1px solid #3d3529;
   border-radius: 8px;
   overflow: hidden;
-  display: flex;
-  flex-direction: row;
+  position: relative;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  cursor: pointer;
 }
 
-.counter-zone {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+.counter-flash {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
   transition: background-color 0.15s;
 }
 
-.counter-zone:active {
-  background: #3d352933;
+.counter-flash-left {
+  left: 0;
 }
 
-.counter-zone .zone-hint {
-  font-family: 'Cinzel', serif;
-  font-size: 1.3rem;
-  color: #8a7e6633;
+.counter-flash-right {
+  right: 0;
+}
+
+.counter-flash-left.flash {
+  background: #6ab86a22;
+}
+
+.counter-flash-right.flash {
+  background: #d9555522;
 }
 
 .counter-center {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
