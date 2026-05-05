@@ -133,7 +133,7 @@ const panelClasses = computed(() => {
     </div>
 
     <!-- Life counter tap zones -->
-    <LifeCounter :rotated="rotated" @change-life="(delta) => emit('changeLife', delta)" />
+    <LifeCounter :rotated="rotated" :disabled="seat.isDead && !seat.deathOverridden" @change-life="(delta) => emit('changeLife', delta)" />
 
     <!-- Death banner -->
     <DeathBanner

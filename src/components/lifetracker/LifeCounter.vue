@@ -1,9 +1,14 @@
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { useLifeCounter } from '../../composables/useLifeCounter.js'
 
 const props = defineProps({
   rotated: Boolean,
+  disabled: Boolean,
+})
+
+watch(() => props.disabled, (val) => {
+  if (val) stop()
 })
 
 const emit = defineEmits(['changeLife'])
@@ -23,7 +28,7 @@ const flashSide = ref(null)
 let flashTimeout = null
 
 function handleDown(event) {
-  if (!el.value) return
+  if (!el.value || props.disabled) return
   const sign = getSign(event, el.value, props.rotated)
   flashSide.value = sign < 0 ? 'left' : 'right'
   clearTimeout(flashTimeout)
