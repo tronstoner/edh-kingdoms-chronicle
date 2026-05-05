@@ -112,7 +112,7 @@ const panelClasses = computed(() => {
     <div class="cmd-minimap" @pointerdown.stop @click.stop="emit('openCmdDamage')">
       <div v-for="(row, ri) in (rotated ? [...layoutRows].reverse() : layoutRows)" :key="ri" class="minimap-row">
         <div
-          v-for="si in row.seats"
+          v-for="si in (rotated ? [...row.seats].reverse() : row.seats)"
           :key="si"
           class="minimap-cell"
           :class="{ 'minimap-self': si === seat.index }"
