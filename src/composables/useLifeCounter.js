@@ -31,8 +31,8 @@ export function useLifeCounter(onChange) {
     clearInterval(tickTimer)
     holdTimer = null
     tickTimer = null
-    // Single tap: only fires if hold didn't trigger
-    if (!held) {
+    // Single tap: only fires if hold didn't trigger and we have an active sign
+    if (!held && currentSign !== 0) {
       onChange(currentSign)
       vibrate()
     }
