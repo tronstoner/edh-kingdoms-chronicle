@@ -112,6 +112,7 @@ onUnmounted(() => {
               <div
                 :ref="(el) => setCounterEl(String(si), el)"
                 class="cmd-tap-zone"
+                @contextmenu.prevent
                 @pointerdown.prevent="handleDown($event, si)"
                 @pointerup.prevent="handleUp"
                 @pointercancel="handleUp"
@@ -145,6 +146,7 @@ onUnmounted(() => {
               <div
                 :ref="(el) => setCounterEl(`${si}-1`, el)"
                 class="cmd-split-half"
+                @contextmenu.prevent
                 @pointerdown.prevent="handleDown($event, si, 1)"
                 @pointerup.prevent="handleUp"
                 @pointercancel="handleUp"
@@ -168,6 +170,7 @@ onUnmounted(() => {
               <div
                 :ref="(el) => setCounterEl(`${si}-2`, el)"
                 class="cmd-split-half"
+                @contextmenu.prevent
                 @pointerdown.prevent="handleDown($event, si, 2)"
                 @pointerup.prevent="handleUp"
                 @pointercancel="handleUp"
@@ -327,6 +330,8 @@ onUnmounted(() => {
   overflow: hidden;
   border-radius: 6px;
   touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
   background: #1a1612;
 }
 
@@ -471,7 +476,7 @@ onUnmounted(() => {
 /* Dual commander split seat */
 .cmd-seat-split {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .cmd-split-half {
@@ -484,7 +489,7 @@ onUnmounted(() => {
 }
 
 .cmd-split-divider {
-  width: 2px;
+  height: 2px;
   background: #3d352966;
   z-index: 2;
 }

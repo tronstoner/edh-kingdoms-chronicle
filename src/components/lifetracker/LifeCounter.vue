@@ -46,6 +46,7 @@ onUnmounted(() => {
   <div
     ref="el"
     class="life-counter"
+    @contextmenu.prevent
     @pointerdown.prevent="handleDown"
     @pointerup.prevent="handleUp"
     @pointercancel="handleUp"
@@ -70,6 +71,7 @@ onUnmounted(() => {
   display: flex;
   z-index: 1;
   touch-action: none;
+  -webkit-touch-callout: none;
   cursor: pointer;
 }
 

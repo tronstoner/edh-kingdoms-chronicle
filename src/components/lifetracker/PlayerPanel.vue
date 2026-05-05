@@ -141,6 +141,7 @@ const panelClasses = computed(() => {
   border: 2px solid transparent;
   touch-action: none;
   user-select: none;
+  -webkit-touch-callout: none;
   transition: border-color 0.3s;
   background-color: #1a1612;
 }
