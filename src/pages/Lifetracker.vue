@@ -5,6 +5,7 @@ import { useLifetrackerState } from '../composables/useLifetrackerState.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
 import TableLayout from '../components/lifetracker/TableLayout.vue'
 import DeckPicker from '../components/lifetracker/DeckPicker.vue'
+import CommanderDamageModal from '../components/lifetracker/CommanderDamageModal.vue'
 
 const router = useRouter()
 const {
@@ -12,6 +13,8 @@ const {
   newGame,
   startGame,
   changeLife,
+  changePoison,
+  changeCommanderDamage,
   toggleDeathOverride,
   advanceTurn,
   resumeOrNew,
@@ -65,6 +68,33 @@ function handleGameSeatSelect({ player, deck }) {
   state.seats[editingSeatInGame.value].deck = deck
   editingSeatInGame.value = null
 }
+
+// Poison
+function handleTogglePoison(i) {
+  state.seats[i].poisonEnabled = !state.seats[i].poisonEnabled
+}
+
+// Commander tax
+function handleChangeTax(i, delta) {
+  state.seats[i].commanderTax = Math.max(0, state.seats[i].commanderTax + delta)
+}
+
+// Commander damage
+const cmdDamageSeat = ref(null)
+
+function handleOpenCmdDamage(i) {
+  cmdDamageSeat.value = i
+}
+
+function handleCmdDamageChange(targetSeat, fromSeat, cmdIndex, delta) {
+  changeCommanderDamage(targetSeat, fromSeat, cmdIndex, delta)
+}
+
+function handleTogglePartners(targetSeat, fromSeat) {
+  const dmg = state.seats[targetSeat].commanderDamage[fromSeat]
+  dmg.hasPartners = !dmg.hasPartners
+  if (!dmg.hasPartners) dmg.cmd2 = 0
+}
 </script>
 
 <template>
@@ -103,6 +133,10 @@ function handleGameSeatSelect({ player, deck }) {
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
+        @change-poison="(i, delta) => changePoison(i, delta)"
+        @toggle-poison="handleTogglePoison"
+        @change-tax="handleChangeTax"
+        @open-cmd-damage="handleOpenCmdDamage"
       />
 
       <!-- Mid-game seat editor -->
@@ -114,6 +148,16 @@ function handleGameSeatSelect({ player, deck }) {
         :used-players="usedPlayers"
         @select="handleGameSeatSelect"
         @close="editingSeatInGame = null"
+      />
+
+      <!-- Commander damage modal -->
+      <CommanderDamageModal
+        v-if="cmdDamageSeat !== null"
+        :seat="state.seats[cmdDamageSeat]"
+        :all-seats="state.seats"
+        @change="handleCmdDamageChange"
+        @toggle-partners="handleTogglePartners"
+        @close="cmdDamageSeat = null"
       />
 
       <!-- Floating menu button -->

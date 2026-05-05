@@ -4,13 +4,14 @@ import { useManaGradient } from '../../composables/useManaGradient.js'
 import { colorIcons } from '../../mana.js'
 import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
+import PoisonCounter from './PoisonCounter.vue'
 
 const props = defineProps({
   seat: Object,
   rotated: Boolean,
 })
 
-const emit = defineEmits(['changeLife', 'override', 'openSeat'])
+const emit = defineEmits(['changeLife', 'override', 'openSeat', 'changePoison', 'togglePoison', 'changeTax', 'openCmdDamage'])
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -80,15 +81,25 @@ const panelClasses = computed(() => {
       ?
     </div>
 
-    <!-- Poison indicator -->
-    <div v-if="seat.poisonEnabled && seat.poison > 0" class="poison-badge">
-      {{ seat.poison }}
-    </div>
+    <!-- Poison counter -->
+    <PoisonCounter
+      :count="seat.poison"
+      :enabled="seat.poisonEnabled"
+      @change="(delta) => emit('changePoison', delta)"
+      @toggle="emit('togglePoison')"
+    />
 
     <!-- Commander tax -->
-    <div v-if="seat.commanderTax > 0" class="tax-badge">
-      Tax {{ seat.commanderTax }}
+    <div class="tax-wrap" @pointerdown.stop>
+      <button class="tax-btn" @click="emit('changeTax', -1)" :disabled="seat.commanderTax <= 0">&minus;</button>
+      <span class="tax-label">Tax {{ seat.commanderTax }}</span>
+      <button class="tax-btn" @click="emit('changeTax', 1)">+</button>
     </div>
+
+    <!-- Commander damage button -->
+    <button class="cmd-dmg-btn" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+      CMD
+    </button>
 
     <!-- Life counter tap zones -->
     <LifeCounter :rotated="rotated" @change-life="(delta) => emit('changeLife', delta)" />
@@ -121,7 +132,7 @@ const panelClasses = computed(() => {
 .gradient-bg {
   position: absolute;
   inset: 0;
-  opacity: 0.15;
+  opacity: 0.3;
   z-index: 0;
   pointer-events: none;
 }
@@ -205,31 +216,70 @@ const panelClasses = computed(() => {
   border-color: #3d3529;
 }
 
-.poison-badge {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.65rem, 1.5vw, 0.8rem);
-  color: #00733e;
-  background: #00733e22;
-  border: 1px solid #00733e44;
-  padding: 2px 8px;
-  border-radius: 4px;
-  z-index: 2;
-}
-
-.tax-badge {
+.tax-wrap {
   position: absolute;
   top: 8px;
   right: 8px;
-  font-family: 'EB Garamond', serif;
-  font-size: clamp(0.55rem, 1.3vw, 0.7rem);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 4;
+}
+
+.tax-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #3d352966;
+  background: #1a161288;
   color: #8a7e66;
-  background: #3d352944;
-  padding: 2px 6px;
-  border-radius: 4px;
-  z-index: 2;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.tax-btn:hover:not(:disabled) {
+  border-color: #8a7e66;
+  color: #d4c8a8;
+}
+
+.tax-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.tax-label {
+  font-family: 'EB Garamond', serif;
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+  color: #8a7e66;
+  min-width: 36px;
+  text-align: center;
+}
+
+.cmd-dmg-btn {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.6rem, 1.3vw, 0.75rem);
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #3d352966;
+  background: #1a161288;
+  color: #8a7e6688;
+  cursor: pointer;
+  z-index: 4;
+  transition: all 0.2s;
+}
+
+.cmd-dmg-btn:hover {
+  border-color: #8a7e66;
+  color: #d4c8a8;
 }
 
 .is-dead {
