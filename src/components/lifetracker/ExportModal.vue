@@ -10,22 +10,24 @@ const emit = defineEmits(['close', 'finish'])
 
 const now = new Date()
 const date = ref(`${now.getDate()}.${now.getMonth() + 1}.${now.getFullYear()}`)
+const gameEnd = ref(String(props.turnCount || ''))
 const gameNotes = ref('')
 const copied = ref(false)
+
+// Detect first KO from state
+const autoFirstKO = (() => {
+  const deaths = props.seats
+    .filter(s => s.deathTurn !== null)
+    .sort((a, b) => a.deathTurn - b.deathTurn)
+  return deaths.length > 0 ? deaths[0] : null
+})()
 
 // Editable overrides per seat
 const overrides = ref(props.seats.map(s => ({
   result: s.isWinner ? 'Win' : 'Loss',
   roleNotes: s.roleNotes || '',
+  firstKO: autoFirstKO && autoFirstKO.index === s.index ? String(autoFirstKO.deathTurn) : '',
 })))
-
-// Find first KO
-const firstKO = computed(() => {
-  const deaths = props.seats
-    .filter(s => s.deathTurn !== null)
-    .sort((a, b) => a.deathTurn - b.deathTurn)
-  return deaths.length > 0 ? deaths[0] : null
-})
 
 const exportText = computed(() => {
   const lines = props.seats.map((s, i) => {
@@ -34,10 +36,9 @@ const exportText = computed(() => {
     const deck = s.deck?.name || ''
     const role = s.role || ''
     const result = overrides.value[i].result
-    const isFirstKO = firstKO.value && firstKO.value.index === s.index
-    const fko = isFirstKO ? String(firstKO.value.deathTurn) : ''
+    const fko = overrides.value[i].firstKO
     const rNotes = overrides.value[i].roleNotes
-    const gEnd = i === 0 ? String(props.turnCount) : ''
+    const gEnd = i === 0 ? gameEnd.value : ''
     const gNotes = i === 0 ? gameNotes.value : ''
     return [d, player, deck, role, result, rNotes, fko, gEnd, gNotes].join('\t')
   })
@@ -94,6 +95,11 @@ function toggleResult(i) {
             class="export-notes"
             placeholder="Notes"
           />
+          <input
+            v-model="overrides[i].firstKO"
+            class="export-fko"
+            placeholder="KO"
+          />
         </div>
       </div>
 
@@ -101,7 +107,7 @@ function toggleResult(i) {
       <div class="export-game-fields">
         <div class="export-field">
           <label class="field-label">Game End</label>
-          <span class="field-value font-beleren">Turn {{ turnCount }}</span>
+          <input v-model="gameEnd" class="field-input field-input-narrow" />
         </div>
         <div class="export-field">
           <label class="field-label">Game Notes</label>
@@ -125,8 +131,8 @@ function toggleResult(i) {
               <td>{{ s.role || '' }}</td>
               <td>{{ overrides[i].result }}</td>
               <td>{{ overrides[i].roleNotes }}</td>
-              <td>{{ firstKO && firstKO.index === s.index ? firstKO.deathTurn : '' }}</td>
-              <td>{{ i === 0 ? turnCount : '' }}</td>
+              <td>{{ overrides[i].firstKO }}</td>
+              <td>{{ i === 0 ? gameEnd : '' }}</td>
               <td>{{ i === 0 ? gameNotes : '' }}</td>
             </tr>
           </tbody>
@@ -161,8 +167,8 @@ function toggleResult(i) {
   border: 2px solid #3d3529;
   border-radius: 3px;
   padding: 24px;
-  width: 92vw;
-  max-width: 700px;
+  width: 96vw;
+  max-width: 900px;
   max-height: 85vh;
   overflow-y: auto;
 }
@@ -193,10 +199,8 @@ function toggleResult(i) {
   width: 120px;
 }
 
-.field-value {
-  font-size: 1rem;
-  color: #d4c8a8;
-  padding: 8px 0;
+.field-input-narrow {
+  width: 60px;
 }
 
 .field-input:focus {
@@ -279,6 +283,20 @@ function toggleResult(i) {
   width: 80px;
 }
 
+.export-fko {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid #3d3529;
+  background: #231f1a;
+  color: #d4c8a8;
+  outline: none;
+  width: 40px;
+  text-align: center;
+}
+
+.export-fko:focus,
 .export-notes:focus {
   border-color: #c9a54e66;
 }
