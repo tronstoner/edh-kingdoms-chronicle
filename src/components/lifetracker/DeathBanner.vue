@@ -59,6 +59,7 @@ const emit = defineEmits([
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding-top: 50px;
   gap: 4px;
   z-index: 6;
 }
