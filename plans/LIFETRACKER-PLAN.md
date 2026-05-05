@@ -182,7 +182,7 @@ The `PlayerPanel` area is split into two tap zones (left = minus, right = plus):
 
 ## Export
 
-Formats game data matching the spreadsheet columns: `Date | Player | Deck | Role | Result | First KO | Role Notes`
+Formats game data matching the spreadsheet columns: `Date | Player | Deck | Role | Result | Role Notes | First KO | Game End | Game Notes`
 
 ```
 5/5/26   Ralf     Atraxa     King      Win

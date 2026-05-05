@@ -8,7 +8,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'finish'])
 
-const date = ref(new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' }))
+const now = new Date()
+const date = ref(`${now.getDate()}.${now.getMonth() + 1}.${now.getFullYear()}`)
+const gameEnd = ref('')
+const gameNotes = ref('')
 const copied = ref(false)
 
 // Editable overrides per seat
@@ -34,8 +37,10 @@ const exportText = computed(() => {
     const result = overrides.value[i].result
     const isFirstKO = firstKO.value && firstKO.value.index === s.index
     const fko = isFirstKO ? `Turn ${firstKO.value.deathTurn}` : ''
-    const notes = overrides.value[i].roleNotes
-    return [d, player, deck, role, result, fko, notes].join('\t')
+    const rNotes = overrides.value[i].roleNotes
+    const gEnd = i === 0 ? gameEnd.value : ''
+    const gNotes = i === 0 ? gameNotes.value : ''
+    return [d, player, deck, role, result, rNotes, fko, gEnd, gNotes].join('\t')
   })
   return lines.join('\n')
 })
@@ -90,6 +95,18 @@ function toggleResult(i) {
             class="export-notes"
             placeholder="Notes"
           />
+        </div>
+      </div>
+
+      <!-- Game fields -->
+      <div class="export-game-fields">
+        <div class="export-field">
+          <label class="field-label">Game End</label>
+          <input v-model="gameEnd" class="field-input" placeholder="e.g. Combat" />
+        </div>
+        <div class="export-field">
+          <label class="field-label">Game Notes</label>
+          <input v-model="gameNotes" class="field-input field-input-wide" placeholder="Optional notes" />
         </div>
       </div>
 
@@ -240,6 +257,16 @@ function toggleResult(i) {
 
 .export-notes:focus {
   border-color: #c9a54e66;
+}
+
+.export-game-fields {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.field-input-wide {
+  width: 200px;
 }
 
 .export-preview {
