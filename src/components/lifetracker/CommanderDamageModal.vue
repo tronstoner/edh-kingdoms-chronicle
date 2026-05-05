@@ -206,7 +206,7 @@ onUnmounted(() => {
                   <span class="zone-hint">+</span>
                 </div>
               </div>
-              <div class="cmd-seat-name-top">{{ allSeats[si]?.player }}</div>
+              <div class="cmd-seat-name-top" :class="{ 'has-dmg': cmd1From(si) > 0 }">{{ allSeats[si]?.player }}</div>
               <div class="cmd-seat-content">
                 <div class="cmd-seat-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
               </div>
@@ -547,7 +547,11 @@ onUnmounted(() => {
   text-align: center;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.7rem, 2.2vw, 1rem);
-  color: #d4c8a888;
+  color: #8a7e66;
+}
+
+.cmd-seat-name-top.has-dmg {
+  color: #d4c8a8;
   pointer-events: none;
   z-index: 3;
 }
