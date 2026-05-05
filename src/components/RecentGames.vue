@@ -74,7 +74,7 @@ const PLAYER_COLORS = {
             v-for="p in sortByRole(game.players)"
             :key="p.player"
             class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-base font-body border transition-colors"
-            :class="p.result === 'Win' ? 'bg-mtg-gold/10 border-mtg-gold/30' : 'bg-mtg-dark/50 border-mtg-border/50'"
+            :class="[p.roleNotes, p.firstKO].includes('Suicide') ? 'bg-red-900/20 border-red-700/40' : p.result === 'Win' ? 'bg-mtg-gold/10 border-mtg-gold/30' : 'bg-mtg-dark/50 border-mtg-border/50'"
           >
             <div class="flex-1 min-w-0">
               <router-link
