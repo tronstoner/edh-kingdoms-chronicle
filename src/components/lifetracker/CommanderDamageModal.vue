@@ -18,7 +18,7 @@ const ROLE_COLORS = {
   'Clone Lord': '#5ba3d9',
 }
 
-const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'revealRole', 'close'])
+const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'revealRole', 'toggleDead', 'close'])
 
 const activeSeat = ref(null)
 const activeCmd = ref(1)
@@ -171,6 +171,13 @@ onUnmounted(() => {
           <span class="counter-hint counter-hint-left">&minus;</span>
           <span class="counter-hint counter-hint-right">+</span>
         </div>
+        <!-- Death toggle -->
+        <button class="counter-box reveal-role-box" :class="{ 'death-active': seat.isDead }" @click="emit('toggleDead')">
+          <div class="counter-center">
+            <span class="reveal-icon">&#x1F480;</span>
+            <span class="reveal-label" :class="{ active: seat.isDead }">{{ seat.isDead ? 'Dead' : 'Alive' }}</span>
+          </div>
+        </button>
         <!-- Reveal role button -->
         <button class="counter-box reveal-role-box" @click="emit('revealRole')">
           <div class="counter-center">
@@ -322,6 +329,10 @@ onUnmounted(() => {
 
 .reveal-role-box {
   cursor: pointer;
+}
+
+.death-active {
+  border-color: #d95555;
 }
 
 .reveal-role-box:hover {

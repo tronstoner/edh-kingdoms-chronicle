@@ -101,6 +101,17 @@ function handleCmdPoison(delta) {
   changePoison(cmdDamageTarget.value, delta)
 }
 
+function handleToggleDead() {
+  const seat = state.seats[cmdDamageTarget.value]
+  seat.isDead = !seat.isDead
+  if (seat.isDead && seat.deathTurn === null) {
+    seat.deathTurn = state.turnCount
+  }
+  if (!seat.isDead) {
+    seat.deathOverridden = true
+  }
+}
+
 function handleCmdTax(delta) {
   state.seats[cmdDamageTarget.value].commanderTax = Math.max(0, state.seats[cmdDamageTarget.value].commanderTax + delta)
 }
@@ -274,6 +285,7 @@ function handleClearGames() {
         @change-poison="handleCmdPoison"
         @change-tax="handleCmdTax"
         @reveal-role="openRolePicker(cmdDamageTarget)"
+        @toggle-dead="handleToggleDead"
         @close="cmdDamageTarget = null"
       />
 
