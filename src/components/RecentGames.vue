@@ -55,7 +55,7 @@ const PLAYER_COLORS = {
       <span class="inline-flex items-center gap-1"><span class="bg-mtg-gold/10 border border-mtg-gold/30 rounded px-1.5 text-xs text-mtg-gold font-beleren">W</span> Victory</span>
       <span class="inline-flex items-center gap-1"><span class="bg-amber-900/30 text-amber-300 border border-amber-700/40 rounded px-1.5 text-xs">King</span></span>
       <span class="inline-flex items-center gap-1"><span class="bg-blue-900/30 text-blue-300 border border-blue-700/40 rounded px-1.5 text-xs">Knight</span></span>
-      <span class="inline-flex items-center gap-1"><span class="bg-red-900/30 text-red-300 border border-red-700/40 rounded px-1.5 text-xs">Goblin</span> (team of 2)</span>
+      <span class="inline-flex items-center gap-1"><span class="bg-red-900/30 text-red-300 border border-red-700/40 rounded px-1.5 text-xs">Goblin</span></span>
       <span class="inline-flex items-center gap-1"><span class="bg-purple-900/30 text-purple-300 border border-purple-700/40 rounded px-1.5 text-xs">Lord</span></span>
       <span class="inline-flex items-center gap-1">&#x1F9DF; Zombified</span>
       <span class="inline-flex items-center gap-1">&#x1F9EC; Cloned</span>

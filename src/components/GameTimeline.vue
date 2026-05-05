@@ -106,8 +106,7 @@ const chartOptions = {
     <!-- Legend -->
     <div class="mt-4 border-t border-mtg-border/50 pt-4">
       <p class="text-sm text-mtg-text-dim/70 font-body italic">
-        Each line tracks a player's total victories over time. Steeper climbs indicate hot streaks.
-        Flat sections mean the player wasn't present or didn't win. Goblin team victories count for both members.
+        Allied wins (King/Knight, Goblin team) count for both members.
       </p>
     </div>
   </ChartCard>

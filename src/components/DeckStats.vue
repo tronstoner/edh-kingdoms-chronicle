@@ -155,8 +155,5 @@ function pct(v) {
       </table>
     </div>
 
-    <p class="mt-4 text-sm text-mtg-text-dim/70 font-body italic">
-      Horizontal bars show win rate %. Bar color indicates the deck's pilot (see legend above). Table below includes mana colors and detailed stats.
-    </p>
   </ChartCard>
 </template>

@@ -119,7 +119,7 @@ function pct(v) {
         </span>
       </div>
       <p class="text-sm text-mtg-text-dim/70 font-body italic mt-2">
-        Stacked bars show victories (solid) and defeats (faded) per champion. Goblin wins always count for both team members.
+        Allied wins (King/Knight, Goblin team) count for both members.
       </p>
     </div>
   </ChartCard>

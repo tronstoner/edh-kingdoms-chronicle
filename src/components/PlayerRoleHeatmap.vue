@@ -86,7 +86,7 @@ function pct(v) {
         <span class="inline-flex items-center gap-1.5">
           <span class="w-8 h-4 rounded" style="background: rgba(201,165,78,0.58)"></span> 100%
         </span>
-        <span class="ml-auto italic">Goblin wins count for both team members</span>
+        <span class="ml-auto italic">Allied wins count for both members</span>
       </div>
     </div>
   </ChartCard>
