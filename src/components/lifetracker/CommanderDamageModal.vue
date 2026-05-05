@@ -1,31 +1,38 @@
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useLifeCounter } from '../../composables/useLifeCounter.js'
-import { colorIcons } from '../../mana.js'
+import { manaGradient } from '../../composables/useManaGradient.js'
 
 const props = defineProps({
   seat: Object,
-  fromSeat: Object,
-  fromIndex: Number,
+  allSeats: Array,
+  layoutRows: Array,
 })
 
-const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'togglePoison', 'changeTax', 'close'])
+const emit = defineEmits(['change', 'changePoison', 'togglePoison', 'changeTax', 'close'])
 
-const dmg = computed(() => props.seat.commanderDamage[props.fromIndex] || { cmd1: 0, cmd2: 0, hasPartners: false })
-const activeCmd = ref(1)
-
-const { start, stop, getSign } = useLifeCounter((delta) => {
-  emit('change', props.seat.index, props.fromIndex, activeCmd.value, delta)
-})
-
-const counterEl = ref(null)
+// Per-seat tap interaction
+const activeSeat = ref(null)
 const flashSide = ref(null)
 let flashTimeout = null
+const counterEls = ref({})
 
-function handleDown(event) {
-  if (!counterEl.value) return
-  const sign = getSign(event, counterEl.value, false)
-  flashSide.value = sign < 0 ? 'left' : 'right'
+function setCounterEl(si, el) {
+  if (el) counterEls.value[si] = el
+}
+
+const { start, stop, getSign } = useLifeCounter((delta) => {
+  if (activeSeat.value !== null) {
+    emit('change', props.seat.index, activeSeat.value, 1, delta)
+  }
+})
+
+function handleDown(event, si) {
+  const el = counterEls.value[si]
+  if (!el) return
+  activeSeat.value = si
+  const sign = getSign(event, el, false)
+  flashSide.value = { seat: si, side: sign < 0 ? 'left' : 'right' }
   clearTimeout(flashTimeout)
   flashTimeout = setTimeout(() => { flashSide.value = null }, 150)
   start(sign)
@@ -33,89 +40,80 @@ function handleDown(event) {
 
 function handleUp() {
   stop()
+  activeSeat.value = null
+}
+
+function seatGradStyle(si) {
+  const s = props.allSeats?.[si]
+  const grad = manaGradient(s?.deck?.colors || '')
+  if (grad === 'transparent') return {}
+  return { background: grad }
+}
+
+function dmgFrom(si) {
+  const d = props.seat.commanderDamage[si]
+  if (!d) return 0
+  return d.cmd1 + d.cmd2
+}
+
+function isFlash(si, side) {
+  return flashSide.value && flashSide.value.seat === si && flashSide.value.side === side
 }
 
 onUnmounted(() => {
   stop()
   clearTimeout(flashTimeout)
 })
-
-const fromMana = computed(() => colorIcons(props.fromSeat?.deck?.colors || ''))
-const currentDmg = computed(() => activeCmd.value === 2 ? dmg.value.cmd2 : dmg.value.cmd1)
-const totalDmg = computed(() => dmg.value.cmd1 + dmg.value.cmd2)
 </script>
 
 <template>
   <div class="cmd-overlay" @click.self="emit('close')">
-    <div class="cmd-panel">
-      <!-- From player info -->
-      <div class="cmd-from">
-        <span class="cmd-from-name font-beleren">{{ fromSeat?.player }}</span>
-        <span v-if="fromSeat?.deck" class="cmd-from-deck">
-          {{ fromSeat.deck.name }}
-          <span v-if="fromMana.length" class="cmd-from-mana">
-            <i v-for="c in fromMana" :key="c.label" :class="[c.icon, 'ms-cost']"></i>
-          </span>
-        </span>
-      </div>
+    <div class="cmd-panel" @click.stop>
+      <!-- Player name -->
+      <div class="cmd-title font-beleren">{{ seat.player }}</div>
 
-      <!-- Partner tab switcher -->
-      <div v-if="dmg.hasPartners" class="cmd-tabs">
-        <button class="cmd-tab" :class="{ active: activeCmd === 1 }" @click="activeCmd = 1">Cmdr 1</button>
-        <button class="cmd-tab" :class="{ active: activeCmd === 2 }" @click="activeCmd = 2">Cmdr 2</button>
-      </div>
-
-      <!-- Damage counter with tap zones -->
-      <div
-        ref="counterEl"
-        class="cmd-counter"
-        @pointerdown.prevent="handleDown"
-        @pointerup.prevent="handleUp"
-        @pointercancel="handleUp"
-        @pointerleave="handleUp"
-      >
-        <div class="cmd-zone cmd-zone-minus" :class="{ flash: flashSide === 'left' }">
-          <span class="cmd-zone-label">&minus;</span>
+      <!-- Counters row -->
+      <div class="counters-row">
+        <div class="counter-item">
+          <span class="counter-label">&#x2620; Poison</span>
+          <div class="counter-controls">
+            <button class="counter-btn" @click="emit('changePoison', -1)" :disabled="!seat.poisonEnabled || seat.poison <= 0">&minus;</button>
+            <span class="counter-val" :class="{ active: seat.poisonEnabled && seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poisonEnabled ? seat.poison : 'off' }}</span>
+            <button class="counter-btn" @click="seat.poisonEnabled ? emit('changePoison', 1) : emit('togglePoison')">{{ seat.poisonEnabled ? '+' : 'on' }}</button>
+          </div>
         </div>
-        <div class="cmd-total" :class="{ lethal: currentDmg >= 21 }">{{ currentDmg }}</div>
-        <div class="cmd-zone cmd-zone-plus" :class="{ flash: flashSide === 'right' }">
-          <span class="cmd-zone-label">+</span>
+        <div class="counter-item">
+          <span class="counter-label">Tax</span>
+          <div class="counter-controls">
+            <button class="counter-btn" @click="emit('changeTax', -1)" :disabled="seat.commanderTax <= 0">&minus;</button>
+            <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
+            <button class="counter-btn" @click="emit('changeTax', 1)">+</button>
+          </div>
         </div>
       </div>
 
-      <!-- Progress -->
-      <div class="cmd-progress">
-        <div class="cmd-bar-wrap">
-          <div class="cmd-bar" :class="{ danger: totalDmg >= 16 }" :style="{ width: Math.min(totalDmg / 21 * 100, 100) + '%' }"></div>
-        </div>
-        <span class="cmd-sum">{{ totalDmg }}/21</span>
-      </div>
-
-      <!-- Partner toggle -->
-      <button class="partner-btn" @click="emit('togglePartners', seat.index, fromIndex)">
-        {{ dmg.hasPartners ? 'Single Commander' : 'Partner Commanders' }}
-      </button>
-
-      <!-- Divider -->
-      <div class="cmd-divider"></div>
-
-      <!-- Poison -->
-      <div class="counter-row">
-        <span class="counter-label">&#x2620; Poison</span>
-        <div class="counter-controls">
-          <button class="counter-btn" @click="emit('changePoison', -1)" :disabled="!seat.poisonEnabled || seat.poison <= 0">&minus;</button>
-          <span class="counter-val" :class="{ 'counter-active': seat.poisonEnabled && seat.poison > 0 }">{{ seat.poisonEnabled ? seat.poison : 'off' }}</span>
-          <button class="counter-btn" @click="seat.poisonEnabled ? emit('changePoison', 1) : emit('togglePoison')">{{ seat.poisonEnabled ? '+' : 'on' }}</button>
-        </div>
-      </div>
-
-      <!-- Commander Tax -->
-      <div class="counter-row">
-        <span class="counter-label">Tax</span>
-        <div class="counter-controls">
-          <button class="counter-btn" @click="emit('changeTax', -1)" :disabled="seat.commanderTax <= 0">&minus;</button>
-          <span class="counter-val" :class="{ 'counter-active': seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
-          <button class="counter-btn" @click="emit('changeTax', 1)">+</button>
+      <!-- Enlarged table layout -->
+      <div class="cmd-layout">
+        <div v-for="(row, ri) in layoutRows" :key="ri" class="cmd-row">
+          <div
+            v-for="si in row.seats"
+            :key="si"
+            :ref="(el) => setCounterEl(si, el)"
+            class="cmd-seat"
+            :class="{ 'cmd-self': si === seat.index }"
+            @pointerdown.prevent="handleDown($event, si)"
+            @pointerup.prevent="handleUp"
+            @pointercancel="handleUp"
+            @pointerleave="handleUp"
+          >
+            <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
+            <div class="cmd-seat-flash cmd-flash-left" :class="{ flash: isFlash(si, 'left') }"></div>
+            <div class="cmd-seat-flash cmd-flash-right" :class="{ flash: isFlash(si, 'right') }"></div>
+            <div class="cmd-seat-content">
+              <div class="cmd-seat-name">{{ allSeats[si]?.player }}</div>
+              <div class="cmd-seat-dmg" :class="{ 'has-dmg': dmgFrom(si) > 0, lethal: dmgFrom(si) >= 21 }">{{ dmgFrom(si) }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -134,214 +132,51 @@ const totalDmg = computed(() => dmg.value.cmd1 + dmg.value.cmd2)
 }
 
 .cmd-panel {
-  background: #231f1a;
-  border: 2px solid #3d3529;
-  border-radius: 12px;
-  padding: 20px;
-  width: 75%;
-  max-width: 340px;
+  width: 88%;
+  max-width: 500px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 12px;
 }
 
-.cmd-from {
+.cmd-title {
   text-align: center;
-}
-
-.cmd-from-name {
   font-size: 1.1rem;
-  color: #d4c8a8;
-  display: block;
-}
-
-.cmd-from-deck {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
-  color: #8a7e66;
-  font-style: italic;
-}
-
-.cmd-from-mana {
-  display: inline-flex;
-  gap: 2px;
-  margin-left: 4px;
-  font-size: 0.7rem;
-}
-
-.cmd-tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.cmd-tab {
-  font-family: 'Cinzel', serif;
-  font-size: 0.85rem;
-  padding: 8px 20px;
-  border-radius: 6px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #8a7e66;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cmd-tab.active {
-  border-color: #c9a54e66;
-  background: #c9a54e11;
   color: #c9a54e;
 }
 
-.cmd-counter {
-  position: relative;
-  width: 100%;
-  height: 120px;
+/* Counters row */
+.counters-row {
   display: flex;
-  align-items: center;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #1a161288;
-  border: 1px solid #3d352966;
-  touch-action: none;
-  cursor: pointer;
-}
-
-.cmd-zone {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  transition: background-color 0.15s;
-}
-
-.cmd-zone-minus {
+  gap: 12px;
   justify-content: center;
-  padding-right: 10%;
 }
 
-.cmd-zone-plus {
-  justify-content: center;
-  padding-left: 10%;
-}
-
-.cmd-zone-label {
-  font-family: 'Cinzel', serif;
-  font-size: 1.8rem;
-  color: #8a7e6618;
-  pointer-events: none;
-  transition: color 0.15s;
-}
-
-.cmd-zone:active .cmd-zone-label,
-.flash .cmd-zone-label {
-  color: #8a7e6633;
-}
-
-.flash.cmd-zone-minus {
-  background: #d9555511;
-}
-
-.flash.cmd-zone-plus {
-  background: #6ab86a11;
-}
-
-.cmd-total {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  font-family: 'Cinzel', serif;
-  font-size: 3rem;
-  font-weight: 700;
-  color: #d4c8a8;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.cmd-total.lethal {
-  color: #d95555;
-}
-
-.cmd-progress {
+.counter-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-}
-
-.cmd-bar-wrap {
-  flex: 1;
-  height: 6px;
-  background: #3d352944;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.cmd-bar {
-  height: 100%;
-  background: #c9a54e;
-  border-radius: 3px;
-  transition: width 0.3s;
-}
-
-.cmd-bar.danger {
-  background: #d95555;
-}
-
-.cmd-sum {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
-  color: #8a7e66;
-  min-width: 40px;
-  text-align: right;
-}
-
-.partner-btn {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.9rem;
-  padding: 8px 18px;
-  border-radius: 6px;
-  border: 1px solid #3d352966;
-  background: none;
-  color: #8a7e66;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.partner-btn:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
-}
-
-.cmd-divider {
-  width: 100%;
-  height: 1px;
-  background: #3d352944;
-}
-
-.counter-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  background: #231f1a;
+  border: 1px solid #3d3529;
+  border-radius: 8px;
+  padding: 8px 12px;
 }
 
 .counter-label {
   font-family: 'Cinzel', serif;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #8a7e66;
 }
 
 .counter-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .counter-btn {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   border: 1px solid #3d3529;
   background: #1a1612;
@@ -367,13 +202,107 @@ const totalDmg = computed(() => dmg.value.cmd1 + dmg.value.cmd2)
 
 .counter-val {
   font-family: 'Cinzel', serif;
-  font-size: 1.1rem;
-  color: #8a7e66;
-  min-width: 32px;
+  font-size: 1rem;
+  color: #8a7e6666;
+  min-width: 28px;
   text-align: center;
 }
 
-.counter-active {
+.counter-val.active {
   color: #d4c8a8;
+}
+
+.counter-val.lethal {
+  color: #d95555;
+}
+
+/* Enlarged layout */
+.cmd-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cmd-row {
+  display: flex;
+  gap: 3px;
+}
+
+.cmd-seat {
+  flex: 1;
+  position: relative;
+  height: clamp(80px, 18vw, 120px);
+  overflow: hidden;
+  border-radius: 6px;
+  touch-action: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmd-seat-grad {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+}
+
+.cmd-self {
+  opacity: 0.4;
+}
+
+.cmd-seat-flash {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transition: background-color 0.15s;
+}
+
+.cmd-flash-left {
+  left: 0;
+}
+
+.cmd-flash-right {
+  right: 0;
+}
+
+.cmd-flash-left.flash {
+  background: #d9555511;
+}
+
+.cmd-flash-right.flash {
+  background: #6ab86a11;
+}
+
+.cmd-seat-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  pointer-events: none;
+}
+
+.cmd-seat-name {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.6rem, 2vw, 0.8rem);
+  color: #d4c8a888;
+  margin-bottom: 2px;
+}
+
+.cmd-seat-dmg {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  font-weight: 700;
+  color: #d4c8a844;
+}
+
+.cmd-seat-dmg.has-dmg {
+  color: #d4c8a8;
+}
+
+.cmd-seat-dmg.lethal {
+  color: #d95555;
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { useManaGradient } from '../../composables/useManaGradient.js'
+import { useManaGradient, manaGradient } from '../../composables/useManaGradient.js'
 import { colorIcons } from '../../mana.js'
 import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
@@ -13,6 +13,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage'])
+
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -42,6 +43,13 @@ function cmdDmgFrom(fromIndex) {
   const d = props.seat.commanderDamage[fromIndex]
   if (!d) return 0
   return d.cmd1 + d.cmd2
+}
+
+function seatGradientStyle(seatIndex) {
+  const s = props.allSeats?.[seatIndex]
+  const grad = manaGradient(s?.deck?.colors || '')
+  if (grad === 'transparent') return {}
+  return { background: grad }
 }
 
 const panelClasses = computed(() => {
@@ -94,17 +102,17 @@ const panelClasses = computed(() => {
       <span v-if="seat.commanderTax > 0" class="badge badge-tax">Tax {{ seat.commanderTax }}</span>
     </div>
 
-    <!-- Commander damage mini-map -->
-    <div class="cmd-minimap" @pointerdown.stop>
+    <!-- Commander damage mini-map (whole box tappable) -->
+    <div class="cmd-minimap" @pointerdown.stop @click.stop="emit('openCmdDamage')">
       <div v-for="(row, ri) in layoutRows" :key="ri" class="minimap-row">
         <div
           v-for="si in row.seats"
           :key="si"
           class="minimap-cell"
-          :class="{ 'minimap-self': si === seat.index, 'has-damage': si !== seat.index && cmdDmgFrom(si) > 0 }"
-          @click.stop="si !== seat.index && emit('openCmdDamage', si)"
+          :class="{ 'minimap-self': si === seat.index }"
         >
-          <template v-if="si !== seat.index">{{ cmdDmgFrom(si) || '' }}</template>
+          <div class="minimap-grad" :style="seatGradientStyle(si)"></div>
+          <span class="minimap-dmg" :class="{ 'has-damage': cmdDmgFrom(si) > 0 }">{{ cmdDmgFrom(si) || '' }}</span>
         </div>
       </div>
     </div>
@@ -255,47 +263,57 @@ const panelClasses = computed(() => {
 
 .cmd-minimap {
   position: absolute;
-  bottom: 8px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid #3d352966;
+  background: #1a161288;
+  cursor: pointer;
   z-index: 4;
 }
 
 .minimap-row {
   display: flex;
-  gap: 2px;
-  justify-content: center;
+  gap: 1px;
 }
 
 .minimap-cell {
-  width: clamp(20px, 5vw, 28px);
-  height: clamp(14px, 3vw, 20px);
+  position: relative;
+  width: clamp(22px, 6vw, 32px);
+  height: clamp(16px, 3.5vw, 22px);
   border-radius: 3px;
-  border: 1px solid #3d352966;
-  background: #1a161266;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.minimap-grad {
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  border-radius: 3px;
+}
+
+.minimap-self .minimap-grad {
+  opacity: 0.15;
+}
+
+.minimap-dmg {
+  position: relative;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.5rem, 1.2vw, 0.65rem);
-  color: #8a7e6666;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-size: clamp(0.5rem, 1.3vw, 0.7rem);
+  color: #d4c8a844;
+  z-index: 1;
 }
 
-.minimap-cell.has-damage {
+.minimap-dmg.has-damage {
   color: #d4c8a8;
-  border-color: #c9a54e44;
-  background: #c9a54e11;
-}
-
-.minimap-self {
-  background: #d4c8a822;
-  border-color: #d4c8a844;
-  cursor: default;
 }
 
 .is-dead {

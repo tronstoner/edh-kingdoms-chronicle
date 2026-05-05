@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useLifetrackerState } from '../composables/useLifetrackerState.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
 import TableLayout from '../components/lifetracker/TableLayout.vue'
+import { LAYOUTS } from '../composables/useTableLayouts.js'
 import DeckPicker from '../components/lifetracker/DeckPicker.vue'
 import CommanderDamageModal from '../components/lifetracker/CommanderDamageModal.vue'
 
@@ -71,26 +72,13 @@ function handleGameSeatSelect({ player, deck }) {
 
 // Commander damage overlay
 const cmdDamageTarget = ref(null)
-const cmdDamageFrom = ref(null)
 
-function handleOpenCmdDamage(targetSeat, fromSeat) {
-  cmdDamageTarget.value = targetSeat
-  cmdDamageFrom.value = fromSeat
-}
-
-function closeCmdDamage() {
-  cmdDamageTarget.value = null
-  cmdDamageFrom.value = null
+function handleOpenCmdDamage(seatIndex) {
+  cmdDamageTarget.value = seatIndex
 }
 
 function handleCmdDamageChange(targetSeat, fromSeat, cmdIndex, delta) {
   changeCommanderDamage(targetSeat, fromSeat, cmdIndex, delta)
-}
-
-function handleTogglePartners(targetSeat, fromSeat) {
-  const dmg = state.seats[targetSeat].commanderDamage[fromSeat]
-  dmg.hasPartners = !dmg.hasPartners
-  if (!dmg.hasPartners) dmg.cmd2 = 0
 }
 
 function handleCmdPoison(delta) {
@@ -160,14 +148,13 @@ function handleCmdTax(delta) {
       <CommanderDamageModal
         v-if="cmdDamageTarget !== null"
         :seat="state.seats[cmdDamageTarget]"
-        :from-seat="state.seats[cmdDamageFrom]"
-        :from-index="cmdDamageFrom"
+        :all-seats="state.seats"
+        :layout-rows="LAYOUTS[state.layoutId].rows"
         @change="handleCmdDamageChange"
-        @toggle-partners="handleTogglePartners"
         @change-poison="handleCmdPoison"
         @toggle-poison="handleCmdTogglePoison"
         @change-tax="handleCmdTax"
-        @close="closeCmdDamage"
+        @close="cmdDamageTarget = null"
       />
 
       <!-- Floating menu button -->

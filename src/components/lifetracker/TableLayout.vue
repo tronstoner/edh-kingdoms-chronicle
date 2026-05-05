@@ -35,7 +35,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @change-life="(delta) => emit('changeLife', seatIndex, delta)"
           @override="emit('override', seatIndex)"
           @open-seat="emit('openSeat', seatIndex)"
-          @open-cmd-damage="(fromSeat) => emit('openCmdDamage', seatIndex, fromSeat)"
+          @open-cmd-damage="emit('openCmdDamage', seatIndex)"
         />
       </div>
     </div>
