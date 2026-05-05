@@ -142,6 +142,70 @@ export function computeStreaks(games, playerName) {
   }
 }
 
+export function computeZombieStats(games, playerName) {
+  let timesZombified = 0
+  let timesCloned = 0
+  let playersRaised = 0
+
+  for (const game of games) {
+    const me = game.players.find(p => p.player === playerName)
+    if (!me) continue
+
+    const notes = (me.roleNotes || me.firstKO || '').trim()
+
+    // Was I turned into a zombie/clone? Exact match — "Clone Lord" is a role, not a conversion
+    if (notes === 'Zombie') timesZombified++
+    if (notes === 'Clone') timesCloned++
+
+    // Did I raise others? Lord makes Zombies, Clone Lord makes Clones
+    if (me.role === 'Lord' || me.role === 'Clone Lord') {
+      for (const p of game.players) {
+        if (p.player === playerName) continue
+        const pNotes = (p.roleNotes || p.firstKO || '').trim()
+        if (pNotes === 'Zombie' || pNotes === 'Clone') playersRaised++
+      }
+    }
+  }
+
+  return {
+    timesZombified,
+    timesCloned,
+    timesUndead: timesZombified + timesCloned,
+    playersRaised,
+  }
+}
+
+export function computeLordRecruitAnalysis(games) {
+  const byRole = {} // role -> { recruited, lordWins, lordLosses }
+
+  for (const game of games) {
+    const lord = game.players.find(p => p.role === 'Lord' || p.role === 'Clone Lord')
+    if (!lord) continue
+
+    const minions = game.players.filter(p => {
+      if (p.player === lord.player) return false
+      const notes = (p.roleNotes || p.firstKO || '').trim()
+      return notes === 'Zombie' || notes === 'Clone'
+    })
+
+    if (minions.length === 0) continue
+
+    const lordWon = lord.result === 'Win'
+
+    for (const m of minions) {
+      const role = m.role || 'Unknown'
+      if (!byRole[role]) byRole[role] = { role, recruited: 0, lordWins: 0, lordLosses: 0 }
+      byRole[role].recruited++
+      if (lordWon) byRole[role].lordWins++
+      else byRole[role].lordLosses++
+    }
+  }
+
+  return Object.values(byRole)
+    .map(r => ({ ...r, lordWinRate: r.recruited > 0 ? r.lordWins / r.recruited : 0 }))
+    .sort((a, b) => b.recruited - a.recruited)
+}
+
 export function computePlayerGames(games, playerName) {
   return games.filter(g => g.players.some(p => p.player === playerName))
 }

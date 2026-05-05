@@ -53,6 +53,7 @@ function parseGames(rows) {
         role: str(row['Role']) || null,
         result: str(row['Result']) || null,
         firstKO: str(row['First KO']) || null,
+        roleNotes: str(row['Role Notes']) || null,
       })
     }
   }

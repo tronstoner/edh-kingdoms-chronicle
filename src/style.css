@@ -27,6 +27,22 @@
   --color-mana-b: #150b00;
   --color-mana-r: #d3202a;
   --color-mana-g: #00733e;
+
+  /*
+   * Role colors — derived from MTG basic land types
+   * (roles are randomly assigned using basic lands)
+   *
+   * King:        White (Plains)  → golden #e2b84a (fits the crown theme)
+   * Knight:      Green (Forest)  → #6ab86a
+   * Goblin:      Red (Mountain)  → #d95555
+   * Zombie Lord: Black (Swamp)   → purple #a47be0 (default Lord color)
+   * Clone Lord:  Blue (Island)   → #5ba3d9 (rare, uses default Lord purple in most contexts)
+   */
+  --color-role-king: #e2b84a;
+  --color-role-knight: #6ab86a;
+  --color-role-goblin: #d95555;
+  --color-role-lord: #a47be0;
+  --color-role-clone-lord: #5ba3d9;
 }
 
 html {

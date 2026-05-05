@@ -137,7 +137,9 @@ function pct(v) {
                 ></i>
               </span>
             </td>
-            <td class="py-2.5 px-2" :style="{ color: OWNER_COLORS[d.owner] }">{{ d.owner }}</td>
+            <td class="py-2.5 px-2">
+              <router-link :to="'/player/' + d.owner" class="no-underline hover:underline transition-colors" :style="{ color: OWNER_COLORS[d.owner] }">{{ d.owner }}</router-link>
+            </td>
             <td class="text-right py-2.5 px-2 text-mtg-text-dim">{{ d.games }}</td>
             <td class="text-right py-2.5 px-2">
               <span class="text-mtg-gold">{{ d.wins }}</span><span class="text-mtg-text-dim">/</span><span class="text-mtg-text-dim">{{ d.losses }}</span>

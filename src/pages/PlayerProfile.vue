@@ -12,6 +12,7 @@ import {
   computeNemesis,
   computeBestPartner,
   computeStreaks,
+  computeZombieStats,
   computePlayerGames,
 } from '../analysis.js'
 
@@ -46,6 +47,10 @@ const partnerData = computed(() =>
 
 const streaks = computed(() =>
   computeStreaks(data.value.games, props.name)
+)
+
+const zombieStats = computed(() =>
+  computeZombieStats(data.value.games, props.name)
 )
 
 const ROLE_COLORS = {
@@ -176,6 +181,17 @@ const recentGames = computed(() =>
               <div class="text-2xl font-beleren text-mtg-gold">{{ streaks.last10Wins }}/{{ streaks.last10Total }}</div>
               <div class="text-sm text-mtg-text-dim">Last 10</div>
             </div>
+          </div>
+          <div v-if="zombieStats.timesUndead > 0 || zombieStats.playersRaised > 0" class="mt-4 pt-4 border-t border-mtg-border/50 flex flex-wrap gap-5 text-sm font-body">
+            <span v-if="zombieStats.timesZombified > 0" class="flex items-center gap-1.5 text-mtg-text-dim" title="Turned into Zombie by a Lord">
+              &#x1F9DF; Zombified {{ zombieStats.timesZombified }}x
+            </span>
+            <span v-if="zombieStats.timesCloned > 0" class="flex items-center gap-1.5 text-mtg-text-dim" title="Turned into Clone by a Clone Lord">
+              &#x1F9EC; Cloned {{ zombieStats.timesCloned }}x
+            </span>
+            <span v-if="zombieStats.playersRaised > 0" class="flex items-center gap-1.5 text-mtg-text-dim" title="Players raised as minions while playing Lord">
+              &#x2620;&#xFE0F; Raised {{ zombieStats.playersRaised }} minion{{ zombieStats.playersRaised !== 1 ? 's' : '' }}
+            </span>
           </div>
         </div>
 

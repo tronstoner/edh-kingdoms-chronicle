@@ -62,8 +62,22 @@ Understanding the game format is important for correct data interpretation:
 - **6 players**: adds a Clone Lord
 - **Goblins are a team** — they always win or lose together. Both get a "Win" in the data.
 - **Lord** plays alone. Killed players become Zombies/Clones (20 life, fight for the Lord). Lord wins by killing the King last (or everyone at once). If the Lord dies, all minions die too.
-- The `First KO` column tracks zombie/clone conversions and suicides.
+- The `First KO` column tracks suicides. The `Role Notes` column tracks zombie/clone conversions ("Zombie", "Clone") and role variants ("Clone Lord").
 - **Team partner analysis** detects Goblin pairs and King/Knight pairings from the game log.
+
+## Role Color System
+
+Roles are randomly assigned using MTG basic lands, so each role maps to a land color:
+
+| Role | Land | Color | Hex | Notes |
+|------|------|-------|-----|-------|
+| King | Plains (White) | Golden | `#e2b84a` | Crown theme, fits White's identity |
+| Knight | Forest (Green) | Green | `#6ab86a` | |
+| Goblin | Mountain (Red) | Red | `#d95555` | Always a team of 2 |
+| Zombie Lord | Swamp (Black) | Purple | `#a47be0` | Default "Lord" color in all contexts |
+| Clone Lord | Island (Blue) | Blue | `#5ba3d9` | Rare; uses default Lord purple in most UI |
+
+These are defined as CSS custom properties (`--color-role-*`) in `style.css`. Zombie/Clone conversion markers in the UI use neutral colors (not role colors) since they represent a state change, not a role.
 
 ## Conventions
 
