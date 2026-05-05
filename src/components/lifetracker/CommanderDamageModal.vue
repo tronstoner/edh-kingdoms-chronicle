@@ -174,7 +174,7 @@ onUnmounted(() => {
         <!-- Death toggle -->
         <button class="counter-box reveal-role-box" :class="{ 'death-active': seat.isDead }" @click="emit('toggleDead')">
           <div class="counter-center">
-            <span class="reveal-icon">&#x1F480;</span>
+            <span class="reveal-icon">{{ seat.isDead ? '💀' : '🌱' }}</span>
             <span class="reveal-label" :class="{ active: seat.isDead }">{{ seat.isDead ? 'Dead' : 'Alive' }}</span>
           </div>
         </button>
