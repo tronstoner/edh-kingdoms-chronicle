@@ -77,14 +77,23 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
   transition: background-color 0.15s;
+}
+
+.zone-minus {
+  justify-content: center;
+  padding-right: 10%;
+}
+
+.zone-plus {
+  justify-content: center;
+  padding-left: 10%;
 }
 
 .zone-label {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.5rem, 5vw, 2.5rem);
-  color: #8a7e6600;
+  color: #8a7e6618;
   transition: color 0.15s;
   pointer-events: none;
 }

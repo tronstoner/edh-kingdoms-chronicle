@@ -21,7 +21,7 @@ const players = computed(() => {
 const selectedPlayer = ref(props.currentPlayer || null)
 const showTempDeck = ref(false)
 const tempName = ref('')
-const tempColors = ref({ W: false, U: false, B: false, R: false, G: false })
+const tempColors = ref({ W: false, U: false, B: false, R: false, G: false, C: false })
 
 const decks = computed(() => {
   if (!data.value?.decks || !selectedPlayer.value) return []
@@ -111,7 +111,7 @@ function isUsed(name) {
           />
           <div class="color-toggles">
             <button
-              v-for="(icon, c) in { W: 'ms ms-w', U: 'ms ms-u', B: 'ms ms-b', R: 'ms ms-r', G: 'ms ms-g' }"
+              v-for="(icon, c) in { W: 'ms ms-w', U: 'ms ms-u', B: 'ms ms-b', R: 'ms ms-r', G: 'ms ms-g', C: 'ms ms-c' }"
               :key="c"
               class="color-toggle"
               :class="{ active: tempColors[c] }"

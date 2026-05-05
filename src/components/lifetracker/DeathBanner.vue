@@ -5,7 +5,7 @@ const emit = defineEmits(['override'])
 <template>
   <div class="death-banner" @click.stop>
     <span class="death-skull">&#x1F480;</span>
-    <button class="override-btn" @click="emit('override')">Override</button>
+    <button class="override-btn" @click="emit('override')">I'm not actually dead</button>
   </div>
 </template>
 

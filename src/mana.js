@@ -4,6 +4,7 @@ export const MANA_MAP = {
   B: { icon: 'ms ms-b', label: 'Black' },
   R: { icon: 'ms ms-r', label: 'Red' },
   G: { icon: 'ms ms-g', label: 'Green' },
+  C: { icon: 'ms ms-c', label: 'Colorless' },
 }
 
 export function colorIcons(colorStr) {
