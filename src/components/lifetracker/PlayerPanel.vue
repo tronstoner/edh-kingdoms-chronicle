@@ -88,7 +88,10 @@ const panelClasses = computed(() => {
       v-if="seat.role && seat.roleRevealed"
       class="role-badge"
       :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
-    >{{ seat.role }}</div>
+    >
+      <span class="badge-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
+      <span class="badge-val">{{ seat.role }}</span>
+    </div>
 
     <!-- Non-zero counters (only shown when relevant) -->
     <div class="counter-badges" @pointerdown.stop @click.stop="emit('openCmdDamage')">
@@ -230,8 +233,9 @@ const panelClasses = computed(() => {
   position: absolute;
   top: 8px;
   left: 8px;
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 3px 6px;
   border: 1px solid;
   border-radius: 3px;
