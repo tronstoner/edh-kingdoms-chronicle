@@ -224,6 +224,7 @@ export function useLifetrackerState() {
   }
 
   function saveGame() {
+    saveLastSetup(state)
     saveCompleted(JSON.parse(JSON.stringify(state)))
   }
 
