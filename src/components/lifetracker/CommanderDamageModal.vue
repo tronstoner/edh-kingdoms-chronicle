@@ -83,20 +83,20 @@ onUnmounted(() => {
 
       <!-- Counters row -->
       <div class="counters-row">
-        <div class="counter-item">
-          <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
-          <div class="counter-controls">
-            <button class="counter-btn" @click="emit('changePoison', -1)" :disabled="!seat.poisonEnabled || seat.poison <= 0">&minus;</button>
+        <div class="counter-box counter-poison" :class="{ disabled: !seat.poisonEnabled }" @click="!seat.poisonEnabled && emit('togglePoison')">
+          <div class="counter-icon-row"><i class="ms ms-ability-phyrexian counter-icon poison-icon"></i></div>
+          <div class="counter-tap">
+            <div class="counter-zone" @click.stop="seat.poisonEnabled && emit('changePoison', -1)"><span class="zone-hint">&minus;</span></div>
             <span class="counter-val" :class="{ active: seat.poisonEnabled && seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poisonEnabled ? seat.poison : 'off' }}</span>
-            <button class="counter-btn" @click="seat.poisonEnabled ? emit('changePoison', 1) : emit('togglePoison')">{{ seat.poisonEnabled ? '+' : 'on' }}</button>
+            <div class="counter-zone" @click.stop="seat.poisonEnabled ? emit('changePoison', 1) : emit('togglePoison')"><span class="zone-hint">+</span></div>
           </div>
         </div>
-        <div class="counter-item">
-          <i class="ms ms-commander counter-icon tax-icon"></i>
-          <div class="counter-controls">
-            <button class="counter-btn" @click="emit('changeTax', -1)" :disabled="seat.commanderTax <= 0">&minus;</button>
+        <div class="counter-box counter-tax">
+          <div class="counter-icon-row"><i class="ms ms-commander counter-icon tax-icon"></i></div>
+          <div class="counter-tap">
+            <div class="counter-zone" @click.stop="emit('changeTax', -1)"><span class="zone-hint">&minus;</span></div>
             <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
-            <button class="counter-btn" @click="emit('changeTax', 1)">+</button>
+            <div class="counter-zone" @click.stop="emit('changeTax', 1)"><span class="zone-hint">+</span></div>
           </div>
         </div>
       </div>
@@ -235,69 +235,73 @@ onUnmounted(() => {
 /* Counters row */
 .counters-row {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 6px;
 }
 
-.counter-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.counter-box {
+  flex: 1;
   background: #1a1612;
   border: 1px solid #3d3529;
   border-radius: 8px;
-  padding: 8px 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.counter-box.disabled {
+  opacity: 0.4;
+  cursor: pointer;
+}
+
+.counter-icon-row {
+  padding: 6px 0 2px;
 }
 
 .counter-icon {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
 .poison-icon {
-  color: #4ec88a;
+  color: #7de830;
 }
 
 .tax-icon {
   color: #e2c878;
 }
 
-.counter-controls {
+.counter-tap {
   display: flex;
+  width: 100%;
   align-items: center;
-  gap: 6px;
 }
 
-.counter-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: 1px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
-  font-family: 'Cinzel', serif;
-  font-size: 1.2rem;
-  cursor: pointer;
+.counter-zone {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: background-color 0.15s;
 }
 
-.counter-btn:hover:not(:disabled) {
-  border-color: #c9a54e66;
-  background: #c9a54e11;
+.counter-zone:active {
+  background: #3d352933;
 }
 
-.counter-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
+.counter-zone .zone-hint {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  color: #8a7e6633;
 }
 
 .counter-val {
   font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  color: #8a7e6666;
-  min-width: 28px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #8a7e6644;
+  min-width: 36px;
   text-align: center;
 }
 

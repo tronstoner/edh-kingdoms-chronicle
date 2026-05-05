@@ -251,9 +251,9 @@ const panelClasses = computed(() => {
 }
 
 .badge-poison {
-  color: #00733e;
-  background: #00733e22;
-  border-color: #00733e44;
+  color: #7de830;
+  background: #7de83022;
+  border-color: #7de83044;
 }
 
 .badge-tax {
