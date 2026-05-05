@@ -9,24 +9,23 @@ const props = defineProps({
 const emit = defineEmits(['close', 'finish'])
 
 const now = new Date()
-const date = ref(`${now.getDate()}.${now.getMonth() + 1}.${now.getFullYear()}`)
-const gameEnd = ref(String(props.turnCount || ''))
-const gameNotes = ref('')
-const copied = ref(false)
-
-// Detect first KO from state
+const date = ref(`${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`)
 const autoFirstKO = (() => {
   const deaths = props.seats
     .filter(s => s.deathTurn !== null)
     .sort((a, b) => a.deathTurn - b.deathTurn)
-  return deaths.length > 0 ? deaths[0] : null
+  return deaths.length > 0 ? String(deaths[0].deathTurn) : ''
 })()
+
+const firstKO = ref(autoFirstKO)
+const gameEnd = ref(String(props.turnCount || ''))
+const gameNotes = ref('')
+const copied = ref(false)
 
 // Editable overrides per seat
 const overrides = ref(props.seats.map(s => ({
   result: s.isWinner ? 'Win' : 'Loss',
   roleNotes: s.roleNotes || '',
-  firstKO: autoFirstKO && autoFirstKO.index === s.index ? String(autoFirstKO.deathTurn) : '',
 })))
 
 const exportText = computed(() => {
@@ -36,8 +35,8 @@ const exportText = computed(() => {
     const deck = s.deck?.name || ''
     const role = s.role || ''
     const result = overrides.value[i].result
-    const fko = overrides.value[i].firstKO
     const rNotes = overrides.value[i].roleNotes
+    const fko = i === 0 ? firstKO.value : ''
     const gEnd = i === 0 ? gameEnd.value : ''
     const gNotes = i === 0 ? gameNotes.value : ''
     return [d, player, deck, role, result, rNotes, fko, gEnd, gNotes].join('\t')
@@ -93,18 +92,17 @@ function toggleResult(i) {
           <input
             v-model="overrides[i].roleNotes"
             class="export-notes"
-            placeholder="Notes"
-          />
-          <input
-            v-model="overrides[i].firstKO"
-            class="export-fko"
-            placeholder="KO"
+            placeholder="Role Notes"
           />
         </div>
       </div>
 
       <!-- Game fields -->
       <div class="export-game-fields">
+        <div class="export-field">
+          <label class="field-label">First KO</label>
+          <input v-model="firstKO" class="field-input field-input-narrow" />
+        </div>
         <div class="export-field">
           <label class="field-label">Game End</label>
           <input v-model="gameEnd" class="field-input field-input-narrow" />
@@ -120,7 +118,7 @@ function toggleResult(i) {
         <table class="preview-table">
           <thead>
             <tr>
-              <th>Date</th><th>Player</th><th>Deck</th><th>Role</th><th>Result</th><th>Notes</th><th>1st KO</th><th>End</th><th>Game Notes</th>
+              <th>Date</th><th>Player</th><th>Deck</th><th>Role</th><th>Result</th><th>Role Notes</th><th>1st KO</th><th>End</th><th>Game Notes</th>
             </tr>
           </thead>
           <tbody>
@@ -131,7 +129,7 @@ function toggleResult(i) {
               <td>{{ s.role || '' }}</td>
               <td>{{ overrides[i].result }}</td>
               <td>{{ overrides[i].roleNotes }}</td>
-              <td>{{ overrides[i].firstKO }}</td>
+              <td>{{ i === 0 ? firstKO : '' }}</td>
               <td>{{ i === 0 ? gameEnd : '' }}</td>
               <td>{{ i === 0 ? gameNotes : '' }}</td>
             </tr>
