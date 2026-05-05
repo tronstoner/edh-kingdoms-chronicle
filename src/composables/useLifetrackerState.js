@@ -225,10 +225,6 @@ export function useLifetrackerState() {
 
   function saveGame() {
     saveCompleted(JSON.parse(JSON.stringify(state)))
-    // Reset to setup for next game, keeping player/deck setup via memory
-    const count = state.playerCount
-    const layout = state.layoutId
-    newGame(count, layout)
   }
 
   function getCompletedGames() {
