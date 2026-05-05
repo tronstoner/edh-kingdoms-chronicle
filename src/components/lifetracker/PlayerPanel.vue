@@ -330,9 +330,6 @@ const panelClasses = computed(() => {
   color: #d4c8a8;
 }
 
-.is-dead {
-  opacity: 0.5;
-}
 
 .is-winner {
   border-color: #c9a54e !important;
