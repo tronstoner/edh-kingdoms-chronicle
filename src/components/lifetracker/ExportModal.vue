@@ -264,7 +264,9 @@ function toggleResult(i) {
 .export-result {
   font-family: 'Cinzel', serif;
   font-size: 0.8rem;
-  padding: 4px 12px;
+  padding: 4px 0;
+  width: 50px;
+  text-align: center;
   border-radius: 3px;
   border: 1px solid;
   cursor: pointer;
