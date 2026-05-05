@@ -84,20 +84,22 @@ const panelClasses = computed(() => {
     </div>
 
     <!-- Role + status badges (left side) -->
-    <div class="left-badges" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+    <div class="left-badges">
       <div
         v-if="seat.role && seat.roleRevealed"
         class="badge"
         :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
+        @pointerdown.stop
+        @click.stop="emit('revealRole')"
       >
         <span class="badge-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
         <span class="badge-val">{{ seat.role }}</span>
       </div>
-      <div v-if="seat.roleNotes === 'Zombie'" class="badge" style="color: #a47be0; border-color: #a47be0aa">
+      <div v-if="seat.roleNotes === 'Zombie'" class="badge" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('openCmdDamage')">
         <span class="badge-icon">&#x1F9DF;</span>
         <span class="badge-val">Zombie</span>
       </div>
-      <div v-else-if="seat.roleNotes === 'Clone'" class="badge" style="color: #5ba3d9; border-color: #5ba3d9aa">
+      <div v-else-if="seat.roleNotes === 'Clone'" class="badge" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('openCmdDamage')">
         <span class="badge-icon">&#x1F9EC;</span>
         <span class="badge-val">Clone</span>
       </div>
