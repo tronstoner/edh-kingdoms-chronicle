@@ -206,12 +206,10 @@ function handleClearGames() {
     <!-- Setup phase -->
     <div v-else-if="state.phase === 'setup'" class="lt-setup">
       <SetupScreen
-        :seats="state.seats"
         :player-count="state.playerCount"
         :layout-id="state.layoutId"
         @set-count="handleSetCount"
         @set-layout="handleSetLayout"
-        @set-seat="handleSetSeat"
         @start="startGame"
         @export="handleShowExport"
         @back="handleBack"

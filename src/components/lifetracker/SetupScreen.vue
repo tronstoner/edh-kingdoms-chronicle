@@ -1,37 +1,20 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { defaultLayout } from '../../composables/useTableLayouts.js'
 import LayoutPicker from './LayoutPicker.vue'
-import DeckPicker from './DeckPicker.vue'
 
 const props = defineProps({
-  seats: Array,
   playerCount: Number,
   layoutId: String,
 })
 
-const emit = defineEmits(['setCount', 'setLayout', 'setSeat', 'start', 'export', 'back'])
-
-const editingSeat = ref(null)
+const emit = defineEmits(['setCount', 'setLayout', 'start', 'export', 'back'])
 
 const selectedCount = computed(() => props.playerCount)
 const selectedLayout = computed(() => props.layoutId)
 
-const usedPlayers = computed(() =>
-  props.seats.filter(s => s.player).map(s => s.player)
-)
-
-const allSeatsReady = computed(() =>
-  props.seats.every(s => s.player && s.deck)
-)
-
 function handleCountChange(count) {
   emit('setCount', count, defaultLayout(count).id)
-}
-
-function handleSeatSelect({ player, deck }) {
-  emit('setSeat', editingSeat.value, player, deck)
-  editingSeat.value = null
 }
 </script>
 
@@ -61,48 +44,12 @@ function handleSeatSelect({ player, deck }) {
       @select="(id) => emit('setLayout', id)"
     />
 
-    <!-- Seats -->
-    <div class="section-label mt-5">Seats</div>
-    <div class="seat-list">
-      <button
-        v-for="(seat, i) in seats"
-        :key="i"
-        class="seat-btn"
-        :class="{ filled: seat.player }"
-        @click="editingSeat = i"
-      >
-        <span class="seat-num">{{ i + 1 }}</span>
-        <span v-if="seat.player" class="seat-info">
-          <span class="seat-player">{{ seat.player }}</span>
-          <span v-if="seat.deck" class="seat-deck">{{ seat.deck.name }}</span>
-        </span>
-        <span v-else class="seat-empty">Tap to assign</span>
-      </button>
-    </div>
-
     <!-- Actions -->
     <div class="actions mt-6">
-      <button
-        class="start-btn"
-        :disabled="!allSeatsReady"
-        @click="emit('start')"
-      >
-        Start Game
-      </button>
+      <button class="start-btn" @click="emit('start')">Start Game</button>
       <button class="back-btn" @click="emit('export')">Export Session</button>
       <button class="back-btn" @click="emit('back')">Back to Dashboard</button>
     </div>
-
-    <!-- Deck picker modal -->
-    <DeckPicker
-      v-if="editingSeat !== null"
-      :seat-index="editingSeat"
-      :current-player="seats[editingSeat]?.player"
-      :current-deck="seats[editingSeat]?.deck"
-      :used-players="usedPlayers"
-      @select="handleSeatSelect"
-      @close="editingSeat = null"
-    />
   </div>
 </template>
 
@@ -151,72 +98,6 @@ function handleSeatSelect({ player, deck }) {
   color: #c9a54e;
 }
 
-.seat-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.seat-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
-  border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-}
-
-.seat-btn:hover {
-  border-color: #8a7e66;
-}
-
-.seat-btn.filled {
-  border-color: #3d352966;
-  background: #231f1a;
-}
-
-.seat-num {
-  font-family: 'Cinzel', serif;
-  font-size: 0.9rem;
-  color: #8a7e66;
-  width: 20px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.seat-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.seat-player {
-  font-family: 'Cinzel', serif;
-  font-size: 0.9rem;
-  color: #d4c8a8;
-}
-
-.seat-deck {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.8rem;
-  color: #8a7e66;
-  font-style: italic;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.seat-empty {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
-  color: #8a7e6666;
-  font-style: italic;
-}
-
 .actions {
   display: flex;
   flex-direction: column;
@@ -236,14 +117,9 @@ function handleSeatSelect({ player, deck }) {
   transition: all 0.2s;
 }
 
-.start-btn:hover:not(:disabled) {
+.start-btn:hover {
   background: #c9a54e33;
   border-color: #c9a54e;
-}
-
-.start-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
 
 .back-btn {

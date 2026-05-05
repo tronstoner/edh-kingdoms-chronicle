@@ -2,6 +2,8 @@
 import { ref, computed, inject } from 'vue'
 import { colorIcons } from '../../mana.js'
 
+const LS_GUESTS = 'edhlog-lt-session-guests'
+
 const props = defineProps({
   seatIndex: Number,
   currentPlayer: String,
@@ -13,30 +15,71 @@ const emit = defineEmits(['select', 'close'])
 
 const data = inject('data')
 
-const players = computed(() => {
+// Load session guests from localStorage
+function loadGuests() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_GUESTS) || '[]')
+  } catch { return [] }
+}
+
+function saveGuests(guests) {
+  localStorage.setItem(LS_GUESTS, JSON.stringify(guests))
+}
+
+const sessionGuests = ref(loadGuests())
+
+const registeredPlayers = computed(() => {
   if (!data.value?.players) return []
   return data.value.players.map(p => p.name)
 })
 
+const allPlayers = computed(() => {
+  const names = [...registeredPlayers.value]
+  for (const g of sessionGuests.value) {
+    if (!names.includes(g.name)) names.push(g.name)
+  }
+  return names
+})
+
 const selectedPlayer = ref(props.currentPlayer || null)
+const showAddGuest = ref(false)
+const guestName = ref('')
 const showTempDeck = ref(false)
 const tempName = ref('')
 const tempColors = ref({ W: false, U: false, B: false, R: false, G: false, C: false })
 
 const decks = computed(() => {
-  if (!data.value?.decks || !selectedPlayer.value) return []
-  return data.value.decks.filter(d => d.owner === selectedPlayer.value)
+  if (!selectedPlayer.value) return []
+  // Registered decks
+  const registered = data.value?.decks?.filter(d => d.owner === selectedPlayer.value) || []
+  // Session guest decks
+  const guest = sessionGuests.value.find(g => g.name === selectedPlayer.value)
+  const guestDecks = guest?.decks || []
+  return [...registered, ...guestDecks]
 })
 
 function selectPlayer(name) {
   selectedPlayer.value = name
   showTempDeck.value = false
+  showAddGuest.value = false
+}
+
+function addGuest() {
+  const name = guestName.value.trim()
+  if (!name) return
+  if (!sessionGuests.value.find(g => g.name === name)) {
+    sessionGuests.value.push({ name, decks: [] })
+    saveGuests(sessionGuests.value)
+  }
+  selectedPlayer.value = name
+  guestName.value = ''
+  showAddGuest.value = false
 }
 
 function selectDeck(deck) {
   emit('select', {
     player: selectedPlayer.value,
-    deck: { name: deck.name, colors: deck.colors, isTemp: false },
+    deck: { name: deck.name, colors: deck.colors, isTemp: !!deck.isTemp },
   })
 }
 
@@ -49,14 +92,28 @@ function confirmTempDeck() {
     .filter(([, v]) => v)
     .map(([k]) => k)
     .join('')
-  emit('select', {
-    player: selectedPlayer.value,
-    deck: { name: tempName.value || 'Unknown Deck', colors, isTemp: true },
-  })
+  const deck = { name: tempName.value || 'Unknown Deck', colors, isTemp: true }
+  // Save to session guest's deck list
+  const guest = sessionGuests.value.find(g => g.name === selectedPlayer.value)
+  if (guest) {
+    if (!guest.decks.find(d => d.name === deck.name)) {
+      guest.decks.push(deck)
+      saveGuests(sessionGuests.value)
+    }
+  } else if (!registeredPlayers.value.includes(selectedPlayer.value)) {
+    // Auto-create guest entry
+    sessionGuests.value.push({ name: selectedPlayer.value, decks: [deck] })
+    saveGuests(sessionGuests.value)
+  }
+  emit('select', { player: selectedPlayer.value, deck })
 }
 
 function isUsed(name) {
   return props.usedPlayers.includes(name) && name !== props.currentPlayer
+}
+
+function isGuest(name) {
+  return !registeredPlayers.value.includes(name)
 }
 </script>
 
@@ -69,15 +126,29 @@ function isUsed(name) {
       <div class="section-label">Player</div>
       <div class="player-grid">
         <button
-          v-for="name in players"
+          v-for="name in allPlayers"
           :key="name"
           class="player-btn"
-          :class="{ active: selectedPlayer === name, used: isUsed(name) }"
+          :class="{ active: selectedPlayer === name, used: isUsed(name), guest: isGuest(name) }"
           :disabled="isUsed(name)"
           @click="selectPlayer(name)"
         >
           {{ name }}
         </button>
+        <button class="player-btn player-btn-add" @click="showAddGuest = !showAddGuest">
+          {{ showAddGuest ? '✕' : '+ Guest' }}
+        </button>
+      </div>
+
+      <!-- Add guest -->
+      <div v-if="showAddGuest" class="add-guest mt-3">
+        <input
+          v-model="guestName"
+          placeholder="Guest name"
+          class="guest-input"
+          @keyup.enter="addGuest"
+        />
+        <button class="guest-add-btn" @click="addGuest">Add</button>
       </div>
 
       <!-- Deck selection -->
@@ -98,7 +169,7 @@ function isUsed(name) {
 
           <!-- Temp deck toggle -->
           <button class="deck-btn deck-btn-temp" @click="showTempDeck = !showTempDeck">
-            {{ showTempDeck ? 'Cancel' : '+ Temporary Deck' }}
+            {{ showTempDeck ? 'Cancel' : '+ New Deck' }}
           </button>
         </div>
 
@@ -191,6 +262,47 @@ function isUsed(name) {
 .player-btn.used {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.player-btn.guest {
+  border-style: dashed;
+}
+
+.player-btn-add {
+  color: #8a7e66;
+  border-style: dashed;
+}
+
+.add-guest {
+  display: flex;
+  gap: 8px;
+}
+
+.guest-input {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.1rem;
+  padding: 10px 14px;
+  border-radius: 3px;
+  border: 1px solid #3d3529;
+  background: #1a1612;
+  color: #d4c8a8;
+  outline: none;
+  flex: 1;
+}
+
+.guest-input:focus {
+  border-color: #c9a54e66;
+}
+
+.guest-add-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  padding: 10px 18px;
+  border-radius: 3px;
+  border: 1px solid #c9a54e66;
+  background: #c9a54e22;
+  color: #c9a54e;
+  cursor: pointer;
 }
 
 .deck-list {
