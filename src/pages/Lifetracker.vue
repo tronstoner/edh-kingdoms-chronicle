@@ -122,6 +122,7 @@ function handleRoleSelect(role) {
     seat.life = 50
   }
   rolePickerSeat.value = null
+  cmdDamageTarget.value = null
 }
 
 // Death actions
