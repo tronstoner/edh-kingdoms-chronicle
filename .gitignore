@@ -10,6 +10,7 @@
 !plans/**
 !README.md
 !index.html
+!lifetracker.html
 !package.json
 !package-lock.json
 !vite.config.js

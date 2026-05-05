@@ -73,7 +73,7 @@ function handleSignOut() {
           </svg>
           <h1 class="text-2xl font-beleren text-mtg-gold tracking-wide">EDH Kingdoms Chronicle</h1>
         </router-link>
-        <span class="text-sm text-mtg-text-dim ml-auto hidden sm:inline font-body italic">Commander &middot; Kingdoms Variant</span>
+        <router-link to="/lifetracker" class="ml-auto text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide hidden sm:inline">Lifetracker</router-link>
         <button
           v-if="signedIn"
           @click="handleSignOut"
