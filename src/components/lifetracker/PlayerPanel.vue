@@ -244,37 +244,26 @@ const panelClasses = computed(() => {
   top: 8px;
   right: 8px;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   z-index: 4;
+  cursor: pointer;
 }
 
 .badge {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
-  padding: 4px 8px;
-  border-radius: 3px;
-  border: 1px solid #3d352966;
-  background: #1a161288;
+  color: #d4c8a8;
 }
 
 .badge-icon {
-  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-size: clamp(0.8rem, 2.5vw, 1.1rem);
 }
 
 .badge-val {
   font-family: 'Cinzel', serif;
   font-size: clamp(0.6rem, 1.5vw, 0.8rem);
   font-weight: 700;
-}
-
-.badge-poison {
-  color: #7de830;
-}
-
-.badge-tax {
-  color: #e2c878;
 }
 
 .cmd-minimap {

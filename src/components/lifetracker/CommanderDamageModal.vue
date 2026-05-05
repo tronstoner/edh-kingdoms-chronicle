@@ -379,12 +379,9 @@ onUnmounted(() => {
   font-size: 4rem;
 }
 
-.poison-icon {
-  color: #7de830;
-}
-
+.poison-icon,
 .tax-icon {
-  color: #e2c878;
+  color: #d4c8a8;
 }
 
 .counter-val {
