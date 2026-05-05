@@ -83,16 +83,24 @@ const panelClasses = computed(() => {
       {{ seat.life }}
     </div>
 
-    <!-- Role badge (left side) -->
-    <div
-      v-if="seat.role && seat.roleRevealed"
-      class="role-badge"
-      :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
-      @pointerdown.stop
-      @click.stop="emit('openCmdDamage')"
-    >
-      <span class="role-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
-      <span class="role-val">{{ seat.role }}</span>
+    <!-- Role + status badges (left side) -->
+    <div class="left-badges" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+      <div
+        v-if="seat.role && seat.roleRevealed"
+        class="badge"
+        :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
+      >
+        <span class="badge-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
+        <span class="badge-val">{{ seat.role }}</span>
+      </div>
+      <div v-if="seat.roleNotes === 'Zombie'" class="badge" style="color: #a47be0; border-color: #a47be0aa">
+        <span class="badge-icon">&#x1F9DF;</span>
+        <span class="badge-val">Zombie</span>
+      </div>
+      <div v-else-if="seat.roleNotes === 'Clone'" class="badge" style="color: #5ba3d9; border-color: #5ba3d9aa">
+        <span class="badge-icon">&#x1F9EC;</span>
+        <span class="badge-val">Clone</span>
+      </div>
     </div>
 
     <!-- Non-zero counters (only shown when relevant) -->
@@ -124,10 +132,6 @@ const panelClasses = computed(() => {
 
     <!-- Life counter tap zones -->
     <LifeCounter :rotated="rotated" @change-life="(delta) => emit('changeLife', delta)" />
-
-    <!-- Zombie/Clone tag -->
-    <div v-if="seat.roleNotes === 'Zombie'" class="status-tag zombie-tag">&#x1F9DF; Zombie</div>
-    <div v-else-if="seat.roleNotes === 'Clone'" class="status-tag clone-tag">&#x1F9EC; Clone</div>
 
     <!-- Death banner -->
     <DeathBanner
@@ -231,28 +235,14 @@ const panelClasses = computed(() => {
   color: #d95555;
 }
 
-.role-badge {
+.left-badges {
   position: absolute;
   top: 8px;
   left: 8px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 3px 6px;
-  border: 1px solid;
-  border-radius: 3px;
+  gap: 4px;
   z-index: 4;
-}
-
-.role-icon {
-  font-size: clamp(0.7rem, 2vw, 1rem);
-  line-height: 1.2;
-}
-
-.role-val {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
-  font-weight: 700;
+  cursor: pointer;
 }
 
 .counter-badges {
@@ -339,28 +329,6 @@ const panelClasses = computed(() => {
 
 .minimap-dmg.has-damage {
   color: #d4c8a8;
-}
-
-.status-tag {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
-  padding: 3px 8px;
-  border-radius: 3px;
-  border: 1px solid;
-  z-index: 4;
-}
-
-.zombie-tag {
-  color: #a47be0;
-  border-color: #a47be066;
-}
-
-.clone-tag {
-  color: #5ba3d9;
-  border-color: #5ba3d966;
 }
 
 .is-dead {
