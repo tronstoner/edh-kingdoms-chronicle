@@ -35,7 +35,7 @@ const exportText = computed(() => {
     const role = s.role || ''
     const result = overrides.value[i].result
     const isFirstKO = firstKO.value && firstKO.value.index === s.index
-    const fko = isFirstKO ? `Turn ${firstKO.value.deathTurn}` : ''
+    const fko = isFirstKO ? String(firstKO.value.deathTurn) : ''
     const rNotes = overrides.value[i].roleNotes
     const gEnd = i === 0 ? String(props.turnCount) : ''
     const gNotes = i === 0 ? gameNotes.value : ''
@@ -125,7 +125,7 @@ function toggleResult(i) {
               <td>{{ s.role || '' }}</td>
               <td>{{ overrides[i].result }}</td>
               <td>{{ overrides[i].roleNotes }}</td>
-              <td>{{ firstKO && firstKO.index === s.index ? `T${firstKO.deathTurn}` : '' }}</td>
+              <td>{{ firstKO && firstKO.index === s.index ? firstKO.deathTurn : '' }}</td>
               <td>{{ i === 0 ? turnCount : '' }}</td>
               <td>{{ i === 0 ? gameNotes : '' }}</td>
             </tr>
