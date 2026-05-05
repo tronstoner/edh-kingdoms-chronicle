@@ -10,7 +10,6 @@ const emit = defineEmits(['close', 'finish'])
 
 const now = new Date()
 const date = ref(`${now.getDate()}.${now.getMonth() + 1}.${now.getFullYear()}`)
-const gameEnd = ref('')
 const gameNotes = ref('')
 const copied = ref(false)
 
@@ -38,7 +37,7 @@ const exportText = computed(() => {
     const isFirstKO = firstKO.value && firstKO.value.index === s.index
     const fko = isFirstKO ? `Turn ${firstKO.value.deathTurn}` : ''
     const rNotes = overrides.value[i].roleNotes
-    const gEnd = i === 0 ? gameEnd.value : ''
+    const gEnd = i === 0 ? String(props.turnCount) : ''
     const gNotes = i === 0 ? gameNotes.value : ''
     return [d, player, deck, role, result, rNotes, fko, gEnd, gNotes].join('\t')
   })
@@ -102,7 +101,7 @@ function toggleResult(i) {
       <div class="export-game-fields">
         <div class="export-field">
           <label class="field-label">Game End</label>
-          <input v-model="gameEnd" class="field-input" placeholder="e.g. Combat" />
+          <span class="field-value font-beleren">Turn {{ turnCount }}</span>
         </div>
         <div class="export-field">
           <label class="field-label">Game Notes</label>
@@ -173,6 +172,12 @@ function toggleResult(i) {
   color: #d4c8a8;
   outline: none;
   width: 120px;
+}
+
+.field-value {
+  font-size: 1rem;
+  color: #d4c8a8;
+  padding: 8px 0;
 }
 
 .field-input:focus {
