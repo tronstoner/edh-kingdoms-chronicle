@@ -10,7 +10,15 @@ const props = defineProps({
   rotated: Boolean,
 })
 
-const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'close'])
+const ROLE_COLORS = {
+  King: '#e2b84a',
+  Knight: '#6ab86a',
+  Goblin: '#d95555',
+  Lord: '#a47be0',
+  'Clone Lord': '#5ba3d9',
+}
+
+const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'revealRole', 'close'])
 
 const activeSeat = ref(null)
 const activeCmd = ref(1)
@@ -163,6 +171,15 @@ onUnmounted(() => {
           <span class="counter-hint counter-hint-left">&minus;</span>
           <span class="counter-hint counter-hint-right">+</span>
         </div>
+        <!-- Reveal role button -->
+        <button class="counter-box reveal-role-box" @click="emit('revealRole')">
+          <div class="counter-center">
+            <span class="reveal-icon">{{ seat.role ? (seat.roleRevealed ? '👁️' : '?') : '👁️' }}</span>
+            <span class="counter-val" :class="{ active: seat.role }" :style="seat.role && seat.roleRevealed ? { color: ROLE_COLORS[seat.role] } : {}">
+              {{ seat.role && seat.roleRevealed ? seat.role : 'Role' }}
+            </span>
+          </div>
+        </button>
       </div>
 
       <!-- Enlarged table layout -->
@@ -301,6 +318,19 @@ onUnmounted(() => {
   display: flex;
   gap: 6px;
   justify-content: center;
+}
+
+.reveal-role-box {
+  cursor: pointer;
+}
+
+.reveal-role-box:hover {
+  border-color: #8a7e66;
+}
+
+.reveal-icon {
+  font-size: 2rem;
+  pointer-events: none;
 }
 
 .counter-box {

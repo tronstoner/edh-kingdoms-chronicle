@@ -7,6 +7,7 @@ import TableLayout from '../components/lifetracker/TableLayout.vue'
 import { LAYOUTS } from '../composables/useTableLayouts.js'
 import DeckPicker from '../components/lifetracker/DeckPicker.vue'
 import CommanderDamageModal from '../components/lifetracker/CommanderDamageModal.vue'
+import RolePicker from '../components/lifetracker/RolePicker.vue'
 
 const router = useRouter()
 const {
@@ -94,6 +95,50 @@ function handleCmdPoison(delta) {
 function handleCmdTax(delta) {
   state.seats[cmdDamageTarget.value].commanderTax = Math.max(0, state.seats[cmdDamageTarget.value].commanderTax + delta)
 }
+
+// Role picker
+const rolePickerSeat = ref(null)
+
+function openRolePicker(seatIndex) {
+  // If called from cmd modal, use that seat; otherwise use the passed index
+  const idx = seatIndex !== undefined ? seatIndex : cmdDamageTarget.value
+  rolePickerSeat.value = idx
+}
+
+function handleRoleSelect(role) {
+  const seat = state.seats[rolePickerSeat.value]
+  seat.role = role
+  seat.roleRevealed = !!role
+  // King gets 50 life
+  if (role === 'King' && seat.life === 40) {
+    seat.life = 50
+  }
+  rolePickerSeat.value = null
+}
+
+// Death actions
+function handleZombify(seatIndex) {
+  const seat = state.seats[seatIndex]
+  seat.life = 20
+  seat.isDead = false
+  seat.deathOverridden = true
+  seat.roleNotes = 'Zombie'
+}
+
+function handleClone(seatIndex) {
+  const seat = state.seats[seatIndex]
+  seat.life = 20
+  seat.isDead = false
+  seat.deathOverridden = true
+  seat.roleNotes = 'Clone'
+}
+
+function handleDeathRevealRole(seatIndex) {
+  const seat = state.seats[seatIndex]
+  seat.isDead = false
+  seat.deathOverridden = true
+  rolePickerSeat.value = seatIndex
+}
 </script>
 
 <template>
@@ -119,7 +164,6 @@ function handleCmdTax(delta) {
         @set-count="handleSetCount"
         @set-layout="handleSetLayout"
         @set-seat="handleSetSeat"
-        @set-role="(i, role) => { state.seats[i].role = role }"
         @start="startGame"
         @back="handleBack"
       />
@@ -134,7 +178,9 @@ function handleCmdTax(delta) {
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
         @open-cmd-damage="handleOpenCmdDamage"
-        @reveal-role="(i) => { state.seats[i].roleRevealed = !state.seats[i].roleRevealed }"
+        @reveal-role="handleDeathRevealRole"
+        @zombify="handleZombify"
+        @clone="handleClone"
       />
 
       <!-- Mid-game seat editor -->
@@ -159,7 +205,18 @@ function handleCmdTax(delta) {
         @toggle-partners="handleTogglePartners"
         @change-poison="handleCmdPoison"
         @change-tax="handleCmdTax"
+        @reveal-role="openRolePicker(cmdDamageTarget)"
         @close="cmdDamageTarget = null"
+      />
+
+      <!-- Role picker -->
+      <RolePicker
+        v-if="rolePickerSeat !== null"
+        :seat="state.seats[rolePickerSeat]"
+        :all-seats="state.seats"
+        :player-count="state.playerCount"
+        @select="handleRoleSelect"
+        @close="rolePickerSeat = null"
       />
 
       <!-- Floating menu button -->

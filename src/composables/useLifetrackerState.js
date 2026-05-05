@@ -24,6 +24,7 @@ function createSeat(index, playerCount) {
     deathOverridden: false,
     deathTurn: null,
     isWinner: false,
+    roleNotes: null,
     history: [],
   }
 }

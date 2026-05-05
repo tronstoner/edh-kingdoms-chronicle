@@ -12,7 +12,7 @@ const props = defineProps({
   layoutRows: Array,
 })
 
-const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole'])
+const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole', 'zombify', 'clone'])
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -132,8 +132,19 @@ const panelClasses = computed(() => {
     <!-- Life counter tap zones -->
     <LifeCounter :rotated="rotated" @change-life="(delta) => emit('changeLife', delta)" />
 
+    <!-- Zombie/Clone tag -->
+    <div v-if="seat.roleNotes === 'Zombie'" class="status-tag zombie-tag">&#x1F9DF; Zombie</div>
+    <div v-else-if="seat.roleNotes === 'Clone'" class="status-tag clone-tag">&#x1F9EC; Clone</div>
+
     <!-- Death banner -->
-    <DeathBanner v-if="seat.isDead && !seat.deathOverridden" @override="emit('override')" />
+    <DeathBanner
+      v-if="seat.isDead && !seat.deathOverridden"
+      :player-count="allSeats.length"
+      @override="emit('override')"
+      @reveal-role="emit('revealRole')"
+      @zombify="emit('zombify')"
+      @clone="emit('clone')"
+    />
 
     <!-- Winner indicator -->
     <div v-if="seat.isWinner" class="winner-glow"></div>
@@ -330,6 +341,28 @@ const panelClasses = computed(() => {
 
 .minimap-dmg.has-damage {
   color: #d4c8a8;
+}
+
+.status-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid;
+  z-index: 4;
+}
+
+.zombie-tag {
+  color: #a47be0;
+  border-color: #a47be066;
+}
+
+.clone-tag {
+  color: #5ba3d9;
+  border-color: #5ba3d966;
 }
 
 .is-dead {
