@@ -12,8 +12,7 @@ const props = defineProps({
   layoutRows: Array,
 })
 
-const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage'])
-
+const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole'])
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -84,15 +83,22 @@ const panelClasses = computed(() => {
       {{ seat.life }}
     </div>
 
-    <!-- Role badge -->
+    <!-- Role badge (tap to reveal) -->
     <div
       v-if="seat.role && seat.roleRevealed"
       class="role-badge"
       :style="{ backgroundColor: roleColor + '33', color: roleColor, borderColor: roleColor + '66' }"
+      @pointerdown.stop
+      @click.stop="emit('revealRole')"
     >
       {{ seat.role }}
     </div>
-    <div v-else-if="seat.role" class="role-badge role-hidden">
+    <div
+      v-else-if="seat.role"
+      class="role-badge role-hidden"
+      @pointerdown.stop
+      @click.stop="emit('revealRole')"
+    >
       ?
     </div>
 
@@ -226,9 +232,10 @@ const panelClasses = computed(() => {
   bottom: 8px;
   left: 8px;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.55rem, 1.5vw, 0.75rem);
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-size: clamp(0.65rem, 1.8vw, 0.85rem);
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
   border: 1px solid;
   z-index: 2;
 }

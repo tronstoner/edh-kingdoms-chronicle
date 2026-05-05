@@ -119,6 +119,7 @@ function handleCmdTax(delta) {
         @set-count="handleSetCount"
         @set-layout="handleSetLayout"
         @set-seat="handleSetSeat"
+        @set-role="(i, role) => { state.seats[i].role = role }"
         @start="startGame"
         @back="handleBack"
       />
@@ -133,6 +134,7 @@ function handleCmdTax(delta) {
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
         @open-cmd-damage="handleOpenCmdDamage"
+        @reveal-role="(i) => { state.seats[i].roleRevealed = !state.seats[i].roleRevealed }"
       />
 
       <!-- Mid-game seat editor -->

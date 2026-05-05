@@ -10,7 +10,7 @@ const props = defineProps({
   layoutId: String,
 })
 
-const emit = defineEmits(['setCount', 'setLayout', 'setSeat', 'start', 'back'])
+const emit = defineEmits(['setCount', 'setLayout', 'setSeat', 'setRole', 'start', 'back'])
 
 const editingSeat = ref(null)
 
@@ -32,6 +32,33 @@ function handleCountChange(count) {
 function handleSeatSelect({ player, deck }) {
   emit('setSeat', editingSeat.value, player, deck)
   editingSeat.value = null
+}
+
+const ROLES_5 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord']
+const ROLES_6 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord', 'Clone Lord']
+
+const availableRoles = computed(() =>
+  props.playerCount === 6 ? ROLES_6 : ROLES_5
+)
+
+function rolesForSeat(seatIndex) {
+  const used = props.seats
+    .filter((s, i) => i !== seatIndex && s.role)
+    .map(s => s.role)
+  const available = [...availableRoles.value]
+  for (const r of used) {
+    const idx = available.indexOf(r)
+    if (idx !== -1) available.splice(idx, 1)
+  }
+  return [...new Set(available)]
+}
+
+const ROLE_COLORS = {
+  King: '#e2b84a',
+  Knight: '#6ab86a',
+  Goblin: '#d95555',
+  Lord: '#a47be0',
+  'Clone Lord': '#5ba3d9',
 }
 </script>
 
@@ -77,7 +104,37 @@ function handleSeatSelect({ player, deck }) {
           <span v-if="seat.deck" class="seat-deck">{{ seat.deck.name }}</span>
         </span>
         <span v-else class="seat-empty">Tap to assign</span>
+        <span
+          v-if="seat.role"
+          class="seat-role"
+          :style="{ color: ROLE_COLORS[seat.role] }"
+        >{{ seat.role }}</span>
       </button>
+    </div>
+
+    <!-- Roles -->
+    <div v-if="allSeatsReady" class="mt-5">
+      <div class="section-label">Roles</div>
+      <div class="role-grid">
+        <div v-for="(seat, i) in seats" :key="i" class="role-row">
+          <span class="role-player font-beleren">{{ seat.player }}</span>
+          <div class="role-options">
+            <button
+              v-for="role in rolesForSeat(i)"
+              :key="role"
+              class="role-btn"
+              :class="{ active: seat.role === role }"
+              :style="seat.role === role ? { borderColor: ROLE_COLORS[role], color: ROLE_COLORS[role] } : {}"
+              @click="emit('setRole', i, role)"
+            >{{ role }}</button>
+            <button
+              v-if="seat.role"
+              class="role-btn role-clear"
+              @click="emit('setRole', i, null)"
+            >&times;</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Actions -->
@@ -214,6 +271,63 @@ function handleSeatSelect({ player, deck }) {
   font-size: 0.85rem;
   color: #8a7e6666;
   font-style: italic;
+}
+
+.seat-role {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.role-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.role-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-player {
+  font-size: 0.9rem;
+  color: #d4c8a8;
+  min-width: 80px;
+}
+
+.role-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  border-radius: 3px;
+  border: 1px solid #3d3529;
+  background: #1a1612;
+  color: #8a7e66;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-btn:hover {
+  border-color: #8a7e66;
+  color: #d4c8a8;
+}
+
+.role-btn.active {
+  background: #1a161288;
+}
+
+.role-clear {
+  color: #8a7e6644;
+  font-size: 1rem;
+  padding: 8px 10px;
 }
 
 .actions {

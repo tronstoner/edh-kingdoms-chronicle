@@ -8,7 +8,7 @@ const props = defineProps({
   seats: Array,
 })
 
-const emit = defineEmits(['changeLife', 'openSeat', 'override', 'openCmdDamage'])
+const emit = defineEmits(['changeLife', 'openSeat', 'override', 'openCmdDamage', 'revealRole'])
 
 const layout = computed(() => LAYOUTS[props.layoutId])
 </script>
@@ -36,6 +36,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @override="emit('override', seatIndex)"
           @open-seat="emit('openSeat', seatIndex)"
           @open-cmd-damage="emit('openCmdDamage', seatIndex)"
+          @reveal-role="emit('revealRole', seatIndex)"
         />
       </div>
     </div>
