@@ -1,6 +1,8 @@
 <script setup>
 const props = defineProps({
   playerCount: Number,
+  roleRevealed: Boolean,
+  roleNotes: String,
 })
 
 const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
@@ -10,9 +12,9 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
   <div class="death-banner" @click.stop @pointerdown.stop>
     <span class="death-skull">&#x1F480;</span>
     <div class="death-actions">
-      <button class="death-btn" @click="emit('revealRole')">Reveal role</button>
-      <button class="death-btn death-btn-zombie" @click="emit('zombify')">&#x1F9DF; Zombified</button>
-      <button v-if="playerCount === 6" class="death-btn death-btn-clone" @click="emit('clone')">&#x1F9EC; Cloned</button>
+      <button v-if="!roleRevealed" class="death-btn" @click="emit('revealRole')">Reveal role</button>
+      <button v-if="!roleNotes" class="death-btn death-btn-zombie" @click="emit('zombify')">&#x1F9DF; Zombified</button>
+      <button v-if="!roleNotes && playerCount === 6" class="death-btn death-btn-clone" @click="emit('clone')">&#x1F9EC; Cloned</button>
       <button class="death-btn death-btn-override" @click="emit('override')">I'm not actually dead</button>
     </div>
   </div>
@@ -22,7 +24,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
 .death-banner {
   position: absolute;
   inset: 0;
-  background: #000000;
+  background: #00000090;
   display: flex;
   flex-direction: column;
   align-items: center;
