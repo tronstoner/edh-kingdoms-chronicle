@@ -118,11 +118,11 @@ onUnmounted(() => {
                 @pointercancel="handleUp"
                 @pointerleave="handleUp"
               >
-                <div class="cmd-flash-half cmd-flash-left" :class="{ flash: isFlash(String(si), 'left') }">
-                  <span class="zone-hint">+</span>
-                </div>
-                <div class="cmd-flash-half cmd-flash-right" :class="{ flash: isFlash(String(si), 'right') }">
+                <div class="cmd-flash-half cmd-flash-minus" :class="{ flash: isFlash(String(si), 'left') }">
                   <span class="zone-hint">&minus;</span>
+                </div>
+                <div class="cmd-flash-half cmd-flash-plus" :class="{ flash: isFlash(String(si), 'right') }">
+                  <span class="zone-hint">+</span>
                 </div>
               </div>
               <div class="cmd-seat-content">
@@ -152,11 +152,11 @@ onUnmounted(() => {
                 @pointercancel="handleUp"
                 @pointerleave="handleUp"
               >
-                <div class="cmd-flash-half cmd-flash-left" :class="{ flash: isFlash(`${si}-1`, 'left') }">
-                  <span class="zone-hint">+</span>
-                </div>
-                <div class="cmd-flash-half cmd-flash-right" :class="{ flash: isFlash(`${si}-1`, 'right') }">
+                <div class="cmd-flash-half cmd-flash-minus" :class="{ flash: isFlash(`${si}-1`, 'left') }">
                   <span class="zone-hint">&minus;</span>
+                </div>
+                <div class="cmd-flash-half cmd-flash-plus" :class="{ flash: isFlash(`${si}-1`, 'right') }">
+                  <span class="zone-hint">+</span>
                 </div>
                 <div class="cmd-split-content">
                   <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
@@ -176,11 +176,11 @@ onUnmounted(() => {
                 @pointercancel="handleUp"
                 @pointerleave="handleUp"
               >
-                <div class="cmd-flash-half cmd-flash-left" :class="{ flash: isFlash(`${si}-2`, 'left') }">
-                  <span class="zone-hint">+</span>
-                </div>
-                <div class="cmd-flash-half cmd-flash-right" :class="{ flash: isFlash(`${si}-2`, 'right') }">
+                <div class="cmd-flash-half cmd-flash-minus" :class="{ flash: isFlash(`${si}-2`, 'left') }">
                   <span class="zone-hint">&minus;</span>
+                </div>
+                <div class="cmd-flash-half cmd-flash-plus" :class="{ flash: isFlash(`${si}-2`, 'right') }">
+                  <span class="zone-hint">+</span>
                 </div>
                 <div class="cmd-split-content">
                   <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd2From(si) > 0, lethal: cmd2From(si) >= 21 }">{{ cmd2From(si) }}</div>
@@ -363,23 +363,23 @@ onUnmounted(() => {
   transition: background-color 0.15s;
 }
 
-.cmd-flash-left {
+.cmd-flash-minus {
   justify-content: center;
   padding-right: 10%;
 }
 
-.cmd-flash-right {
+.cmd-flash-plus {
   justify-content: center;
   padding-left: 10%;
 }
 
-/* Reversed: left is red (receiving damage = bad), right is green (correcting) */
-.cmd-flash-left.flash {
-  background: #d9555522;
+/* Plus = red (receiving damage), minus = green (correcting) */
+.cmd-flash-minus.flash {
+  background: #6ab86a22;
 }
 
-.cmd-flash-right.flash {
-  background: #6ab86a22;
+.cmd-flash-plus.flash {
+  background: #d9555522;
 }
 
 .zone-hint {
