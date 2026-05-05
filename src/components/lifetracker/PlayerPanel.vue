@@ -117,8 +117,8 @@ const panelClasses = computed(() => {
       </div>
     </div>
 
-    <!-- Commander damage mini-map (whole box tappable) -->
-    <div class="cmd-minimap" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+    <!-- Commander damage mini-map (whole box tappable, hidden when dead) -->
+    <div v-if="!seat.isDead || seat.deathOverridden" class="cmd-minimap" @pointerdown.stop @click.stop="emit('openCmdDamage')">
       <div v-for="(row, ri) in (rotated ? [...layoutRows].reverse() : layoutRows)" :key="ri" class="minimap-row">
         <div
           v-for="si in (rotated ? [...row.seats].reverse() : row.seats)"
