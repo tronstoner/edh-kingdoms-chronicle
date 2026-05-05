@@ -30,7 +30,7 @@ const showConfirmNew = ref(false)
     </div>
 
     <!-- Confirm new game -->
-    <ConfirmDialog
+    <Teleport to="body"><ConfirmDialog
       v-if="showConfirmNew"
       title="New Game"
       message="This will discard the current game. Are you sure?"
@@ -38,7 +38,7 @@ const showConfirmNew = ref(false)
       :danger="true"
       @confirm="showConfirmNew = false; emit('newGame')"
       @cancel="showConfirmNew = false"
-    />
+    /></Teleport>
   </div>
 </template>
 
