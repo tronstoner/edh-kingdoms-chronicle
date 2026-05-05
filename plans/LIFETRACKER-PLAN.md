@@ -265,19 +265,37 @@ The lifetracker must work across different screen shapes — portrait phones, la
 21. Manual win/death controls in `GameMenu`
 
 ### Phase 7: Polish & Responsiveness
-22. `useWakeLock.js`
-23. Animations (life changes, death, role reveal flip)
-24. Haptic feedback
-25. Resume-game prompt on page load
-26. **Responsive layout overhaul**:
-    - Test and fix all views on small phones, large phones, tablets (portrait + landscape)
-    - Player panel content: life total, name, deck, minimap, badges must scale and reflow per panel size
-    - Commander damage modal: counter boxes, layout seats, and progress bars must adapt to viewport
-    - Setup screen and deck picker must be usable on small screens
-    - Use container queries or aspect-ratio media queries where clamp() isn't sufficient
-    - Ensure touch targets are minimum 44px on all screen sizes
-    - Test minimap readability at all sizes
-    - Fullscreen API integration to hide browser chrome
+
+**Priority 1: Game menu & turn counter rework**
+- Current bottom bar is unusable on mobile — too small, hard to reach
+- Redesign as a proper floating action menu
+- Turn counter needs to be prominent and always accessible
+- Consider a circular/radial menu or a slide-up panel
+
+**Priority 2: Responsive layout overhaul**
+- Needs a proper concept before implementation, not incremental fixes
+- Test all views on small phones, large phones, tablets (portrait + landscape)
+- Player panel content: life total, name, deck, minimap, badges must scale and reflow per panel size
+- Commander damage modal: counter boxes, layout seats, and progress bars must adapt to viewport
+- Setup screen and deck picker must be usable on small screens
+- Use container queries or aspect-ratio media queries where clamp() isn't sufficient
+- Ensure touch targets are minimum 44px on all screen sizes
+- Test minimap readability at all sizes
+
+**Priority 3: Refactoring**
+- Layout system needs proper abstraction for column-based layouts (head-of-table seating)
+- Single shared layout renderer for main view, minimap, and damage modal
+- Rotation handling for 90°/270° side seats (not just 180°)
+- Current approach duplicates layout rendering logic in 3 places — fragile and causes regressions
+- Plan the abstraction before implementing new layouts
+
+**Priority 4: Additional features**
+- `useWakeLock.js` — keep screen on during game
+- Fullscreen API integration to hide browser chrome
+- Animations (life changes, death, role reveal)
+- Haptic feedback
+- Resume-game prompt on page load
+- History drawer for life change log
 
 ---
 
