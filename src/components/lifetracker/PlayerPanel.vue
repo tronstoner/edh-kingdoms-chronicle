@@ -79,7 +79,7 @@ const panelClasses = computed(() => {
     </div>
 
     <!-- Life total -->
-    <div class="life-total" :class="{ 'life-danger': seat.life <= 10 && seat.life > 0, 'life-lethal': seat.life <= 0 }">
+    <div class="life-total" :class="{ 'life-dead': seat.isDead && !seat.deathOverridden, 'life-danger': seat.life <= 10 && seat.life > 0, 'life-lethal': seat.life <= 0 }">
       {{ seat.life }}
     </div>
 
@@ -238,6 +238,10 @@ const panelClasses = computed(() => {
 
 .life-lethal {
   color: #d95555;
+}
+
+.life-dead {
+  color: #8a7e66;
 }
 
 .left-badges {
