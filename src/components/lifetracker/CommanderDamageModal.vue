@@ -136,8 +136,8 @@ onUnmounted(() => {
           @pointercancel="poisonUp"
           @pointerleave="poisonUp"
         >
-          <div class="counter-flash counter-flash-left" :class="{ flash: poisonFlash === 'left' }"></div>
-          <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"></div>
+          <div class="counter-flash counter-flash-left" :class="{ flash: poisonFlash === 'left' }"><span class="counter-hint">&minus;</span></div>
+          <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"><span class="counter-hint">+</span></div>
           <div class="counter-center">
             <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
             <span class="counter-val" :class="{ active: seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poison }}</span>
@@ -152,8 +152,8 @@ onUnmounted(() => {
           @pointercancel="taxUp"
           @pointerleave="taxUp"
         >
-          <div class="counter-flash counter-flash-left" :class="{ flash: taxFlash === 'left' }"></div>
-          <div class="counter-flash counter-flash-right" :class="{ flash: taxFlash === 'right' }"></div>
+          <div class="counter-flash counter-flash-left" :class="{ flash: taxFlash === 'left' }"><span class="counter-hint">&minus;</span></div>
+          <div class="counter-flash counter-flash-right" :class="{ flash: taxFlash === 'right' }"><span class="counter-hint">+</span></div>
           <div class="counter-center">
             <i class="ms ms-commander counter-icon tax-icon"></i>
             <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
@@ -319,7 +319,21 @@ onUnmounted(() => {
   top: 0;
   bottom: 0;
   width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color 0.15s;
+}
+
+.counter-hint {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  color: #8a7e6633;
+  pointer-events: none;
+}
+
+.counter-flash.flash .counter-hint {
+  color: #8a7e6666;
 }
 
 .counter-flash-left {
@@ -383,6 +397,8 @@ onUnmounted(() => {
   gap: 3px;
   border-radius: 3px;
   overflow: hidden;
+  background: #0d0b09;
+  border: 3px solid #0d0b09;
 }
 
 .cmd-row {
@@ -452,13 +468,13 @@ onUnmounted(() => {
 .zone-hint {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 4vw, 2rem);
-  color: #8a7e6618;
+  color: #8a7e6633;
   pointer-events: none;
 }
 
 .cmd-flash-half:active .zone-hint,
 .cmd-flash-half.flash .zone-hint {
-  color: #8a7e6633;
+  color: #8a7e6666;
 }
 
 .cmd-seat-content {

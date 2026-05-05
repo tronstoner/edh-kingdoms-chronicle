@@ -287,7 +287,7 @@ const panelClasses = computed(() => {
   gap: 2px;
   padding: 4px;
   border-radius: 3px;
-  border: 1px solid #3d352966;
+  border: 1px solid #d4c8a888;
   background: #1a161288;
   cursor: pointer;
   z-index: 4;

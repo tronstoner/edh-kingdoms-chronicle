@@ -95,14 +95,14 @@ onUnmounted(() => {
 .zone-label {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.5rem, 5vw, 2.5rem);
-  color: #8a7e6618;
+  color: #8a7e6633;
   transition: color 0.15s;
   pointer-events: none;
 }
 
 .zone:active .zone-label,
 .flash .zone-label {
-  color: #8a7e6633;
+  color: #8a7e6666;
 }
 
 .flash.zone-minus {
