@@ -109,7 +109,7 @@ const panelClasses = computed(() => {
     </div>
 
     <!-- Commander damage mini-map (whole box tappable) -->
-    <div class="cmd-minimap" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+    <div class="cmd-minimap" :style="rotated ? { transform: 'rotate(180deg)' } : undefined" @pointerdown.stop @click.stop="emit('openCmdDamage')">
       <div v-for="(row, ri) in layoutRows" :key="ri" class="minimap-row">
         <div
           v-for="si in row.seats"
@@ -257,12 +257,12 @@ const panelClasses = computed(() => {
 }
 
 .badge-icon {
-  font-size: clamp(0.8rem, 2.5vw, 1.1rem);
+  font-size: clamp(1rem, 3vw, 1.5rem);
 }
 
 .badge-val {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  font-size: clamp(0.8rem, 2vw, 1.1rem);
   font-weight: 700;
 }
 
