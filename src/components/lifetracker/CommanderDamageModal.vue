@@ -11,28 +11,31 @@ const props = defineProps({
 
 const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'togglePoison', 'changeTax', 'close'])
 
-// Per-seat tap interaction
 const activeSeat = ref(null)
+const activeCmd = ref(1)
 const flashSide = ref(null)
 let flashTimeout = null
 const counterEls = ref({})
 
-function setCounterEl(si, el) {
-  if (el) counterEls.value[si] = el
+function setCounterEl(key, el) {
+  if (el) counterEls.value[key] = el
 }
 
 const { start, stop, getSign } = useLifeCounter((delta) => {
   if (activeSeat.value !== null) {
-    emit('change', props.seat.index, activeSeat.value, 1, delta)
+    emit('change', props.seat.index, activeSeat.value, activeCmd.value, delta)
   }
 })
 
-function handleDown(event, si) {
-  const el = counterEls.value[si]
+function handleDown(event, si, cmdIdx) {
+  const key = cmdIdx ? `${si}-${cmdIdx}` : String(si)
+  const el = counterEls.value[key]
   if (!el) return
   activeSeat.value = si
+  activeCmd.value = cmdIdx || 1
   const sign = getSign(event, el, false)
-  flashSide.value = { seat: si, side: sign < 0 ? 'left' : 'right' }
+  // Reversed: left = plus (receiving damage), right = minus (correcting)
+  flashSide.value = { key, side: sign < 0 ? 'left' : 'right' }
   clearTimeout(flashTimeout)
   flashTimeout = setTimeout(() => { flashSide.value = null }, 150)
   start(sign)
@@ -50,12 +53,6 @@ function seatGradStyle(si) {
   return { background: grad }
 }
 
-function dmgFrom(si) {
-  const d = props.seat.commanderDamage[si]
-  if (!d) return 0
-  return d.cmd1 + d.cmd2
-}
-
 function cmd1From(si) {
   return props.seat.commanderDamage[si]?.cmd1 || 0
 }
@@ -68,8 +65,8 @@ function hasPartners(si) {
   return props.seat.commanderDamage[si]?.hasPartners || false
 }
 
-function isFlash(si, side) {
-  return flashSide.value && flashSide.value.seat === si && flashSide.value.side === side
+function isFlash(key, side) {
+  return flashSide.value && flashSide.value.key === key && flashSide.value.side === side
 }
 
 onUnmounted(() => {
@@ -107,40 +104,96 @@ onUnmounted(() => {
       <!-- Enlarged table layout -->
       <div class="cmd-layout">
         <div v-for="(row, ri) in layoutRows" :key="ri" class="cmd-row">
-          <div
-            v-for="si in row.seats"
-            :key="si"
-            :ref="(el) => setCounterEl(si, el)"
-            class="cmd-seat"
-            :class="{ 'cmd-self': si === seat.index }"
-            @pointerdown.prevent="handleDown($event, si)"
-            @pointerup.prevent="handleUp"
-            @pointercancel="handleUp"
-            @pointerleave="handleUp"
-          >
-            <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
-            <div class="cmd-seat-flash cmd-flash-left" :class="{ flash: isFlash(si, 'left') }"></div>
-            <div class="cmd-seat-flash cmd-flash-right" :class="{ flash: isFlash(si, 'right') }"></div>
-            <div class="cmd-seat-content">
-              <div class="cmd-seat-name">{{ allSeats[si]?.player }}</div>
-              <div class="cmd-seat-dmg" :class="{ 'has-dmg': dmgFrom(si) > 0, lethal: cmd1From(si) >= 21 || cmd2From(si) >= 21 }">
-                {{ hasPartners(si) ? cmd1From(si) + ' / ' + cmd2From(si) : cmd1From(si) }}
+          <!-- Single commander seat -->
+          <template v-for="si in row.seats" :key="si">
+            <div v-if="!hasPartners(si)" class="cmd-seat" :class="{ 'cmd-self': si === seat.index }">
+              <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
+              <!-- Tap zone -->
+              <div
+                :ref="(el) => setCounterEl(String(si), el)"
+                class="cmd-tap-zone"
+                @pointerdown.prevent="handleDown($event, si)"
+                @pointerup.prevent="handleUp"
+                @pointercancel="handleUp"
+                @pointerleave="handleUp"
+              >
+                <div class="cmd-flash-half cmd-flash-left" :class="{ flash: isFlash(String(si), 'left') }">
+                  <span class="zone-hint">+</span>
+                </div>
+                <div class="cmd-flash-half cmd-flash-right" :class="{ flash: isFlash(String(si), 'right') }">
+                  <span class="zone-hint">&minus;</span>
+                </div>
               </div>
-              <!-- Progress bar(s) -->
-              <div class="cmd-bars">
-                <div class="cmd-bar-wrap">
-                  <div class="cmd-bar" :class="{ danger: cmd1From(si) >= 16 }" :style="{ width: Math.min(cmd1From(si) / 21 * 100, 100) + '%' }"></div>
-                </div>
-                <div v-if="hasPartners(si)" class="cmd-bar-wrap">
-                  <div class="cmd-bar" :class="{ danger: cmd2From(si) >= 16 }" :style="{ width: Math.min(cmd2From(si) / 21 * 100, 100) + '%' }"></div>
-                </div>
+              <div class="cmd-seat-content">
+                <div class="cmd-seat-name">{{ allSeats[si]?.player }}</div>
+                <div class="cmd-seat-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
+              </div>
+              <!-- Progress bar -->
+              <div class="cmd-bar-bottom">
+                <div class="cmd-bar" :class="{ danger: cmd1From(si) >= 16 }" :style="{ width: Math.min(cmd1From(si) / 21 * 100, 100) + '%' }"></div>
               </div>
               <!-- Partner toggle -->
               <button class="partner-toggle" @pointerdown.stop @click.stop="emit('togglePartners', seat.index, si)">
-                {{ hasPartners(si) ? '2 cmdrs' : '1 cmdr' }}
+                <i class="ms ms-commander"></i>
               </button>
             </div>
-          </div>
+
+            <!-- Dual commander seat (split in half) -->
+            <div v-else class="cmd-seat cmd-seat-split" :class="{ 'cmd-self': si === seat.index }">
+              <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
+              <!-- Commander 1 (left half) -->
+              <div
+                :ref="(el) => setCounterEl(`${si}-1`, el)"
+                class="cmd-split-half"
+                @pointerdown.prevent="handleDown($event, si, 1)"
+                @pointerup.prevent="handleUp"
+                @pointercancel="handleUp"
+                @pointerleave="handleUp"
+              >
+                <div class="cmd-flash-half cmd-flash-left" :class="{ flash: isFlash(`${si}-1`, 'left') }">
+                  <span class="zone-hint">+</span>
+                </div>
+                <div class="cmd-flash-half cmd-flash-right" :class="{ flash: isFlash(`${si}-1`, 'right') }">
+                  <span class="zone-hint">&minus;</span>
+                </div>
+                <div class="cmd-split-content">
+                  <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
+                </div>
+                <div class="cmd-bar-bottom">
+                  <div class="cmd-bar" :class="{ danger: cmd1From(si) >= 16 }" :style="{ width: Math.min(cmd1From(si) / 21 * 100, 100) + '%' }"></div>
+                </div>
+              </div>
+              <div class="cmd-split-divider"></div>
+              <!-- Commander 2 (right half) -->
+              <div
+                :ref="(el) => setCounterEl(`${si}-2`, el)"
+                class="cmd-split-half"
+                @pointerdown.prevent="handleDown($event, si, 2)"
+                @pointerup.prevent="handleUp"
+                @pointercancel="handleUp"
+                @pointerleave="handleUp"
+              >
+                <div class="cmd-flash-half cmd-flash-left" :class="{ flash: isFlash(`${si}-2`, 'left') }">
+                  <span class="zone-hint">+</span>
+                </div>
+                <div class="cmd-flash-half cmd-flash-right" :class="{ flash: isFlash(`${si}-2`, 'right') }">
+                  <span class="zone-hint">&minus;</span>
+                </div>
+                <div class="cmd-split-content">
+                  <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd2From(si) > 0, lethal: cmd2From(si) >= 21 }">{{ cmd2From(si) }}</div>
+                </div>
+                <div class="cmd-bar-bottom">
+                  <div class="cmd-bar" :class="{ danger: cmd2From(si) >= 16 }" :style="{ width: Math.min(cmd2From(si) / 21 * 100, 100) + '%' }"></div>
+                </div>
+              </div>
+              <!-- Player name spans both -->
+              <div class="cmd-split-name">{{ allSeats[si]?.player }}</div>
+              <!-- Partner toggle -->
+              <button class="partner-toggle" @pointerdown.stop @click.stop="emit('togglePartners', seat.index, si)">
+                <i class="ms ms-commander"></i><i class="ms ms-commander"></i>
+              </button>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -274,10 +327,6 @@ onUnmounted(() => {
   overflow: hidden;
   border-radius: 6px;
   touch-action: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #1a1612;
 }
 
@@ -285,30 +334,41 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   opacity: 0.3;
+  pointer-events: none;
 }
 
 .cmd-self {
-  opacity: 0.35;
-  cursor: default;
+  opacity: 0.4;
 }
 
-.cmd-seat-flash {
+/* Single commander tap zone */
+.cmd-tap-zone {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  transition: background-color 0.15s;
+  inset: 0;
+  display: flex;
+  cursor: pointer;
   z-index: 1;
 }
 
+.cmd-flash-half {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
 .cmd-flash-left {
-  left: 0;
+  justify-content: center;
+  padding-right: 10%;
 }
 
 .cmd-flash-right {
-  right: 0;
+  justify-content: center;
+  padding-left: 10%;
 }
 
+/* Reversed: left is red (receiving damage = bad), right is green (correcting) */
 .cmd-flash-left.flash {
   background: #d9555522;
 }
@@ -317,12 +377,27 @@ onUnmounted(() => {
   background: #6ab86a22;
 }
 
-.cmd-seat-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
+.zone-hint {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  color: #8a7e6618;
   pointer-events: none;
-  width: 80%;
+}
+
+.cmd-flash-half:active .zone-hint,
+.cmd-flash-half.flash .zone-hint {
+  color: #8a7e6633;
+}
+
+.cmd-seat-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .cmd-seat-name {
@@ -348,25 +423,20 @@ onUnmounted(() => {
   color: #d95555;
 }
 
-/* Progress bars */
-.cmd-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 4px;
-}
-
-.cmd-bar-wrap {
-  height: 4px;
+/* Progress bar at bottom */
+.cmd-bar-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
   background: #3d352944;
-  border-radius: 2px;
-  overflow: hidden;
+  z-index: 3;
 }
 
 .cmd-bar {
   height: 100%;
   background: #c9a54e;
-  border-radius: 2px;
   transition: width 0.3s;
 }
 
@@ -374,24 +444,75 @@ onUnmounted(() => {
   background: #d95555;
 }
 
+/* Partner toggle */
 .partner-toggle {
-  position: relative;
-  z-index: 3;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4;
   pointer-events: auto;
-  font-family: 'EB Garamond', serif;
-  font-size: clamp(0.55rem, 1.3vw, 0.7rem);
-  padding: 2px 8px;
-  margin-top: 2px;
+  font-size: 0.7rem;
+  padding: 4px 6px;
   border-radius: 4px;
   border: 1px solid #3d352966;
   background: #1a161288;
   color: #8a7e6688;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  gap: 2px;
 }
 
 .partner-toggle:hover {
   border-color: #8a7e66;
   color: #d4c8a8;
+}
+
+/* Dual commander split seat */
+.cmd-seat-split {
+  display: flex;
+  flex-direction: row;
+}
+
+.cmd-split-half {
+  flex: 1;
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  touch-action: none;
+  z-index: 1;
+}
+
+.cmd-split-divider {
+  width: 2px;
+  background: #3d352966;
+  z-index: 2;
+}
+
+.cmd-split-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cmd-split-dmg {
+  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+}
+
+.cmd-split-name {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.6rem, 1.8vw, 0.85rem);
+  color: #d4c8a888;
+  pointer-events: none;
+  z-index: 3;
 }
 </style>
