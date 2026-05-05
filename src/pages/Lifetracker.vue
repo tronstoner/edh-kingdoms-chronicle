@@ -8,6 +8,8 @@ import { LAYOUTS } from '../composables/useTableLayouts.js'
 import DeckPicker from '../components/lifetracker/DeckPicker.vue'
 import CommanderDamageModal from '../components/lifetracker/CommanderDamageModal.vue'
 import RolePicker from '../components/lifetracker/RolePicker.vue'
+import GameMenu from '../components/lifetracker/GameMenu.vue'
+import ExportModal from '../components/lifetracker/ExportModal.vue'
 
 const router = useRouter()
 const {
@@ -19,6 +21,7 @@ const {
   changeCommanderDamage,
   toggleDeathOverride,
   advanceTurn,
+  finishGame,
   resumeOrNew,
   discardSaved,
 } = useLifetrackerState()
@@ -136,6 +139,14 @@ function handleClone(seatIndex) {
 function handleDeathRevealRole(seatIndex) {
   rolePickerSeat.value = seatIndex
 }
+
+// Export
+const showExport = ref(false)
+
+function handleFinishGame() {
+  finishGame()
+  showExport.value = false
+}
 </script>
 
 <template>
@@ -216,18 +227,23 @@ function handleDeathRevealRole(seatIndex) {
         @close="rolePickerSeat = null"
       />
 
-      <!-- Floating menu button -->
-      <div class="lt-menu-float">
-        <button @click="handleBack" class="lt-menu-btn" title="Back">
-          <span class="text-lg">&larr;</span>
-        </button>
-        <div class="lt-turn font-beleren">
-          T{{ state.turnCount }}
-        </div>
-        <button @click="advanceTurn" class="lt-menu-btn" title="Next turn">
-          <span class="text-lg">&#x27F3;</span>
-        </button>
-      </div>
+      <!-- Export modal -->
+      <ExportModal
+        v-if="showExport"
+        :seats="state.seats"
+        :turn-count="state.turnCount"
+        @close="showExport = false"
+        @finish="handleFinishGame"
+      />
+
+      <!-- Game menu -->
+      <GameMenu
+        :turn-count="state.turnCount"
+        @advance-turn="advanceTurn"
+        @export="showExport = true"
+        @new-game="discardSaved"
+        @back="handleBack"
+      />
     </template>
   </div>
 </template>
@@ -296,46 +312,4 @@ function handleDeathRevealRole(seatIndex) {
   border-color: #c9a54e;
 }
 
-.lt-menu-float {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background: #231f1aee;
-  border: 1px solid #3d3529;
-  border-bottom: none;
-  border-radius: 3px 3px 0 0;
-  z-index: 120;
-}
-
-.lt-menu-btn {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: #8a7e66;
-  cursor: pointer;
-  border-radius: 3px;
-  transition: all 0.2s;
-  font-size: 1.3rem;
-}
-
-.lt-menu-btn:hover {
-  color: #c9a54e;
-  background: #c9a54e11;
-}
-
-.lt-turn {
-  color: #c9a54e;
-  font-size: 1.1rem;
-  min-width: 40px;
-  text-align: center;
-}
 </style>
