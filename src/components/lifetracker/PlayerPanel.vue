@@ -306,6 +306,7 @@ const panelClasses = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #1a1612;
 }
 
 .minimap-grad {
@@ -313,10 +314,6 @@ const panelClasses = computed(() => {
   inset: 0;
   opacity: 0.4;
   border-radius: 3px;
-}
-
-.minimap-self .minimap-grad {
-  opacity: 0.15;
 }
 
 .minimap-dmg {
