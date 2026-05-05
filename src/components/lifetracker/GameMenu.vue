@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import ConfirmDialog from './ConfirmDialog.vue'
 
 const props = defineProps({
   turnCount: Number,
@@ -8,7 +9,7 @@ const props = defineProps({
 const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back'])
 
 const expanded = ref(false)
-const confirmNew = ref(false)
+const showConfirmNew = ref(false)
 </script>
 
 <template>
@@ -24,10 +25,20 @@ const confirmNew = ref(false)
     <div v-if="expanded" class="menu-expanded">
       <button class="menu-btn menu-btn-save" @click="emit('endGame'); expanded = false">End Game</button>
       <button class="menu-btn" @click="emit('export'); expanded = false">Export Session</button>
-      <button v-if="!confirmNew" class="menu-btn" @click="confirmNew = true">New Game</button>
-      <button v-else class="menu-btn menu-btn-danger" @click="emit('newGame'); expanded = false; confirmNew = false">Discard current game?</button>
+      <button class="menu-btn" @click="showConfirmNew = true; expanded = false">New Game</button>
       <button class="menu-btn" @click="emit('back'); expanded = false">Back to Dashboard</button>
     </div>
+
+    <!-- Confirm new game -->
+    <ConfirmDialog
+      v-if="showConfirmNew"
+      title="New Game"
+      message="This will discard the current game. Are you sure?"
+      confirm-label="Discard & Start New"
+      :danger="true"
+      @confirm="showConfirmNew = false; emit('newGame')"
+      @cancel="showConfirmNew = false"
+    />
   </div>
 </template>
 
@@ -75,12 +86,6 @@ const confirmNew = ref(false)
 .menu-btn-save {
   color: #c9a54e;
   border-color: #c9a54e66;
-}
-
-.menu-btn-danger {
-  color: #d95555;
-  border-color: #d95555;
-  background: #d9555522;
 }
 
 .menu-bar {
