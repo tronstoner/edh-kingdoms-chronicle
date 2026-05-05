@@ -179,13 +179,18 @@ export function useLifetrackerState() {
 
   function changeCommanderDamage(targetSeat, fromSeat, cmdIndex, delta) {
     const seat = state.seats[targetSeat]
+    if (!seat.commanderDamage[fromSeat]) return
     const key = cmdIndex === 2 ? 'cmd2' : 'cmd1'
-    seat.commanderDamage[fromSeat][key] = Math.max(0, seat.commanderDamage[fromSeat][key] + delta)
+    const prev = seat.commanderDamage[fromSeat][key]
+    const next = Math.max(0, prev + delta)
+    const actualDelta = next - prev
+    if (actualDelta === 0) return
+    seat.commanderDamage[fromSeat][key] = next
     // Commander damage also reduces life
-    seat.life -= delta
+    seat.life -= actualDelta
     seat.history.push({
       timestamp: Date.now(),
-      delta: -delta,
+      delta: -actualDelta,
       newTotal: seat.life,
       source: 'commander',
       fromSeat,

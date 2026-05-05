@@ -98,8 +98,8 @@ const panelClasses = computed(() => {
 
     <!-- Non-zero counters (only shown when relevant) -->
     <div class="counter-badges">
-      <span v-if="seat.poison > 0" class="badge badge-poison">&#x2620; {{ seat.poison }}</span>
-      <span v-if="seat.commanderTax > 0" class="badge badge-tax">Tax {{ seat.commanderTax }}</span>
+      <span v-if="seat.poison > 0" class="badge badge-poison"><i class="ms ms-ability-toxic ms-cost"></i> {{ seat.poison }}</span>
+      <span v-if="seat.commanderTax > 0" class="badge badge-tax"><i class="ms ms-commander ms-cost"></i> {{ seat.commanderTax }}</span>
     </div>
 
     <!-- Commander damage mini-map (whole box tappable) -->
