@@ -253,6 +253,9 @@ const panelClasses = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 3px 6px;
+  border: 1px solid #d4c8a8;
+  border-radius: 3px;
   color: #d4c8a8;
 }
 
@@ -276,7 +279,7 @@ const panelClasses = computed(() => {
   gap: 2px;
   padding: 4px;
   border-radius: 3px;
-  border: 1px solid #d4c8a888;
+  border: 1px solid #d4c8a8;
   background: #1a161288;
   cursor: pointer;
   z-index: 4;
