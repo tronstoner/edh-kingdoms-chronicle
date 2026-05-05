@@ -22,7 +22,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
 .death-banner {
   position: absolute;
   inset: 0;
-  background: #0d0b09e8;
+  background: #0d0b09;
   display: flex;
   flex-direction: column;
   align-items: center;
