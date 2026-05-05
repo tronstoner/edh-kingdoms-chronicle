@@ -182,7 +182,7 @@ const panelClasses = computed(() => {
   left: 0;
   right: 0;
   text-align: center;
-  z-index: 2;
+  z-index: 8;
 }
 
 .player-name {
@@ -243,7 +243,7 @@ const panelClasses = computed(() => {
   left: 8px;
   display: flex;
   gap: 4px;
-  z-index: 4;
+  z-index: 8;
   cursor: pointer;
 }
 
@@ -253,7 +253,7 @@ const panelClasses = computed(() => {
   right: 8px;
   display: flex;
   gap: 4px;
-  z-index: 4;
+  z-index: 8;
   cursor: pointer;
 }
 
@@ -290,7 +290,7 @@ const panelClasses = computed(() => {
   border: 1px solid #d4c8a8aa;
   background: #1a1612;
   cursor: pointer;
-  z-index: 4;
+  z-index: 8;
   width: clamp(120px, 30vw, 180px);
 }
 
