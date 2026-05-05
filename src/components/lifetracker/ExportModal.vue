@@ -11,6 +11,7 @@ const ROLES = ['', 'King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
 const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
 
 const copied = ref(false)
+const confirmClear = ref(false)
 
 // Editable state per game
 const gameData = ref(props.games.map(g => {
@@ -151,7 +152,9 @@ async function copyToClipboard() {
         <button v-if="games.length" class="export-btn export-btn-copy" @click="copyToClipboard">
           {{ copied ? 'Copied!' : 'Copy to Clipboard' }}
         </button>
-        <button v-if="games.length" class="export-btn export-btn-clear" @click="emit('clearGames')">Clear All Games</button>
+        <button v-if="games.length && !confirmClear" class="export-btn export-btn-clear" @click="confirmClear = true">Clear All Games</button>
+        <button v-if="confirmClear" class="export-btn export-btn-clear-confirm" @click="emit('clearGames')">Yes, clear all {{ games.length }} games</button>
+        <button v-if="confirmClear" class="export-btn export-btn-cancel" @click="confirmClear = false">No</button>
         <button class="export-btn export-btn-cancel" @click="emit('close')">Close</button>
       </div>
     </div>
@@ -418,6 +421,16 @@ async function copyToClipboard() {
 
 .export-btn-clear:hover {
   border-color: #d95555;
+}
+
+.export-btn-clear-confirm {
+  color: #d95555;
+  border-color: #d95555;
+  background: #d9555522;
+}
+
+.export-btn-clear-confirm:hover {
+  background: #d9555533;
 }
 
 .export-btn-cancel {
