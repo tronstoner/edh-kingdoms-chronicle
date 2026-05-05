@@ -9,7 +9,7 @@ const props = defineProps({
   layoutRows: Array,
 })
 
-const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'togglePoison', 'changeTax', 'close'])
+const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'close'])
 
 const activeSeat = ref(null)
 const activeCmd = ref(1)
@@ -83,15 +83,15 @@ onUnmounted(() => {
 
       <!-- Counters row -->
       <div class="counters-row">
-        <div class="counter-box" :class="{ disabled: !seat.poisonEnabled }">
-          <div class="counter-zone" @click="seat.poisonEnabled ? emit('changePoison', -1) : emit('togglePoison')">
+        <div class="counter-box">
+          <div class="counter-zone" @click="emit('changePoison', -1)">
             <span class="zone-hint">&minus;</span>
           </div>
           <div class="counter-center">
             <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
-            <span class="counter-val" :class="{ active: seat.poisonEnabled && seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poisonEnabled ? seat.poison : 'off' }}</span>
+            <span class="counter-val" :class="{ active: seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poison }}</span>
           </div>
-          <div class="counter-zone" @click="seat.poisonEnabled ? emit('changePoison', 1) : emit('togglePoison')">
+          <div class="counter-zone" @click="emit('changePoison', 1)">
             <span class="zone-hint">+</span>
           </div>
         </div>
@@ -256,10 +256,6 @@ onUnmounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: row;
-}
-
-.counter-box.disabled {
-  opacity: 0.4;
 }
 
 .counter-zone {

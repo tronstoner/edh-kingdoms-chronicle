@@ -91,10 +91,6 @@ function handleCmdPoison(delta) {
   changePoison(cmdDamageTarget.value, delta)
 }
 
-function handleCmdTogglePoison() {
-  state.seats[cmdDamageTarget.value].poisonEnabled = !state.seats[cmdDamageTarget.value].poisonEnabled
-}
-
 function handleCmdTax(delta) {
   state.seats[cmdDamageTarget.value].commanderTax = Math.max(0, state.seats[cmdDamageTarget.value].commanderTax + delta)
 }
@@ -159,7 +155,6 @@ function handleCmdTax(delta) {
         @change="handleCmdDamageChange"
         @toggle-partners="handleTogglePartners"
         @change-poison="handleCmdPoison"
-        @toggle-poison="handleCmdTogglePoison"
         @change-tax="handleCmdTax"
         @close="cmdDamageTarget = null"
       />
