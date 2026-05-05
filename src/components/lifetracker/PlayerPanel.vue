@@ -89,8 +89,8 @@ const panelClasses = computed(() => {
       class="role-badge"
       :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
     >
-      <span class="badge-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
-      <span class="badge-val">{{ seat.role }}</span>
+      <span class="role-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
+      <span class="role-val">{{ seat.role }}</span>
     </div>
 
     <!-- Non-zero counters (only shown when relevant) -->
@@ -240,6 +240,17 @@ const panelClasses = computed(() => {
   border: 1px solid;
   border-radius: 3px;
   z-index: 4;
+}
+
+.role-icon {
+  font-size: clamp(0.7rem, 2vw, 1rem);
+  line-height: 1;
+}
+
+.role-val {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.5rem, 1.2vw, 0.65rem);
+  font-weight: 700;
 }
 
 .counter-badges {
