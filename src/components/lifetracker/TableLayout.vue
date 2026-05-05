@@ -8,7 +8,7 @@ const props = defineProps({
   seats: Array,
 })
 
-const emit = defineEmits(['changeLife', 'openSeat', 'override', 'openCmdDamage', 'revealRole', 'zombify', 'clone'])
+const emit = defineEmits(['changeLife', 'openSeat', 'override', 'openCmdDamage', 'revealRole', 'zombify', 'clone', 'clearUndead'])
 
 const layout = computed(() => LAYOUTS[props.layoutId])
 </script>
@@ -39,6 +39,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @reveal-role="emit('revealRole', seatIndex)"
           @zombify="emit('zombify', seatIndex)"
           @clone="emit('clone', seatIndex)"
+          @clear-undead="emit('clearUndead', seatIndex)"
         />
       </div>
     </div>

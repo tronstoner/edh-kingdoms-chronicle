@@ -5,7 +5,7 @@ const props = defineProps({
   roleNotes: String,
 })
 
-const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
+const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone', 'clearUndead'])
 </script>
 
 <template>
@@ -15,6 +15,7 @@ const emit = defineEmits(['override', 'revealRole', 'zombify', 'clone'])
       <button v-if="!roleRevealed" class="death-btn" @click="emit('revealRole')">Reveal role</button>
       <button v-if="!roleNotes" class="death-btn death-btn-zombie" @click="emit('zombify')">&#x1F9DF; Zombified</button>
       <button v-if="!roleNotes && playerCount === 6" class="death-btn death-btn-clone" @click="emit('clone')">&#x1F9EC; Cloned</button>
+      <button v-if="roleNotes" class="death-btn death-btn-override" @click="emit('clearUndead')">Undo {{ roleNotes }}</button>
       <button class="death-btn death-btn-override" @click="emit('override')">I'm not actually dead</button>
     </div>
   </div>

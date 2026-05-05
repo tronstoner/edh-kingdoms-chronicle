@@ -134,6 +134,13 @@ function handleZombify(seatIndex) {
   seat.roleNotes = 'Zombie'
 }
 
+function handleClearUndead(seatIndex) {
+  const seat = state.seats[seatIndex]
+  seat.roleNotes = null
+  seat.isDead = false
+  seat.deathOverridden = true
+}
+
 function handleClone(seatIndex) {
   const seat = state.seats[seatIndex]
   seat.life = 20
@@ -231,6 +238,7 @@ function handleClearGames() {
         @reveal-role="handleDeathRevealRole"
         @zombify="handleZombify"
         @clone="handleClone"
+        @clear-undead="handleClearUndead"
       />
 
       <!-- Mid-game seat editor -->

@@ -12,7 +12,7 @@ const props = defineProps({
   layoutRows: Array,
 })
 
-const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole', 'zombify', 'clone'])
+const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole', 'zombify', 'clone', 'clearUndead'])
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -145,6 +145,7 @@ const panelClasses = computed(() => {
       @reveal-role="emit('revealRole')"
       @zombify="emit('zombify')"
       @clone="emit('clone')"
+      @clear-undead="emit('clearUndead')"
     />
 
     <!-- Winner indicator -->
