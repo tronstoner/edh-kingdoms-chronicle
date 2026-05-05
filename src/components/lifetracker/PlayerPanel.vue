@@ -254,18 +254,18 @@ const panelClasses = computed(() => {
   flex-direction: column;
   align-items: center;
   padding: 3px 6px;
-  border: 1px solid #d4c8a8;
+  border: 1px solid #d4c8a8aa;
   border-radius: 3px;
   color: #d4c8a8;
 }
 
 .badge-icon {
-  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-size: clamp(0.7rem, 2vw, 1rem);
 }
 
 .badge-val {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.8rem, 2vw, 1.1rem);
+  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
   font-weight: 700;
 }
 
@@ -279,7 +279,7 @@ const panelClasses = computed(() => {
   gap: 2px;
   padding: 4px;
   border-radius: 3px;
-  border: 1px solid #d4c8a8;
+  border: 1px solid #d4c8a8aa;
   background: #1a161288;
   cursor: pointer;
   z-index: 4;

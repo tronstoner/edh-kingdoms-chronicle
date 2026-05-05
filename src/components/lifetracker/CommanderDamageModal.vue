@@ -386,7 +386,7 @@ onUnmounted(() => {
 
 .counter-val {
   font-family: 'Cinzel', serif;
-  font-size: 1.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: #8a7e6644;
 }
