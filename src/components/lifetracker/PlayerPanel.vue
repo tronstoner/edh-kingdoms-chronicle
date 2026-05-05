@@ -287,24 +287,25 @@ const panelClasses = computed(() => {
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 3px;
-  border-radius: 6px;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 8px;
   border: 1px solid #3d352966;
   background: #1a161288;
   cursor: pointer;
   z-index: 4;
+  width: clamp(120px, 30vw, 180px);
 }
 
 .minimap-row {
   display: flex;
-  gap: 1px;
+  gap: 2px;
 }
 
 .minimap-cell {
   position: relative;
-  width: clamp(22px, 6vw, 32px);
-  height: clamp(16px, 3.5vw, 22px);
+  flex: 1;
+  height: clamp(28px, 6vw, 40px);
   border-radius: 3px;
   overflow: hidden;
   display: flex;
@@ -326,7 +327,7 @@ const panelClasses = computed(() => {
 .minimap-dmg {
   position: relative;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.5rem, 1.3vw, 0.7rem);
+  font-size: clamp(0.65rem, 2vw, 0.9rem);
   color: #d4c8a844;
   z-index: 1;
 }
