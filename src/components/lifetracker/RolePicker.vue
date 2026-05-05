@@ -127,7 +127,8 @@ function select(role) {
   background: #1a1612;
   cursor: pointer;
   transition: all 0.2s;
-  min-width: 90px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .role-option:hover {
