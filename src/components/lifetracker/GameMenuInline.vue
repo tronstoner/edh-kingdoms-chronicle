@@ -61,6 +61,10 @@ function onTurnPointerLeave() {
       <i class="ms ms-battle"></i>
     </button>
 
+    <!-- Spacers fill remaining gap -->
+    <div v-if="vertical" class="menu-spacer menu-spacer--before" style="order: -1"></div>
+    <div class="menu-spacer"></div>
+
     <!-- Options modal -->
     <Teleport to="body">
       <div v-if="showMore" class="menu-modal-overlay" @click.self="showMore = false">
@@ -95,6 +99,7 @@ function onTurnPointerLeave() {
   gap: 3px;
   position: relative;
   width: 100%;
+  height: 100%;
 }
 
 .inline-menu--vertical {
@@ -141,6 +146,15 @@ function onTurnPointerLeave() {
 .turn-label {
   font-size: 1rem;
   line-height: 1;
+}
+
+.menu-spacer {
+  flex: 1;
+  width: 100%;
+  background: #1a1612;
+  border: 1px solid #3d3529;
+  border-radius: 3px;
+  min-height: 0;
 }
 
 
