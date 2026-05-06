@@ -218,8 +218,8 @@ const panelClasses = computed(() => {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 20rem;
+  transform: translate(-55%, -55%) perspective(400px) rotateX(20deg) rotateY(-20deg) rotateZ(12deg) scale(1.3);
+  font-size: 24rem;
   color: #000;
   opacity: 0.1;
   z-index: 0;
