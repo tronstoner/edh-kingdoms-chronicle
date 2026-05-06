@@ -138,7 +138,7 @@ onUnmounted(() => {
         <!-- Reveal role button -->
         <button class="counter-box role-box" @click="emit('revealRole')">
           <div class="counter-center">
-            <i class="ms ms-ability-suspect counter-icon role-icon"></i>
+            <i class="ms ms-ability-cloak counter-icon role-icon"></i>
             <span class="reveal-label" :class="{ active: seat.role }" :style="seat.role && seat.roleRevealed ? { color: ROLE_COLORS[seat.role] } : {}">
               {{ seat.role && seat.roleRevealed ? seat.role : 'Role' }}
             </span>
