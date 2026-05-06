@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { layoutsForCount } from '../../composables/useTableLayouts.js'
 
 const props = defineProps({
@@ -8,7 +9,7 @@ const props = defineProps({
 
 const emit = defineEmits(['select'])
 
-const layouts = layoutsForCount(props.playerCount)
+const layouts = computed(() => layoutsForCount(props.playerCount))
 </script>
 
 <template>
