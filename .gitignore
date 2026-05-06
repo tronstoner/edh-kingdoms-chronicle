@@ -5,6 +5,7 @@
 !.gitignore
 !.env.example
 !AGENTS.md
+!CLAUDE.md
 !LIFETRACKER.md
 !plans/
 !plans/**
