@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useManaGradient, manaGradient } from '../../composables/useManaGradient.js'
-import { colorIcons } from '../../mana.js'
+import { colorIcons, factionIcon } from '../../mana.js'
 import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
 
@@ -17,6 +17,7 @@ const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage',
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
 const manaIcons = computed(() => colorIcons(deckColors.value))
+const faction = computed(() => factionIcon(deckColors.value))
 
 const gradientOverlay = computed(() => {
   const grad = gradient.value
@@ -75,9 +76,12 @@ const panelClasses = computed(() => {
     <!-- Mana color gradient background -->
     <div v-if="gradientOverlay" class="gradient-bg" :style="{ background: gradientOverlay }"></div>
 
+    <!-- Faction watermark background -->
+    <i v-if="faction" :class="faction" class="faction-bg"></i>
+
     <!-- Player name & deck (tappable to edit) -->
     <div class="panel-header" @pointerdown.stop>
-      <span class="player-name" @click.stop="emit('openSeat')">{{ seat.player || 'Empty Seat' }}</span>
+      <span class="player-name" @click.stop="emit('openSeat')">{{ seat.player || 'Empty Seat' }}<i v-if="faction" :class="faction" class="faction-icon"></i></span>
       <span v-if="seat.deck" class="deck-info" @click.stop="emit('openSeat')">
         <span class="deck-name">{{ seat.deck.name }}</span>
         <span v-if="manaIcons.length" class="mana-icons">
@@ -208,6 +212,26 @@ const panelClasses = computed(() => {
   white-space: nowrap;
   padding: 0 8px;
 
+}
+
+.faction-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20rem;
+  color: #000;
+  opacity: 0.1;
+  z-index: 0;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.faction-icon {
+  margin-left: 6px;
+  font-size: 0.85em;
+  color: #8a7e66;
+  vertical-align: baseline;
 }
 
 .deck-info {
