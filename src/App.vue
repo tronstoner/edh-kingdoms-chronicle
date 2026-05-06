@@ -52,11 +52,18 @@ async function handleSignIn() {
   }
 }
 
+const mobileMenuOpen = ref(false)
+
 function handleSignOut() {
   signOut()
   signedIn.value = false
   data.value = null
+  mobileMenuOpen.value = false
   router.push('/')
+}
+
+function closeMobileMenu() {
+  mobileMenuOpen.value = false
 }
 </script>
 
@@ -73,11 +80,34 @@ function handleSignOut() {
           </svg>
           <h1 class="text-2xl font-beleren text-mtg-gold tracking-wide">EDH Kingdoms Chronicle</h1>
         </router-link>
+        <!-- Desktop nav -->
         <router-link to="/lifetracker" class="ml-auto text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide hidden sm:inline">Lifetracker</router-link>
         <button
           v-if="signedIn"
           @click="handleSignOut"
-          class="ml-4 text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors cursor-pointer font-body"
+          class="ml-4 text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors cursor-pointer font-body hidden sm:inline"
+        >
+          Sign out
+        </button>
+
+        <!-- Mobile hamburger -->
+        <button
+          class="ml-auto sm:hidden text-mtg-text-dim hover:text-mtg-gold transition-colors cursor-pointer p-1"
+          @click="mobileMenuOpen = !mobileMenuOpen"
+          aria-label="Menu"
+        >
+          <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Mobile dropdown -->
+      <div v-if="mobileMenuOpen" class="sm:hidden border-t border-mtg-gold/20 bg-mtg-dark/95 backdrop-blur px-4 py-3 flex flex-col gap-3">
+        <router-link to="/lifetracker" class="text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide" @click="closeMobileMenu">Lifetracker</router-link>
+        <button
+          v-if="signedIn"
+          @click="handleSignOut"
+          class="text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors cursor-pointer font-body text-left"
         >
           Sign out
         </button>
