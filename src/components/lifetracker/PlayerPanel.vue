@@ -81,7 +81,7 @@ const panelClasses = computed(() => {
 
     <!-- Player name & deck (tappable to edit) -->
     <div class="panel-header" @pointerdown.stop>
-      <span class="player-name" @click.stop="emit('openSeat')">{{ seat.player || 'Empty Seat' }}<i v-if="faction" :class="faction" class="faction-icon"></i></span>
+      <span class="player-name" @click.stop="emit('openSeat')"><i v-if="faction" :class="faction" class="faction-icon"></i>{{ seat.player || 'Empty Seat' }}</span>
       <span v-if="seat.deck" class="deck-info" @click.stop="emit('openSeat')">
         <span class="deck-name">{{ seat.deck.name }}</span>
         <span v-if="manaIcons.length" class="mana-icons">
@@ -228,7 +228,7 @@ const panelClasses = computed(() => {
 }
 
 .faction-icon {
-  margin-left: 6px;
+  margin-right: 6px;
   font-size: 0.85em;
   color: #8a7e66;
   vertical-align: baseline;
