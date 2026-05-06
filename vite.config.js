@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),
-          lifetracker: resolve(__dirname, 'lifetracker.html'),
+          lifetracker: resolve(__dirname, 'lifetracker/index.html'),
         },
       },
     },

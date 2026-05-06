@@ -12,7 +12,8 @@
 !plans/**
 !README.md
 !index.html
-!lifetracker.html
+!lifetracker/
+!lifetracker/index.html
 !package.json
 !package-lock.json
 !vite.config.js
