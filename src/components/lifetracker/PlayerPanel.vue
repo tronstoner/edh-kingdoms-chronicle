@@ -76,14 +76,14 @@ const panelClasses = computed(() => {
     <div v-if="gradientOverlay" class="gradient-bg" :style="{ background: gradientOverlay }"></div>
 
     <!-- Player name & deck (tappable to edit) -->
-    <div class="panel-header" @pointerdown.stop @click.stop="emit('openSeat')">
-      <div class="player-name">{{ seat.player || 'Empty Seat' }}</div>
-      <div v-if="seat.deck" class="deck-info">
+    <div class="panel-header" @pointerdown.stop>
+      <span class="player-name" @click.stop="emit('openSeat')">{{ seat.player || 'Empty Seat' }}</span>
+      <span v-if="seat.deck" class="deck-info" @click.stop="emit('openSeat')">
         <span class="deck-name">{{ seat.deck.name }}</span>
         <span v-if="manaIcons.length" class="mana-icons">
           <i v-for="c in manaIcons" :key="c.label" :class="[c.icon, 'ms-cost']"></i>
         </span>
-      </div>
+      </span>
     </div>
 
     <!-- Life total -->
@@ -189,29 +189,33 @@ const panelClasses = computed(() => {
 
 .panel-header {
   position: absolute;
-  top: 8px;
+  top: 0;
   left: 0;
   right: 0;
-  text-align: center;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   z-index: 8;
+
 }
 
 .player-name {
+  display: inline;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.75rem, 2.5vw, 1.1rem);
   color: #d4c8a8;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   padding: 0 8px;
+
 }
 
 .deck-info {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 4px;
   padding: 0 8px;
+
 }
 
 .deck-name {
