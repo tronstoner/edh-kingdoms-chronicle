@@ -5,6 +5,7 @@ const props = defineProps({
   seat: Object,
   allSeats: Array,
   playerCount: Number,
+  rotated: Boolean,
 })
 
 const emit = defineEmits(['select', 'close'])
@@ -47,7 +48,7 @@ function select(role) {
 
 <template>
   <div class="role-overlay" @click.self="emit('close')">
-    <div class="role-panel">
+    <div class="role-panel" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }">
       <div class="role-title font-beleren">{{ seat.player }}</div>
       <div class="role-subtitle">Reveal role</div>
       <div class="role-grid">

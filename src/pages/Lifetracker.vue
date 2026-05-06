@@ -298,6 +298,7 @@ function handleClearGames() {
         :seat="state.seats[rolePickerSeat]"
         :all-seats="state.seats"
         :player-count="state.playerCount"
+        :rotated="LAYOUTS[state.layoutId].rows[0].seats.includes(rolePickerSeat)"
         @select="handleRoleSelect"
         @close="rolePickerSeat = null"
       />

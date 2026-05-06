@@ -44,11 +44,19 @@ function cmdDmgFrom(fromIndex) {
   return d.cmd1 + d.cmd2
 }
 
+function isOtherSide(seatIndex) {
+  const myRow = props.layoutRows.find(r => r.seats.includes(props.seat.index))
+  const theirRow = props.layoutRows.find(r => r.seats.includes(seatIndex))
+  return myRow !== theirRow
+}
+
 function seatGradientStyle(seatIndex) {
   const s = props.allSeats?.[seatIndex]
   const grad = manaGradient(s?.deck?.colors || '')
   if (grad === 'transparent') return {}
-  return { background: grad }
+  const style = { background: grad }
+  if (isOtherSide(seatIndex)) style.transform = 'rotate(180deg)'
+  return style
 }
 
 const panelClasses = computed(() => {

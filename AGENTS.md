@@ -79,6 +79,10 @@ Roles are randomly assigned using MTG basic lands, so each role maps to a land c
 
 These are defined as CSS custom properties (`--color-role-*`) in `style.css`. Zombie/Clone conversion markers in the UI use neutral colors (not role colors) since they represent a state change, not a role.
 
+## Design References
+
+- [LIFETRACKER-DESIGN.md](LIFETRACKER-DESIGN.md) — Table orientation, modal rotation, and minimap rules for the lifetracker UI.
+
 ## Conventions
 
 - No global pip/npm installs — use `uv venv` for Python, project-local `node_modules` for JS.
