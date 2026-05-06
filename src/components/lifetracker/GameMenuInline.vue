@@ -48,7 +48,7 @@ function onTurnPointerLeave() {
       title="Tap: next turn. Hold: undo"
     >
       <i class="ms ms-planeswalker turn-icon"></i>
-      <span class="turn-label font-beleren">T{{ turnCount }}</span>
+      <span class="turn-label font-beleren">{{ turnCount }}</span>
     </button>
 
     <!-- More options -->
@@ -58,7 +58,7 @@ function onTurnPointerLeave() {
       @click="showMore = !showMore"
       title="More options"
     >
-      <span class="icon-dots">⋯</span>
+      <i class="ms ms-battle"></i>
     </button>
 
     <!-- Options modal -->
@@ -143,10 +143,6 @@ function onTurnPointerLeave() {
   line-height: 1;
 }
 
-.icon-dots {
-  font-size: 1.4rem;
-  line-height: 1;
-}
 
 :global(.menu-modal-overlay) {
   position: fixed;

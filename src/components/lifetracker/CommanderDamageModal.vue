@@ -135,24 +135,22 @@ onUnmounted(() => {
     <div class="cmd-panel" :class="{ closing }" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }" @click.stop>
       <!-- Counters row -->
       <div class="counters-row">
-        <div
-          ref="poisonEl"
-          class="counter-box"
-          @contextmenu.prevent
-          @pointerdown.prevent="poisonDown"
-          @pointerup.prevent="poisonUp"
-          @pointercancel="poisonUp"
-          @pointerleave="poisonUp"
-        >
-          <div class="counter-flash counter-flash-left" :class="{ flash: poisonFlash === 'left' }"></div>
-          <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"></div>
+        <!-- Reveal role button -->
+        <button class="counter-box role-box" @click="emit('revealRole')">
           <div class="counter-center">
-            <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
-            <span class="counter-val" :class="{ active: seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poison }}</span>
+            <i class="ms ms-ability-suspect counter-icon role-icon"></i>
+            <span class="reveal-label" :class="{ active: seat.role }" :style="seat.role && seat.roleRevealed ? { color: ROLE_COLORS[seat.role] } : {}">
+              {{ seat.role && seat.roleRevealed ? seat.role : 'Role' }}
+            </span>
           </div>
-          <span class="counter-hint counter-hint-left">&minus;</span>
-          <span class="counter-hint counter-hint-right">+</span>
-        </div>
+        </button>
+        <!-- Death toggle -->
+        <button class="counter-box reveal-role-box" :class="{ 'death-active': seat.isDead }" @click="emit('toggleDead')">
+          <div class="counter-center">
+            <i :class="seat.isDead ? 'ms ms-graveyard' : 'ms ms-ability-lifelink'" class="counter-icon death-icon"></i>
+            <span class="reveal-label" :class="{ active: seat.isDead }">{{ seat.isDead ? 'Dead' : 'Alive' }}</span>
+          </div>
+        </button>
         <div
           ref="taxEl"
           class="counter-box"
@@ -171,22 +169,24 @@ onUnmounted(() => {
           <span class="counter-hint counter-hint-left">&minus;</span>
           <span class="counter-hint counter-hint-right">+</span>
         </div>
-        <!-- Death toggle -->
-        <button class="counter-box reveal-role-box" :class="{ 'death-active': seat.isDead }" @click="emit('toggleDead')">
+        <div
+          ref="poisonEl"
+          class="counter-box"
+          @contextmenu.prevent
+          @pointerdown.prevent="poisonDown"
+          @pointerup.prevent="poisonUp"
+          @pointercancel="poisonUp"
+          @pointerleave="poisonUp"
+        >
+          <div class="counter-flash counter-flash-left" :class="{ flash: poisonFlash === 'left' }"></div>
+          <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"></div>
           <div class="counter-center">
-            <i :class="seat.isDead ? 'ms ms-graveyard' : 'ms ms-ability-lifelink'" class="reveal-icon-ms"></i>
-            <span class="reveal-label" :class="{ active: seat.isDead }">{{ seat.isDead ? 'Dead' : 'Alive' }}</span>
+            <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
+            <span class="counter-val" :class="{ active: seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poison }}</span>
           </div>
-        </button>
-        <!-- Reveal role button -->
-        <button class="counter-box reveal-role-box" @click="emit('revealRole')">
-          <div class="counter-center">
-            <span class="reveal-icon">{{ seat.role ? (seat.roleRevealed ? '👁️' : '?') : '👁️' }}</span>
-            <span class="reveal-label" :class="{ active: seat.role }" :style="seat.role && seat.roleRevealed ? { color: ROLE_COLORS[seat.role] } : {}">
-              {{ seat.role && seat.roleRevealed ? seat.role : 'Role' }}
-            </span>
-          </div>
-        </button>
+          <span class="counter-hint counter-hint-left">&minus;</span>
+          <span class="counter-hint counter-hint-right">+</span>
+        </div>
       </div>
 
       <!-- Enlarged table layout -->
@@ -327,6 +327,15 @@ onUnmounted(() => {
   justify-content: center;
 }
 
+.role-box {
+  cursor: pointer;
+  border-color: #c9a54e44;
+}
+
+.role-box:hover {
+  border-color: #c9a54e;
+}
+
 .reveal-role-box {
   cursor: pointer;
 }
@@ -438,7 +447,9 @@ onUnmounted(() => {
 }
 
 .poison-icon,
-.tax-icon {
+.tax-icon,
+.death-icon,
+.role-icon {
   color: #d4c8a8;
 }
 
