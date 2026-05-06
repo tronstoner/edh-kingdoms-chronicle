@@ -120,7 +120,7 @@ onUnmounted(() => {
 
 .pending-delta {
   position: absolute;
-  bottom: 30%;
+  top: 30%;
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Cinzel', serif;
