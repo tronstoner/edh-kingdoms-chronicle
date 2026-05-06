@@ -20,19 +20,17 @@ const layout = computed(() => LAYOUTS[props.layoutId])
 </script>
 
 <template>
-  <!-- 6-player: each row split as 2 seats | menu column | 1 seat -->
-  <div v-if="layout.menuColumn" class="table-layout">
-    <div
-      v-for="(row, ri) in layout.rows"
-      :key="ri"
-      class="table-row"
-    >
-      <!-- First two seats -->
+  <!-- 6-player: CSS grid with menu column between seats 2 and 3 -->
+  <div v-if="layout.menuColumn" class="table-layout table-layout--6p">
+    <template v-for="(row, ri) in layout.rows" :key="ri">
       <div
         v-for="seatIndex in row.seats.slice(0, 2)"
         :key="seatIndex"
         class="table-cell"
-        :style="{ transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined }"
+        :style="{
+          transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined,
+          gridRow: ri + 1,
+        }"
       >
         <PlayerPanel
           v-if="seats[seatIndex]"
@@ -50,12 +48,13 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @clear-undead="emit('clearUndead', seatIndex)"
         />
       </div>
-      <!-- Spacer to keep grid alignment (menu is absolutely positioned) -->
-      <div class="menu-column-spacer"></div>
-      <!-- Third seat -->
       <div
         class="table-cell"
-        :style="{ transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined }"
+        :style="{
+          transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined,
+          gridRow: ri + 1,
+          gridColumn: 4,
+        }"
       >
         <PlayerPanel
           v-if="seats[row.seats[2]]"
@@ -73,8 +72,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @clear-undead="emit('clearUndead', row.seats[2])"
         />
       </div>
-    </div>
-    <!-- Menu column spanning full height -->
+    </template>
     <div class="menu-column">
       <GameMenuInline
         :turn-count="turnCount"
@@ -116,7 +114,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
             @clear-undead="emit('clearUndead', row.seats[0])"
           />
         </div>
-        <div class="menu-gap" :class="{ 'menu-gap--rotated': row.rotate }" :style="{ transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined }">
+        <div class="menu-gap" :style="{ transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined }">
           <GameMenuInline
             :turn-count="turnCount"
             @advance-turn="(d) => emit('advanceTurn', d)"
@@ -207,24 +205,18 @@ const layout = computed(() => LAYOUTS[props.layoutId])
   z-index: 15;
 }
 
-.menu-gap--rotated {
-  align-items: flex-end;
+.table-layout--6p {
+  display: grid;
+  grid-template-columns: 1fr 1fr 48px 1fr;
+  grid-template-rows: 1fr 1fr;
 }
 
 .menu-column {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, 0);
+  grid-column: 3;
+  grid-row: 1 / -1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 48px;
-  z-index: 10;
-}
-
-.menu-column-spacer {
-  width: 48px;
-  min-width: 48px;
+  justify-content: center;
+  z-index: 15;
 }
 </style>

@@ -11,6 +11,7 @@ import RolePicker from '../components/lifetracker/RolePicker.vue'
 import ExportModal from '../components/lifetracker/ExportModal.vue'
 import ConcludeModal from '../components/lifetracker/ConcludeModal.vue'
 import ConfirmDialog from '../components/lifetracker/ConfirmDialog.vue'
+import Announcement from '../components/lifetracker/Announcement.vue'
 
 const router = useRouter()
 const {
@@ -116,6 +117,16 @@ function handleToggleDead() {
 
 function handleCmdTax(delta) {
   state.seats[cmdDamageTarget.value].commanderTax = Math.max(0, state.seats[cmdDamageTarget.value].commanderTax + delta)
+}
+
+// Turn advance with announcement
+const announceText = ref(null)
+
+function handleAdvanceTurn(delta) {
+  advanceTurn(delta)
+  if (delta > 0) {
+    announceText.value = `Turn ${state.turnCount}`
+  }
 }
 
 // Role picker
@@ -263,12 +274,15 @@ function handleClearGames() {
         @zombify="handleZombify"
         @clone="handleClone"
         @clear-undead="handleClearUndead"
-        @advance-turn="(d) => advanceTurn(d)"
+        @advance-turn="handleAdvanceTurn"
         @end-game="showConclude = true"
         @export="handleShowExport"
         @new-game="discardSaved"
         @back="handleBack"
       />
+
+      <!-- Turn announcement -->
+      <Announcement :text="announceText" @done="announceText = null" />
 
       <!-- Mid-game seat editor -->
       <DeckPicker
@@ -406,5 +420,6 @@ function handleClearGames() {
   background: #c9a54e33;
   border-color: #c9a54e;
 }
+
 
 </style>
