@@ -5,7 +5,7 @@ export const LAYOUTS = {
     label: '3 + 2',
     rows: [
       { seats: [0, 1, 2], rotate: 180 },
-      { seats: [3, 4], rotate: 0 },
+      { seats: [3, 4], rotate: 0, menuGap: true },
     ],
   },
   '5-2t3b': {
@@ -13,7 +13,7 @@ export const LAYOUTS = {
     playerCount: 5,
     label: '2 + 3',
     rows: [
-      { seats: [0, 1], rotate: 180 },
+      { seats: [0, 1], rotate: 180, menuGap: true },
       { seats: [2, 3, 4], rotate: 0 },
     ],
   },
@@ -21,6 +21,7 @@ export const LAYOUTS = {
     id: '6-3t3b',
     playerCount: 6,
     label: '3 + 3',
+    menuColumn: true,
     rows: [
       { seats: [0, 1, 2], rotate: 180 },
       { seats: [3, 4, 5], rotate: 0 },

@@ -8,7 +8,6 @@ import { LAYOUTS } from '../composables/useTableLayouts.js'
 import DeckPicker from '../components/lifetracker/DeckPicker.vue'
 import CommanderDamageModal from '../components/lifetracker/CommanderDamageModal.vue'
 import RolePicker from '../components/lifetracker/RolePicker.vue'
-import GameMenu from '../components/lifetracker/GameMenu.vue'
 import ExportModal from '../components/lifetracker/ExportModal.vue'
 import ConcludeModal from '../components/lifetracker/ConcludeModal.vue'
 import ConfirmDialog from '../components/lifetracker/ConfirmDialog.vue'
@@ -255,6 +254,7 @@ function handleClearGames() {
       <TableLayout
         :layout-id="state.layoutId"
         :seats="state.seats"
+        :turn-count="state.turnCount"
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
@@ -263,6 +263,11 @@ function handleClearGames() {
         @zombify="handleZombify"
         @clone="handleClone"
         @clear-undead="handleClearUndead"
+        @advance-turn="(d) => advanceTurn(d)"
+        @end-game="showConclude = true"
+        @export="handleShowExport"
+        @new-game="discardSaved"
+        @back="handleBack"
       />
 
       <!-- Mid-game seat editor -->
@@ -326,14 +331,6 @@ function handleClearGames() {
         @close="showConclude = false"
       />
 
-      <GameMenu
-        :turn-count="state.turnCount"
-        @advance-turn="advanceTurn"
-        @end-game="showConclude = true"
-        @export="handleShowExport"
-        @new-game="discardSaved"
-        @back="handleBack"
-      />
     </template>
 
     <!-- Export modal (available in any phase) -->

@@ -230,8 +230,8 @@ export function useLifetrackerState() {
     }
   }
 
-  function advanceTurn() {
-    state.turnCount++
+  function advanceTurn(delta = 1) {
+    state.turnCount = Math.max(1, state.turnCount + delta)
   }
 
   function saveGame() {
