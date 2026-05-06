@@ -11,6 +11,19 @@ const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back']
 
 const showMore = ref(false)
 const showConfirmNew = ref(false)
+const isFullscreen = ref(!!document.fullscreenElement)
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen()
+  } else {
+    document.documentElement.requestFullscreen()
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  isFullscreen.value = !!document.fullscreenElement
+})
 
 // Hold-to-decrement for turn counter
 let holdTimer = null
@@ -59,6 +72,15 @@ function onTurnPointerLeave() {
       title="More options"
     >
       <i class="ms ms-battle"></i>
+    </button>
+
+    <!-- Fullscreen toggle -->
+    <button
+      class="menu-icon"
+      @click="toggleFullscreen"
+      :title="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
+    >
+      <span class="fullscreen-icon">{{ isFullscreen ? '◱' : '⛶' }}</span>
     </button>
 
     <!-- Spacers fill remaining gap -->
@@ -145,6 +167,11 @@ function onTurnPointerLeave() {
 
 .turn-label {
   font-size: 1rem;
+  line-height: 1;
+}
+
+.fullscreen-icon {
+  font-size: 1.4rem;
   line-height: 1;
 }
 
