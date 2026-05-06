@@ -1,5 +1,5 @@
 <script setup>
-import { ref, provide, computed } from 'vue'
+import { ref, provide, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLifetrackerState } from '../composables/useLifetrackerState.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
@@ -32,6 +32,32 @@ const {
 } = useLifetrackerState()
 
 provide('lifetracker', state)
+
+// Keep screen awake while lifetracker is open
+let wakeLock = null
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen')
+    }
+  } catch { /* user denied or not supported */ }
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') requestWakeLock()
+}
+
+onMounted(() => {
+  requestWakeLock()
+  document.addEventListener('visibilitychange', onVisibilityChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  wakeLock?.release()
+  wakeLock = null
+})
 
 const hasSaved = resumeOrNew()
 const showResume = ref(hasSaved && state.phase !== 'setup')
