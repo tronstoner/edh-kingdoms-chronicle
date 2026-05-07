@@ -97,8 +97,8 @@ function select(role) {
 }
 
 .role-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 220px);
   gap: 10px;
   justify-content: center;
   width: 100%;
@@ -108,16 +108,14 @@ function select(role) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 12px 12px 16px;
+  gap: 12px;
+  padding: 16px 14px 18px;
   border-radius: 6px;
   border: 2px solid #3d3529;
   background: #1a1612;
   cursor: pointer;
   transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-  flex: 1 1 160px;
-  min-width: 150px;
-  max-width: 220px;
+  width: 100%;
 }
 
 .role-option:hover {
@@ -137,7 +135,7 @@ function select(role) {
 
 .role-name {
   font-family: 'Cinzel', serif;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   letter-spacing: 0.02em;
 }
 

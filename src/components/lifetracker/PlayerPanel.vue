@@ -74,7 +74,7 @@ const panelClasses = computed(() => {
 
     <!-- Player name & deck (tappable to edit) -->
     <div class="panel-header" @pointerdown.stop>
-      <span class="player-name" @click.stop="emit('openSeat')"><i v-if="faction" :class="faction" class="faction-icon"></i>{{ seat.player || 'Empty Seat' }}</span>
+      <span class="player-name" @click.stop="emit('openSeat')"><i v-if="faction" :class="faction" class="faction-icon"></i>{{ seat.player || 'Empty Seat' }}<img v-if="seat.role && seat.roleRevealed" :src="roleIconUrl(seat.role)" class="name-role-icon" alt="" /></span>
       <span v-if="seat.deck" class="deck-info" @click.stop="emit('openSeat')">
         <span class="deck-name">{{ seat.deck.name }}</span>
         <span v-if="manaIcons.length" class="mana-icons">
@@ -88,25 +88,27 @@ const panelClasses = computed(() => {
       {{ seat.life }}
     </div>
 
-    <!-- Role + status badges (left side) -->
+    <!-- Role + status badges (left side, stacked vertically) -->
     <div class="left-badges">
       <div
         v-if="seat.role && seat.roleRevealed"
-        class="badge"
+        class="role-tag"
         :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
         @pointerdown.stop
         @click.stop="emit('revealRole')"
       >
-        <img class="badge-icon role-img" :src="roleIconUrl(seat.role)" alt="" />
-        <span class="badge-val">{{ lifetrackerRoleLabel(seat.role) }}</span>
+        <img class="role-tag-img" :src="roleIconUrl(seat.role)" alt="" />
+        <span class="role-tag-label">
+          <span v-for="word in lifetrackerRoleLabel(seat.role).split(' ')" :key="word">{{ word }}</span>
+        </span>
       </div>
-      <div v-if="seat.roleNotes === 'Zombie'" class="badge" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
-        <img class="badge-icon role-img" :src="conversionIconUrl('Zombie')" alt="" />
-        <span class="badge-val">Zombie</span>
+      <div v-if="seat.roleNotes === 'Zombie'" class="role-tag role-tag-conversion" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
+        <img class="role-tag-img" :src="conversionIconUrl('Zombie')" alt="" />
+        <span class="role-tag-label"><span>Zombie</span></span>
       </div>
-      <div v-else-if="seat.roleNotes === 'Clone'" class="badge" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('clearUndead')">
-        <img class="badge-icon role-img" :src="conversionIconUrl('Clone')" alt="" />
-        <span class="badge-val">Clone</span>
+      <div v-else-if="seat.roleNotes === 'Clone'" class="role-tag role-tag-conversion" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('clearUndead')">
+        <img class="role-tag-img" :src="conversionIconUrl('Clone')" alt="" />
+        <span class="role-tag-label"><span>Clone</span></span>
       </div>
     </div>
 
@@ -278,9 +280,64 @@ const panelClasses = computed(() => {
   top: 8px;
   left: 8px;
   display: flex;
+  flex-direction: column;
   gap: 4px;
   z-index: 8;
   cursor: pointer;
+  align-items: stretch;
+}
+
+.name-role-icon {
+  width: clamp(14px, 2.6vw, 20px);
+  height: clamp(14px, 2.6vw, 20px);
+  object-fit: contain;
+  vertical-align: middle;
+  margin-left: 6px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  display: inline-block;
+}
+
+.role-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 6px 6px;
+  border: 1px solid #d4c8a8aa;
+  border-radius: 4px;
+  color: #d4c8a8;
+  background: rgba(26, 22, 18, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.role-tag-img {
+  width: clamp(30px, 5.2vw, 48px);
+  height: clamp(30px, 5.2vw, 48px);
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.role-tag-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.55rem, 1.4vw, 0.75rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.role-tag-conversion .role-tag-img {
+  width: clamp(22px, 4vw, 34px);
+  height: clamp(22px, 4vw, 34px);
+}
+
+.role-tag-conversion .role-tag-label {
+  font-size: clamp(0.5rem, 1.25vw, 0.65rem);
 }
 
 .counter-badges {
@@ -305,14 +362,6 @@ const panelClasses = computed(() => {
 
 .badge-icon {
   font-size: clamp(0.7rem, 2vw, 1rem);
-}
-
-.badge-icon.role-img {
-  width: clamp(16px, 3.2vw, 22px);
-  height: clamp(16px, 3.2vw, 22px);
-  object-fit: contain;
-  display: block;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .badge-val {

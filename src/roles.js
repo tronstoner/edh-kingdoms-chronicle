@@ -44,3 +44,11 @@ export function conversionIconUrl(noteRole) {
   if (noteRole === 'Clone') return roleIconUrl('Clone Lord')
   return null
 }
+
+export const ROLE_DESCRIPTIONS = {
+  King: 'Rules the kingdom with the loyal Knight at his side. The two share a single fate — they win together when the Lord falls last.',
+  Knight: 'Sworn to the King. Wins when his liege survives, loses when the throne is overthrown. Together they form the Crown.',
+  Goblin: 'Always part of a pair. Wild, chaotic, and unpredictable — Goblins win or lose as a team, never apart.',
+  'Zombie Lord': 'Plays alone against the kingdom. Killed players rise as Zombies (20 life) and fight for him. Wins by killing the King last, or by leveling everyone at once. If the Lord falls, his Zombies fall with him.',
+  'Clone Lord': 'A rare blue-tinged Lord variant. Killed players become Clones rather than Zombies, but the rules of life and death are the same — the Lord wins the room or perishes with his minions.',
+}

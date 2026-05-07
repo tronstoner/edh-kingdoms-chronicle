@@ -1,17 +1,30 @@
 <script setup>
+import { ref, computed } from 'vue'
 import ChartCard from './ChartCard.vue'
+import RoleDetailModal from './RoleDetailModal.vue'
 import { ROLE_COLORS, rolePortraitUrl } from '../roles.js'
+import { computeLordSplits } from '../analysis.js'
 
-const props = defineProps({ players: Array })
+const props = defineProps({
+  players: Array,
+  games: { type: Array, default: () => [] },
+})
 
-const roles = ['King', 'Knight', 'Goblin', 'Lord']
+const roles = ['King', 'Knight', 'Goblin', 'Zombie Lord', 'Clone Lord']
+
+const lordSplits = computed(() => computeLordSplits(props.games))
 
 function getRoleData(player, role) {
-  const key = role.toLowerCase()
-  return {
-    games: player[key + 'Games'],
-    winRate: player[key + 'WinRate'],
+  if (role === 'Zombie Lord') {
+    const s = lordSplits.value[player.name]
+    return { games: s?.zombieLordGames || 0, winRate: s?.zombieLordWinRate ?? null }
   }
+  if (role === 'Clone Lord') {
+    const s = lordSplits.value[player.name]
+    return { games: s?.cloneLordGames || 0, winRate: s?.cloneLordWinRate ?? null }
+  }
+  const key = role.toLowerCase()
+  return { games: player[key + 'Games'], winRate: player[key + 'WinRate'] }
 }
 
 function cellStyle(wr) {
@@ -26,6 +39,10 @@ function cellStyle(wr) {
 function pct(v) {
   return v != null ? (v * 100).toFixed(0) + '%' : null
 }
+
+const detailRole = ref(null)
+function openDetail(role) { detailRole.value = role }
+function closeDetail() { detailRole.value = null }
 </script>
 
 <template>
@@ -38,13 +55,21 @@ function pct(v) {
             <th class="text-left py-3 pr-6 font-beleren text-mtg-gold-light text-sm tracking-wider uppercase">Champion</th>
             <th
               v-for="r in roles" :key="r"
-              class="text-center py-3 px-4 font-beleren text-sm tracking-wider uppercase align-bottom"
+              class="text-center py-3 px-3 font-beleren text-sm tracking-wider uppercase align-bottom"
               :style="{ color: ROLE_COLORS[r] }"
             >
-              <div class="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                class="role-header-btn"
+                :style="{ color: ROLE_COLORS[r] }"
+                :aria-label="`About ${r}`"
+                @click="openDetail(r)"
+              >
                 <img :src="rolePortraitUrl(r)" :alt="r" class="role-portrait-thumb" />
-                <span>{{ r }}</span>
-              </div>
+                <span class="role-header-label">
+                  <span v-for="word in r.split(' ')" :key="word">{{ word }}</span>
+                </span>
+              </button>
             </th>
           </tr>
         </thead>
@@ -88,14 +113,48 @@ function pct(v) {
         <span class="ml-auto italic">Allied wins count for both members</span>
       </div>
     </div>
+
+    <Teleport to="body">
+      <RoleDetailModal v-if="detailRole" :role="detailRole" @close="closeDetail" />
+    </Teleport>
   </ChartCard>
 </template>
 
 <style scoped>
+.role-header-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-family: 'Cinzel', serif;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  transition: background 0.15s, transform 0.15s;
+}
+.role-header-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+}
+
 .role-portrait-thumb {
-  width: clamp(56px, 7vw, 96px);
+  width: clamp(48px, 6.5vw, 88px);
   aspect-ratio: 1 / 1;
   object-fit: contain;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.role-header-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
 }
 </style>

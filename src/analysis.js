@@ -2,6 +2,35 @@
  * Compute per-player stats derived from the raw game log.
  */
 
+/**
+ * Per-player split of Lord games into Zombie Lord (role='Lord') vs Clone Lord (role='Clone Lord').
+ * The Players sheet only carries combined Lord stats; we derive the split from the game log here.
+ *
+ * Returns: { [playerName]: { zombieLordGames, zombieLordWinRate, cloneLordGames, cloneLordWinRate } }
+ */
+export function computeLordSplits(games) {
+  const out = {}
+  for (const game of games) {
+    for (const p of game.players) {
+      if (!p.player) continue
+      let key
+      if (p.role === 'Lord') key = 'zombieLord'
+      else if (p.role === 'Clone Lord') key = 'cloneLord'
+      else continue
+      if (!out[p.player]) {
+        out[p.player] = { zombieLordGames: 0, zombieLordWins: 0, cloneLordGames: 0, cloneLordWins: 0 }
+      }
+      out[p.player][key + 'Games']++
+      if (p.result === 'Win') out[p.player][key + 'Wins']++
+    }
+  }
+  for (const stats of Object.values(out)) {
+    stats.zombieLordWinRate = stats.zombieLordGames > 0 ? stats.zombieLordWins / stats.zombieLordGames : null
+    stats.cloneLordWinRate = stats.cloneLordGames > 0 ? stats.cloneLordWins / stats.cloneLordGames : null
+  }
+  return out
+}
+
 export function computeRoleDistribution(games, playerName) {
   const dist = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
   let total = 0
