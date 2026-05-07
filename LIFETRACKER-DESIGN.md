@@ -45,8 +45,9 @@ In practice this means two coordinate systems coexist:
 
 The game menu is not a floating overlay — it lives *inside* the table grid, occupying the natural gap between seats:
 
-- **5 players (3+2):** The 2-seat row has a gap between its two seats. The menu icons and turn-cycle indicator fit in this gap as square buttons.
+- **5 players (3+2):** The 2-seat row has a gap between its two seats. The menu icons fit in this gap.
 - **6 players (3+3):** A vertical gap runs between columns 2 and 3, spanning both rows. All columns remain equal width.
+- The menu gap is sized for comfortable iPad tap targets — non-turn buttons render as squares matching the gap width; the turn-cycle indicator is double-height so it stands out and is easy to hit.
 - The menu rotates with its row — if it's in the top row (rotated 180°), the icons flip with it. The player just flips the device to use their preferred orientation.
 - The turn-cycle indicator doubles as an increment button (tap to advance). Hold to decrement for corrections.
 - Buttons with sub-menus (e.g. "...") open their options as a dropdown/popover from that button.
@@ -62,6 +63,14 @@ A planned "desktop mode" disables all seat rotation — every panel renders righ
 - Modals do not need the `rotated` prop
 
 This mode does not exist yet but the rotation system should remain easy to disable at the layout level (e.g. a `rotate: 0` override on all rows).
+
+## Commander Damage Data Model
+
+Each seat tracks `commanderDamage[fromSeat] = { cmd1, cmd2 }` for damage received from every other seat. The `hasPartners` flag — whether a player runs partner commanders — lives on the **dealer's seat** (`seat.hasPartners`), not on each opponent's damage entry. This is the single source of truth: if player A toggles partner mode for player B in their own damage modal, every other player's damage map sees B as dual-commander too.
+
+Toggling between dual and single mode never zeros `cmd2` — the value is preserved so the player can flip back without losing tracked damage.
+
+Lethality is per-commander (each `cmd1` or `cmd2 >= 21` is lethal alone), not summed. The minimap on `PlayerPanel` shows `cmd1/cmd2` when the dealer has partners and a single value otherwise.
 
 ## General Rules
 
