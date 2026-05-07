@@ -7,7 +7,7 @@ const LS_LAST_SETUP = 'edhlog-lt-last-setup'
 function createSeat(index, playerCount) {
   const commanderDamage = {}
   for (let i = 0; i < playerCount; i++) {
-    commanderDamage[i] = { cmd1: 0, cmd2: 0, hasPartners: false }
+    commanderDamage[i] = { cmd1: 0, cmd2: 0 }
   }
   return {
     index,
@@ -20,6 +20,7 @@ function createSeat(index, playerCount) {
     poisonEnabled: false,
     commanderTax: 0,
     commanderDamage,
+    hasPartners: false,
     isDead: false,
     deathOverridden: false,
     deathTurn: null,

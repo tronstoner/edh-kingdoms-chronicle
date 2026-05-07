@@ -117,10 +117,9 @@ function handleCmdDamageChange(targetSeat, fromSeat, cmdIndex, delta) {
   changeCommanderDamage(targetSeat, fromSeat, cmdIndex, delta)
 }
 
-function handleTogglePartners(targetSeat, fromSeat) {
-  const dmg = state.seats[targetSeat].commanderDamage[fromSeat]
-  dmg.hasPartners = !dmg.hasPartners
-  if (!dmg.hasPartners) dmg.cmd2 = 0
+function handleTogglePartners(_targetSeat, fromSeat) {
+  const dealer = state.seats[fromSeat]
+  dealer.hasPartners = !dealer.hasPartners
 }
 
 function handleCmdPoison(delta) {

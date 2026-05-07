@@ -104,7 +104,13 @@ function cmd2From(si) {
 }
 
 function hasPartners(si) {
-  return props.seat.commanderDamage[si]?.hasPartners || false
+  return props.allSeats[si]?.hasPartners || false
+}
+
+function hasIcons(si) {
+  const s = props.allSeats[si]
+  if (!s) return false
+  return (s.role && s.roleRevealed) || !!conversionIconUrl(s.roleNotes)
 }
 
 function isFlash(key, side) {
@@ -252,7 +258,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Dual commander seat (split in half) -->
-            <div v-else class="cmd-seat cmd-seat-split" :class="{ 'cmd-self': si === seat.index }">
+            <div v-else class="cmd-seat cmd-seat-split" :class="{ 'cmd-self': si === seat.index, 'has-icons': hasIcons(si) }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
               <div
                 v-if="(allSeats[si]?.role && allSeats[si]?.roleRevealed) || conversionIconUrl(allSeats[si]?.roleNotes)"
@@ -754,6 +760,11 @@ onUnmounted(() => {
   justify-content: center;
   pointer-events: none;
   z-index: 2;
+}
+
+/* In partner mode shift the whole damage group below the icons (only when icons are shown). */
+.cmd-seat-split.has-icons {
+  padding-top: clamp(36px, 7.5vw, 56px);
 }
 
 .cmd-split-dmg {

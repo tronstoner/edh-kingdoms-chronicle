@@ -32,10 +32,24 @@ const roleColor = computed(() => {
   return ROLE_COLORS[props.seat.role]
 })
 
-function cmdDmgFrom(fromIndex) {
+function dealerHasPartners(fromIndex) {
+  return props.allSeats?.[fromIndex]?.hasPartners || false
+}
+
+function dmgText(fromIndex) {
   const d = props.seat.commanderDamage[fromIndex]
-  if (!d) return 0
-  return d.cmd1 + d.cmd2
+  if (!d) return ''
+  if (dealerHasPartners(fromIndex)) {
+    if (!d.cmd1 && !d.cmd2) return ''
+    return `${d.cmd1}/${d.cmd2}`
+  }
+  return d.cmd1 || ''
+}
+
+function hasDmg(fromIndex) {
+  const d = props.seat.commanderDamage[fromIndex]
+  if (!d) return false
+  return dealerHasPartners(fromIndex) ? (d.cmd1 + d.cmd2 > 0) : (d.cmd1 > 0)
 }
 
 function isOtherSide(seatIndex) {
@@ -143,7 +157,7 @@ const panelClasses = computed(() => {
           :class="{ 'minimap-self': si === seat.index }"
         >
           <div class="minimap-grad" :style="seatGradientStyle(si)"></div>
-          <span class="minimap-dmg" :class="{ 'has-damage': cmdDmgFrom(si) > 0 }">{{ cmdDmgFrom(si) || '' }}</span>
+          <span class="minimap-dmg" :class="{ 'has-damage': hasDmg(si) }">{{ dmgText(si) }}</span>
         </div>
       </div>
     </div>
