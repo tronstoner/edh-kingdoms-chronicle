@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useManaGradient, manaGradient } from '../../composables/useManaGradient.js'
 import { colorIcons, factionIcon } from '../../mana.js'
+import { ROLE_COLORS, roleIconUrl, conversionIconUrl, lifetrackerRoleLabel } from '../../roles.js'
 import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
 
@@ -25,14 +26,6 @@ const gradientOverlay = computed(() => {
   if (grad.startsWith('linear-gradient')) return grad
   return `linear-gradient(135deg, ${grad}, ${grad})`
 })
-
-const ROLE_COLORS = {
-  King: '#e2b84a',
-  Knight: '#6ab86a',
-  Goblin: '#d95555',
-  Lord: '#a47be0',
-  'Clone Lord': '#5ba3d9',
-}
 
 const roleColor = computed(() => {
   if (!props.seat.role || !props.seat.roleRevealed) return null
@@ -104,15 +97,15 @@ const panelClasses = computed(() => {
         @pointerdown.stop
         @click.stop="emit('revealRole')"
       >
-        <span class="badge-icon">{{ { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }[seat.role] }}</span>
-        <span class="badge-val">{{ seat.role }}</span>
+        <img class="badge-icon role-img" :src="roleIconUrl(seat.role)" alt="" />
+        <span class="badge-val">{{ lifetrackerRoleLabel(seat.role) }}</span>
       </div>
       <div v-if="seat.roleNotes === 'Zombie'" class="badge" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
-        <span class="badge-icon">&#x1F9DF;</span>
+        <img class="badge-icon role-img" :src="conversionIconUrl('Zombie')" alt="" />
         <span class="badge-val">Zombie</span>
       </div>
       <div v-else-if="seat.roleNotes === 'Clone'" class="badge" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('clearUndead')">
-        <span class="badge-icon">&#x1F9EC;</span>
+        <img class="badge-icon role-img" :src="conversionIconUrl('Clone')" alt="" />
         <span class="badge-val">Clone</span>
       </div>
     </div>
@@ -312,6 +305,14 @@ const panelClasses = computed(() => {
 
 .badge-icon {
   font-size: clamp(0.7rem, 2vw, 1rem);
+}
+
+.badge-icon.role-img {
+  width: clamp(16px, 3.2vw, 22px);
+  height: clamp(16px, 3.2vw, 22px);
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .badge-val {

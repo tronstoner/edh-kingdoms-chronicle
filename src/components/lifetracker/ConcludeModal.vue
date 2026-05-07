@@ -1,16 +1,9 @@
 <script setup>
 import { ref } from 'vue'
+import { ROLE_COLORS, roleIconUrl, lifetrackerRoleLabel } from '../../roles.js'
 
 const ROLES = ['King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
 const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
-const ROLE_ICONS = { King: '👑', Knight: '🛡️', Goblin: '🔥', Lord: '🧟', 'Clone Lord': '🧬' }
-const ROLE_COLORS = {
-  King: '#e2b84a',
-  Knight: '#6ab86a',
-  Goblin: '#d95555',
-  Lord: '#a47be0',
-  'Clone Lord': '#5ba3d9',
-}
 
 const props = defineProps({
   seats: Array,
@@ -88,8 +81,8 @@ function handleSaveAndExport() {
               :style="r.role === role ? { color: ROLE_COLORS[role], borderColor: ROLE_COLORS[role] + '88' } : {}"
               @click="selectRole(i, role)"
             >
-              <span class="role-chip-icon">{{ ROLE_ICONS[role] }}</span>
-              <span class="role-chip-label">{{ role }}</span>
+              <img class="role-chip-icon" :src="roleIconUrl(role)" alt="" />
+              <span class="role-chip-label">{{ lifetrackerRoleLabel(role) }}</span>
             </button>
           </div>
         </div>
@@ -240,7 +233,10 @@ function handleSaveAndExport() {
 }
 
 .role-chip-icon {
-  font-size: 1rem;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
 }
 
 .role-chip-label {

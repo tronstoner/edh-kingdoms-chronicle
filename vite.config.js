@@ -5,8 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  // Ensure base always ends with '/' so import.meta.env.BASE_URL is consistently formed.
+  const rawBase = env.VITE_BASE_PATH || '/'
+  const base = rawBase.endsWith('/') ? rawBase : rawBase + '/'
   return {
-    base: env.VITE_BASE_PATH || '/',
+    base,
     build: {
       rollupOptions: {
         input: {

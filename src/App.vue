@@ -75,16 +75,12 @@ function closeMobileMenu() {
     <header class="border-b-2 border-mtg-gold/30 bg-mtg-dark/90 backdrop-blur sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
         <router-link to="/" class="flex items-center gap-3 no-underline">
-          <svg class="w-8 h-8 shrink-0" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 34 L4 16 L14 24 L24 8 L34 24 L44 16 L40 34Z" fill="currentColor" class="text-mtg-gold"/>
-            <rect x="8" y="34" width="32" height="6" rx="2" fill="currentColor" class="text-mtg-gold"/>
-            <circle cx="4" cy="15" r="3" fill="#c0392b"/><circle cx="24" cy="7" r="3.5" fill="#c0392b"/><circle cx="44" cy="15" r="3" fill="#c0392b"/>
-            <circle cx="16" cy="37" r="1.5" fill="#c0392b" opacity="0.8"/><circle cx="24" cy="37" r="1.5" fill="#c0392b" opacity="0.8"/><circle cx="32" cy="37" r="1.5" fill="#c0392b" opacity="0.8"/>
-          </svg>
+          <img src="/crown-128.png" alt="" class="w-9 h-9 shrink-0" />
           <h1 class="text-2xl font-beleren text-mtg-gold tracking-wide">EDH Kingdoms Chronicle</h1>
         </router-link>
         <!-- Desktop nav -->
-        <router-link to="/lifetracker" class="ml-auto text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide hidden sm:inline">Lifetracker</router-link>
+        <router-link to="/dashboard" class="ml-auto text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide hidden sm:inline">Chronicle</router-link>
+        <router-link to="/lifetracker" class="ml-4 text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide hidden sm:inline">Lifetracker</router-link>
         <button
           v-if="canToggleFullscreen"
           @click="toggleFullscreen"
@@ -115,6 +111,7 @@ function closeMobileMenu() {
 
       <!-- Mobile dropdown -->
       <div v-if="mobileMenuOpen" class="sm:hidden border-t border-mtg-gold/20 bg-mtg-dark/95 backdrop-blur px-4 py-3 flex flex-col gap-3">
+        <router-link to="/dashboard" class="text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide" @click="closeMobileMenu">Chronicle</router-link>
         <router-link to="/lifetracker" class="text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide" @click="closeMobileMenu">Lifetracker</router-link>
         <button
           v-if="canToggleFullscreen"

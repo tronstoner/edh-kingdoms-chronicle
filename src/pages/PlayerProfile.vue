@@ -150,7 +150,7 @@ const recentGames = computed(() =>
 
   <div v-else>
     <!-- Back link -->
-    <router-link to="/" class="inline-flex items-center gap-2 text-mtg-text-dim hover:text-mtg-gold transition-colors mb-6 font-body no-underline">
+    <router-link to="/dashboard" class="inline-flex items-center gap-2 text-mtg-text-dim hover:text-mtg-gold transition-colors mb-6 font-body no-underline">
       &larr; Back to Dashboard
     </router-link>
 

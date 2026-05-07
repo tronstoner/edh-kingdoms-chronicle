@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { ROLE_COLORS, rolePortraitUrl, lifetrackerRoleLabel } from '../../roles.js'
 
 const props = defineProps({
   seat: Object,
@@ -12,22 +13,6 @@ const emit = defineEmits(['select', 'close'])
 
 const ROLES_5 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord']
 const ROLES_6 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord', 'Clone Lord']
-
-const ROLE_COLORS = {
-  King: '#e2b84a',
-  Knight: '#6ab86a',
-  Goblin: '#d95555',
-  Lord: '#a47be0',
-  'Clone Lord': '#5ba3d9',
-}
-
-const ROLE_ICONS = {
-  King: '👑',
-  Knight: '🛡️',
-  Goblin: '🔥',
-  Lord: '🧟',
-  'Clone Lord': '🧬',
-}
 
 const availableRoles = computed(() => {
   const all = props.playerCount === 6 ? [...ROLES_6] : [...ROLES_5]
@@ -59,8 +44,8 @@ function select(role) {
           :style="{ borderColor: ROLE_COLORS[role] + '66' }"
           @click="select(role)"
         >
-          <span class="role-icon">{{ ROLE_ICONS[role] }}</span>
-          <span class="role-name" :style="{ color: ROLE_COLORS[role] }">{{ role }}</span>
+          <img class="role-portrait" :src="rolePortraitUrl(role)" :alt="role" />
+          <span class="role-name" :style="{ color: ROLE_COLORS[role] }">{{ lifetrackerRoleLabel(role) }}</span>
         </button>
       </div>
       <button
@@ -89,8 +74,10 @@ function select(role) {
   border: 2px solid #3d3529;
   border-radius: 3px;
   padding: 32px;
-  width: 92vw;
-  max-width: 600px;
+  width: 94vw;
+  max-width: 1000px;
+  max-height: 92vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -122,27 +109,36 @@ function select(role) {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 24px 20px;
-  border-radius: 3px;
+  padding: 12px 12px 16px;
+  border-radius: 6px;
   border: 2px solid #3d3529;
   background: #1a1612;
   cursor: pointer;
-  transition: all 0.2s;
-  flex: 1 1 0;
-  min-width: 0;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  flex: 1 1 160px;
+  min-width: 150px;
+  max-width: 220px;
 }
 
 .role-option:hover {
-  background: #231f1a;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
-.role-icon {
-  font-size: 3rem;
+.role-portrait {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .role-name {
   font-family: 'Cinzel', serif;
   font-size: 1.1rem;
+  letter-spacing: 0.02em;
 }
 
 .role-clear-btn {

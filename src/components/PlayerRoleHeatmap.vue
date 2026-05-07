@@ -1,16 +1,10 @@
 <script setup>
 import ChartCard from './ChartCard.vue'
+import { ROLE_COLORS, rolePortraitUrl } from '../roles.js'
 
 const props = defineProps({ players: Array })
 
 const roles = ['King', 'Knight', 'Goblin', 'Lord']
-
-const ROLE_COLORS = {
-  King: '#e2b84a',
-  Knight: '#6ab86a',
-  Goblin: '#d95555',
-  Lord: '#a47be0',
-}
 
 function getRoleData(player, role) {
   const key = role.toLowerCase()
@@ -44,9 +38,14 @@ function pct(v) {
             <th class="text-left py-3 pr-6 font-beleren text-mtg-gold-light text-sm tracking-wider uppercase">Champion</th>
             <th
               v-for="r in roles" :key="r"
-              class="text-center py-3 px-4 font-beleren text-sm tracking-wider uppercase"
+              class="text-center py-3 px-4 font-beleren text-sm tracking-wider uppercase align-bottom"
               :style="{ color: ROLE_COLORS[r] }"
-            >{{ r }}</th>
+            >
+              <div class="flex flex-col items-center gap-2">
+                <img :src="rolePortraitUrl(r)" :alt="r" class="role-portrait-thumb" />
+                <span>{{ r }}</span>
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -91,3 +90,12 @@ function pct(v) {
     </div>
   </ChartCard>
 </template>
+
+<style scoped>
+.role-portrait-thumb {
+  width: clamp(56px, 7vw, 96px);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+}
+</style>

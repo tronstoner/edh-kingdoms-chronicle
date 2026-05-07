@@ -72,7 +72,7 @@ function handleNewGame() {
 }
 
 function handleBack() {
-  router.push('/')
+  router.push('/dashboard')
 }
 
 function handleSetCount(count, layoutId) {

@@ -26,3 +26,14 @@
 !public/
 !public/**
 
+# Allow artwork sources (regenerated into public/ via `npm run assets`)
+!resources/
+!resources/**
+
+# Allow build/utility scripts
+!scripts/
+!scripts/**
+
+# Always ignore macOS Finder metadata, even inside allowlisted dirs
+**/.DS_Store
+
