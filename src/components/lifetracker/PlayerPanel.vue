@@ -102,6 +102,15 @@ const panelClasses = computed(() => {
           <span v-for="word in lifetrackerRoleLabel(seat.role).split(' ')" :key="word">{{ word }}</span>
         </span>
       </div>
+      <div
+        v-else
+        class="role-tag role-tag-pick"
+        @pointerdown.stop
+        @click.stop="emit('revealRole')"
+      >
+        <i class="ms ms-ability-cloak role-tag-pick-icon"></i>
+        <span class="role-tag-label"><span>Role</span></span>
+      </div>
       <div v-if="seat.roleNotes === 'Zombie'" class="role-tag role-tag-conversion" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
         <img class="role-tag-img" :src="conversionIconUrl('Zombie')" alt="" />
         <span class="role-tag-label"><span>Zombie</span></span>
@@ -328,6 +337,20 @@ const panelClasses = computed(() => {
 
 .role-tag-conversion .role-tag-label {
   font-size: clamp(0.5rem, 1.25vw, 0.65rem);
+}
+
+.role-tag-pick {
+  color: #d4c8a8;
+  border-color: #d4c8a833;
+  background: rgba(26, 22, 18, 0.25);
+  opacity: 0.55;
+}
+
+.role-tag-pick-icon {
+  font-size: clamp(22px, 4vw, 36px);
+  line-height: 1;
+  color: #d4c8a8;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
 .counter-badges {
