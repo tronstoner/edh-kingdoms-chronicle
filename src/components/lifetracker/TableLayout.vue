@@ -200,14 +200,14 @@ const layout = computed(() => LAYOUTS[props.layoutId])
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  width: 48px;
-  min-width: 48px;
+  width: 64px;
+  min-width: 64px;
   z-index: 15;
 }
 
 .table-layout--6p {
   display: grid;
-  grid-template-columns: 1fr 1fr 48px 1fr;
+  grid-template-columns: 1fr 1fr 64px 1fr;
   grid-template-rows: 1fr 1fr;
 }
 

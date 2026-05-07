@@ -120,7 +120,8 @@ function onTurnPointerLeave() {
 
 .menu-icon {
   width: 100%;
-  height: 44px;
+  aspect-ratio: 1 / 1;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,19 +145,20 @@ function onTurnPointerLeave() {
 }
 
 .turn-btn {
-  height: 88px;
+  aspect-ratio: auto;
+  height: 128px;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   color: #c9a54e;
   border-color: #c9a54e44;
 }
 
 .turn-icon {
-  font-size: 1.6rem;
+  font-size: 2rem;
 }
 
 .turn-label {
-  font-size: 1rem;
+  font-size: 1.6rem;
   line-height: 1;
 }
 
