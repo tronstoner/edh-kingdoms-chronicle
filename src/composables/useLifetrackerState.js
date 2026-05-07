@@ -165,15 +165,22 @@ export function useLifetrackerState() {
       lifeBatch[seatIndex] = { delta, newTotal: seat.life, timer: null }
     }
     lifeBatch[seatIndex].timer = setTimeout(() => {
+      const batch = lifeBatch[seatIndex]
+      const oldLife = seat.life - batch.delta
       seat.history.push({
         timestamp: Date.now(),
-        delta: lifeBatch[seatIndex].delta,
-        newTotal: lifeBatch[seatIndex].newTotal,
+        delta: batch.delta,
+        newTotal: batch.newTotal,
         source: 'life',
       })
       delete lifeBatch[seatIndex]
+      // If life crossed from alive into lethal during this batch, drop any
+      // active override so death re-triggers (e.g. revived zombie taking lethal).
+      if (oldLife > 0 && seat.life <= 0 && seat.deathOverridden) {
+        seat.deathOverridden = false
+      }
+      checkDeath(seat)
     }, 2000)
-    checkDeath(seat)
   }
 
   function changePoison(seatIndex, delta) {
