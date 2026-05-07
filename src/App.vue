@@ -3,6 +3,9 @@ import { ref, provide, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { initGoogleAuth, signIn, signOut } from './google-auth.js'
 import { fetchAllData } from './data.js'
+import { useFullscreen } from './composables/useFullscreen.js'
+
+const { isFullscreen, canToggleFullscreen, toggleFullscreen } = useFullscreen()
 
 const router = useRouter()
 const data = ref(null)
@@ -83,6 +86,15 @@ function closeMobileMenu() {
         <!-- Desktop nav -->
         <router-link to="/lifetracker" class="ml-auto text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide hidden sm:inline">Lifetracker</router-link>
         <button
+          v-if="canToggleFullscreen"
+          @click="toggleFullscreen"
+          class="ml-4 text-mtg-text-dim hover:text-mtg-gold transition-colors cursor-pointer hidden sm:inline-flex items-center justify-center w-8 h-8 leading-none"
+          :title="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'"
+          aria-label="Toggle fullscreen"
+        >
+          <span class="text-xl">{{ isFullscreen ? '◱' : '⛶' }}</span>
+        </button>
+        <button
           v-if="signedIn"
           @click="handleSignOut"
           class="ml-4 text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors cursor-pointer font-body hidden sm:inline"
@@ -104,6 +116,13 @@ function closeMobileMenu() {
       <!-- Mobile dropdown -->
       <div v-if="mobileMenuOpen" class="sm:hidden border-t border-mtg-gold/20 bg-mtg-dark/95 backdrop-blur px-4 py-3 flex flex-col gap-3">
         <router-link to="/lifetracker" class="text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors no-underline font-beleren tracking-wide" @click="closeMobileMenu">Lifetracker</router-link>
+        <button
+          v-if="canToggleFullscreen"
+          @click="toggleFullscreen(); closeMobileMenu()"
+          class="text-sm text-mtg-text-dim hover:text-mtg-gold transition-colors cursor-pointer font-body text-left"
+        >
+          {{ isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen' }}
+        </button>
         <button
           v-if="signedIn"
           @click="handleSignOut"

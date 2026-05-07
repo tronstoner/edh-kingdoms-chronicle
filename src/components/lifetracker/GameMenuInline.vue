@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import ConfirmDialog from './ConfirmDialog.vue'
+import { useFullscreen } from '../../composables/useFullscreen.js'
 
 const props = defineProps({
   turnCount: Number,
@@ -11,19 +12,7 @@ const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back']
 
 const showMore = ref(false)
 const showConfirmNew = ref(false)
-const isFullscreen = ref(!!document.fullscreenElement)
-
-function toggleFullscreen() {
-  if (document.fullscreenElement) {
-    document.exitFullscreen()
-  } else {
-    document.documentElement.requestFullscreen()
-  }
-}
-
-document.addEventListener('fullscreenchange', () => {
-  isFullscreen.value = !!document.fullscreenElement
-})
+const { isFullscreen, canToggleFullscreen, toggleFullscreen } = useFullscreen()
 
 // Hold-to-decrement for turn counter
 let holdTimer = null
@@ -74,8 +63,9 @@ function onTurnPointerLeave() {
       <i class="ms ms-battle"></i>
     </button>
 
-    <!-- Fullscreen toggle -->
+    <!-- Fullscreen toggle (hidden when API unavailable or already in standalone PWA) -->
     <button
+      v-if="canToggleFullscreen"
       class="menu-icon"
       @click="toggleFullscreen"
       :title="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
