@@ -48,11 +48,16 @@
 
 html {
   font-size: 18px;
+  /* Prevent iOS Safari from scaling text on rotation */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   background: var(--color-mtg-dark);
+  /* Block double-tap-to-zoom; iOS pinch-zoom is blocked via gesture listeners in main.js */
+  touch-action: manipulation;
 }
 
 /* Themed scrollbars */

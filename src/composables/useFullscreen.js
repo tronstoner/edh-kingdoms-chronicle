@@ -22,18 +22,19 @@ function detectIOS() {
 export function useFullscreen() {
   const isStandalone = ref(detectStandalone())
   const isIOS = ref(detectIOS())
-  const isFullscreen = ref(!!document.fullscreenElement)
+  const isFullscreen = ref(!!(document.fullscreenElement || document.webkitFullscreenElement))
 
-  // Fullscreen API is unreliable on iOS (shows X overlay, exits on keyboard).
   // In standalone PWA mode there's already no browser chrome, so the toggle is moot.
+  // (On iOS browser the API is buggy — shows an X overlay and exits on keyboard —
+  // but we still surface the button so users can opt in.)
   const canToggleFullscreen = computed(() => {
     if (isStandalone.value) return false
-    if (isIOS.value) return false
     return !!document.documentElement.requestFullscreen
+      || !!document.documentElement.webkitRequestFullscreen
   })
 
   function onFullscreenChange() {
-    isFullscreen.value = !!document.fullscreenElement
+    isFullscreen.value = !!(document.fullscreenElement || document.webkitFullscreenElement)
   }
 
   function onStandaloneChange(e) {
@@ -42,11 +43,14 @@ export function useFullscreen() {
 
   async function toggleFullscreen() {
     if (!canToggleFullscreen.value) return
+    const el = document.documentElement
+    const request = el.requestFullscreen || el.webkitRequestFullscreen
+    const exit = document.exitFullscreen || document.webkitExitFullscreen
     try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen()
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        await exit?.call(document)
       } else {
-        await document.documentElement.requestFullscreen()
+        await request?.call(el)
       }
     } catch {
       // Browser may reject (e.g. not from user gesture); ignore.
@@ -55,11 +59,13 @@ export function useFullscreen() {
 
   onMounted(() => {
     document.addEventListener('fullscreenchange', onFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange)
     standaloneQuery?.addEventListener?.('change', onStandaloneChange)
   })
 
   onUnmounted(() => {
     document.removeEventListener('fullscreenchange', onFullscreenChange)
+    document.removeEventListener('webkitfullscreenchange', onFullscreenChange)
     standaloneQuery?.removeEventListener?.('change', onStandaloneChange)
   })
 
