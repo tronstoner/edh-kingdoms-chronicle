@@ -1,21 +1,23 @@
 // Shared role config for both the lifetracker and dashboard.
 // Single source of truth for colors, image URLs, and per-context labels.
 
+// 'Lord' is the canonical role key used in game data; 'Zombie Lord' is the same role,
+// just under its full name (used in display contexts where Clone Lord stands separately).
 export const ROLE_COLORS = {
   King: '#e2b84a',
   Knight: '#6ab86a',
   Goblin: '#d95555',
   Lord: '#a47be0',
+  'Zombie Lord': '#a47be0',
   'Clone Lord': '#5ba3d9',
 }
 
-// Lord shares the Zombie Lord artwork (he _is_ the Zombie Lord by default);
-// Clone Lord has its own art.
 const ROLE_SLUG = {
   King: 'king',
   Knight: 'knight',
   Goblin: 'goblin',
   Lord: 'zombie-lord',
+  'Zombie Lord': 'zombie-lord',
   'Clone Lord': 'clone-lord',
 }
 
@@ -46,9 +48,9 @@ export function conversionIconUrl(noteRole) {
 }
 
 export const ROLE_DESCRIPTIONS = {
-  King: 'Rules the kingdom with the loyal Knight at his side. The two share a single fate — they win together when the Lord falls last.',
-  Knight: 'Sworn to the King. Wins when his liege survives, loses when the throne is overthrown. Together they form the Crown.',
-  Goblin: 'Always part of a pair. Wild, chaotic, and unpredictable — Goblins win or lose as a team, never apart.',
-  'Zombie Lord': 'Plays alone against the kingdom. Killed players rise as Zombies (20 life) and fight for him. Wins by killing the King last, or by leveling everyone at once. If the Lord falls, his Zombies fall with him.',
-  'Clone Lord': 'A rare blue-tinged Lord variant. Killed players become Clones rather than Zombies, but the rules of life and death are the same — the Lord wins the room or perishes with his minions.',
+  King: 'Rules with the Knight at his side. Wins whenever his enemies fall — even if the Knight has died. If the Knight closes out the game with an alternate win condition, the King shares the victory.',
+  Knight: 'Sworn to the King. Shares the King\'s fate: the Crown wins together when the others fall, by combat or by alternate win condition.',
+  Goblin: 'Wild and chaotic, always part of a pair. The Goblins win the instant the King dies — provided at least one of them is still standing.',
+  'Zombie Lord': 'Plays alone against the kingdom. Wins only by killing the King last, by leveling everyone at once, or via an alternate win condition. Players he kills rise as Zombies (20 life) and fight for him — but the moment the Lord falls, every Zombie falls with him.',
+  'Clone Lord': 'A rare blue-tinged Lord variant. The win conditions are identical to the Zombie Lord — King last, everyone at once, or an alternate win — but his fallen rise as Clones rather than Zombies. They live and die with him.',
 }

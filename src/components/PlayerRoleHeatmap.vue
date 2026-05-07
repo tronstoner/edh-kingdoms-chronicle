@@ -1,28 +1,14 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import ChartCard from './ChartCard.vue'
 import RoleDetailModal from './RoleDetailModal.vue'
 import { ROLE_COLORS, rolePortraitUrl } from '../roles.js'
-import { computeLordSplits } from '../analysis.js'
 
-const props = defineProps({
-  players: Array,
-  games: { type: Array, default: () => [] },
-})
+defineProps({ players: Array })
 
-const roles = ['King', 'Knight', 'Goblin', 'Zombie Lord', 'Clone Lord']
-
-const lordSplits = computed(() => computeLordSplits(props.games))
+const roles = ['King', 'Knight', 'Goblin', 'Lord']
 
 function getRoleData(player, role) {
-  if (role === 'Zombie Lord') {
-    const s = lordSplits.value[player.name]
-    return { games: s?.zombieLordGames || 0, winRate: s?.zombieLordWinRate ?? null }
-  }
-  if (role === 'Clone Lord') {
-    const s = lordSplits.value[player.name]
-    return { games: s?.cloneLordGames || 0, winRate: s?.cloneLordWinRate ?? null }
-  }
   const key = role.toLowerCase()
   return { games: player[key + 'Games'], winRate: player[key + 'WinRate'] }
 }
@@ -55,7 +41,7 @@ function closeDetail() { detailRole.value = null }
             <th class="text-left py-3 pr-6 font-beleren text-mtg-gold-light text-sm tracking-wider uppercase">Champion</th>
             <th
               v-for="r in roles" :key="r"
-              class="text-center py-3 px-3 font-beleren text-sm tracking-wider uppercase align-bottom"
+              class="text-center py-3 px-2 font-beleren text-sm tracking-wider uppercase"
               :style="{ color: ROLE_COLORS[r] }"
             >
               <button
@@ -66,9 +52,7 @@ function closeDetail() { detailRole.value = null }
                 @click="openDetail(r)"
               >
                 <img :src="rolePortraitUrl(r)" :alt="r" class="role-portrait-thumb" />
-                <span class="role-header-label">
-                  <span v-for="word in r.split(' ')" :key="word">{{ word }}</span>
-                </span>
+                <span class="role-header-label">{{ r }}</span>
               </button>
             </th>
           </tr>
@@ -122,7 +106,7 @@ function closeDetail() { detailRole.value = null }
 
 <style scoped>
 .role-header-btn {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
@@ -143,18 +127,12 @@ function closeDetail() { detailRole.value = null }
 }
 
 .role-portrait-thumb {
-  width: clamp(48px, 6.5vw, 88px);
+  width: clamp(56px, 7vw, 96px);
   aspect-ratio: 1 / 1;
   object-fit: contain;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-.role-header-label {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
 }
 </style>

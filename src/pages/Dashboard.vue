@@ -34,7 +34,7 @@ const data = inject('data')
 
     <div class="space-y-8">
       <PlayerStats :players="data.players" />
-      <PlayerRoleHeatmap :players="data.players" :games="data.games" />
+      <PlayerRoleHeatmap :players="data.players" />
       <RoleBalance :roles="data.roles" :games="data.games" />
       <ColorStats :decks="data.decks" />
       <DeckStats :decks="data.decks" />

@@ -39,9 +39,13 @@
 }
 
 .splash-king {
-  width: min(70vw, 480px);
+  /* Constrain by both width and height so the whole splash fits in the
+     viewport regardless of orientation. */
+  max-width: min(72vw, 540px);
+  max-height: 46vh;
+  width: auto;
   height: auto;
-  margin-bottom: -120px;
+  margin-bottom: -9vh;
   pointer-events: none;
   filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6));
   z-index: 0;
@@ -55,7 +59,9 @@
 }
 
 .splash-card {
-  width: min(40vw, 280px);
+  /* Cap card by viewport width AND height (via aspect-ratio), so two cards
+     side-by-side never push the layout off-screen on iPad / short displays. */
+  width: min(42vw, calc(42vh * 63 / 88), 310px);
   aspect-ratio: 63 / 88;
   display: flex;
   flex-direction: column;
@@ -117,7 +123,7 @@
 
 @media (max-width: 480px) {
   .splash-king {
-    margin-bottom: -80px;
+    margin-bottom: -6vh;
   }
 }
 </style>
