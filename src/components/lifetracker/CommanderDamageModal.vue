@@ -2,6 +2,7 @@
 import { ref, onUnmounted } from 'vue'
 import { useLifeCounter } from '../../composables/useLifeCounter.js'
 import { manaGradient } from '../../composables/useManaGradient.js'
+import { roleIconUrl, lifetrackerRoleLabel } from '../../roles.js'
 
 const props = defineProps({
   seat: Object,
@@ -138,10 +139,16 @@ onUnmounted(() => {
         <!-- Reveal role button -->
         <button class="counter-box role-box" @click="emit('revealRole')">
           <div class="counter-center">
-            <i class="ms ms-ability-cloak counter-icon role-icon"></i>
-            <span class="reveal-label" :class="{ active: seat.role }" :style="seat.role && seat.roleRevealed ? { color: ROLE_COLORS[seat.role] } : {}">
-              {{ seat.role && seat.roleRevealed ? seat.role : 'Role' }}
-            </span>
+            <template v-if="seat.role && seat.roleRevealed">
+              <img :src="roleIconUrl(seat.role)" alt="" class="role-box-img" />
+              <span class="reveal-label active role-box-label" :style="{ color: ROLE_COLORS[seat.role] }">
+                <span v-for="word in lifetrackerRoleLabel(seat.role).split(' ')" :key="word">{{ word }}</span>
+              </span>
+            </template>
+            <template v-else>
+              <i class="ms ms-ability-cloak counter-icon role-icon"></i>
+              <span class="reveal-label">Role</span>
+            </template>
           </div>
         </button>
         <!-- Death toggle -->
@@ -196,6 +203,12 @@ onUnmounted(() => {
           <template v-for="si in (rotated ? [...row.seats].reverse() : row.seats)" :key="si">
             <div v-if="!hasPartners(si)" class="cmd-seat" :class="{ 'cmd-self': si === seat.index }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
+              <img
+                v-if="allSeats[si]?.role && allSeats[si]?.roleRevealed"
+                :src="roleIconUrl(allSeats[si].role)"
+                alt=""
+                class="cmd-seat-role"
+              />
               <!-- Tap zone -->
               <div
                 :ref="(el) => setCounterEl(String(si), el)"
@@ -230,6 +243,12 @@ onUnmounted(() => {
             <!-- Dual commander seat (split in half) -->
             <div v-else class="cmd-seat cmd-seat-split" :class="{ 'cmd-self': si === seat.index }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
+              <img
+                v-if="allSeats[si]?.role && allSeats[si]?.roleRevealed"
+                :src="roleIconUrl(allSeats[si].role)"
+                alt=""
+                class="cmd-seat-role"
+              />
               <!-- Commander 1 (left half) -->
               <div
                 :ref="(el) => setCounterEl(`${si}-1`, el)"
@@ -446,6 +465,22 @@ onUnmounted(() => {
   font-size: 4rem;
 }
 
+.role-box-img {
+  width: clamp(48px, 9vw, 80px);
+  height: clamp(48px, 9vw, 80px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.role-box-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
 .poison-icon,
 .tax-icon,
 .death-icon,
@@ -505,6 +540,19 @@ onUnmounted(() => {
 
 .cmd-self {
   border: 2px solid #d9555566;
+}
+
+.cmd-seat-role {
+  position: absolute;
+  top: clamp(20px, 4vw, 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(22px, 4.5vw, 36px);
+  height: clamp(22px, 4.5vw, 36px);
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 4;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
 /* Single commander tap zone */

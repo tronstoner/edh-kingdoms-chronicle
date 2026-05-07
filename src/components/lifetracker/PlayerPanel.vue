@@ -74,7 +74,7 @@ const panelClasses = computed(() => {
 
     <!-- Player name & deck (tappable to edit) -->
     <div class="panel-header" @pointerdown.stop>
-      <span class="player-name" @click.stop="emit('openSeat')"><i v-if="faction" :class="faction" class="faction-icon"></i>{{ seat.player || 'Empty Seat' }}<img v-if="seat.role && seat.roleRevealed" :src="roleIconUrl(seat.role)" class="name-role-icon" alt="" /></span>
+      <span class="player-name" @click.stop="emit('openSeat')"><i v-if="faction" :class="faction" class="faction-icon"></i>{{ seat.player || 'Empty Seat' }}</span>
       <span v-if="seat.deck" class="deck-info" @click.stop="emit('openSeat')">
         <span class="deck-name">{{ seat.deck.name }}</span>
         <span v-if="manaIcons.length" class="mana-icons">
@@ -285,16 +285,6 @@ const panelClasses = computed(() => {
   z-index: 8;
   cursor: pointer;
   align-items: stretch;
-}
-
-.name-role-icon {
-  width: clamp(14px, 2.6vw, 20px);
-  height: clamp(14px, 2.6vw, 20px);
-  object-fit: contain;
-  vertical-align: middle;
-  margin-left: 6px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-  display: inline-block;
 }
 
 .role-tag {
