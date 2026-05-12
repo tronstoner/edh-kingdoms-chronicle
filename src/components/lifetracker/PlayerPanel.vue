@@ -8,6 +8,8 @@ import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
 import CycleHouseBadge from './CycleHouseBadge.vue'
 
+const BASE_URL = import.meta.env.BASE_URL
+
 const props = defineProps({
   seat: Object,
   rotated: Boolean,
@@ -325,6 +327,13 @@ const panelClasses = computed(() => {
 
     <!-- Winner indicator -->
     <div v-if="seat.isWinner" class="winner-glow"></div>
+    <img
+      v-if="seat.isWinner"
+      class="winner-crown"
+      :src="`${BASE_URL}crown-128.png`"
+      alt=""
+      aria-hidden="true"
+    />
   </div>
 </template>
 
@@ -674,5 +683,35 @@ const panelClasses = computed(() => {
   border: 2px solid #c9a54e44;
   pointer-events: none;
   z-index: 3;
+}
+
+/* Crown sits just above the centred life total. After the entry pop,
+   a slow vertical bounce keeps the win prominent. Position is computed
+   from the panel centre so the gap from the life total stays correct
+   as the panel scales. Element unmounts when the win is revoked. */
+.winner-crown {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - clamp(1.5rem, 6vw, 3rem) - clamp(96px, 18vw, 160px) + 36px);
+  width: clamp(96px, 18vw, 160px);
+  z-index: 10;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.8));
+  transform-origin: 50% 100%;
+  animation:
+    crown-pop 0.8s cubic-bezier(0.22, 1.4, 0.36, 1) both,
+    crown-bounce 1.6s ease-in-out 0.8s infinite;
+}
+
+@keyframes crown-pop {
+  0%   { transform: translate(-50%, -28px) scale(0.4) rotate(-12deg); opacity: 0; }
+  55%  { transform: translate(-50%, 0)     scale(1.18) rotate(4deg);  opacity: 1; }
+  80%  { transform: translate(-50%, 0)     scale(0.95) rotate(-2deg); }
+  100% { transform: translate(-50%, 0)     scale(1)    rotate(0deg);  }
+}
+
+@keyframes crown-bounce {
+  0%,  100% { transform: translate(-50%, 0)     scale(1) rotate(0deg); }
+  50%       { transform: translate(-50%, -14px) scale(1) rotate(0deg); }
 }
 </style>

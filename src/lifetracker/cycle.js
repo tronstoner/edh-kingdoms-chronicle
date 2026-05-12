@@ -67,6 +67,30 @@ export function randomStart(seatCount) {
 // clockwise from TL goes TL → TR → BR → BL = 0 → 1 → 3 → 2.
 export const CLOCKWISE_4P = [0, 1, 3, 2]
 
+// True if any seat in `seats` is currently eliminated (isDead and not
+// overridden) and assigned to the given house.
+function isHouseEliminated(seats, house) {
+  return seats.some(s => s && s.house === house && s.isDead && !s.deathOverridden)
+}
+
+// Returns the seat index of the unique Cycle winner — a player who is
+// alive and whose feud + rival houses are both eliminated — or null if
+// no one currently satisfies the condition. The cycle rules guarantee
+// at most one such player at any time.
+export function findCycleWinner(seats) {
+  for (let i = 0; i < seats.length; i++) {
+    const seat = seats[i]
+    if (!seat || !seat.house) continue
+    if (seat.isDead && !seat.deathOverridden) continue
+    const rel = cycleRelations(seat.house)
+    if (!rel) continue
+    if (isHouseEliminated(seats, rel.feud) && isHouseEliminated(seats, rel.rival)) {
+      return i
+    }
+  }
+  return null
+}
+
 // Turn position (1-indexed) of a seat relative to the starting seat,
 // going clockwise around the physical table.
 export function turnPositionFor(seatIndex, startingSeatIndex, seatCount) {

@@ -1,7 +1,8 @@
 <script setup>
-import { ref, provide, computed, onMounted, onUnmounted } from 'vue'
+import { ref, provide, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLifetrackerState } from '../composables/useLifetrackerState.js'
+import { findCycleWinner } from '../lifetracker/cycle.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
 import CycleSetupPreview from '../components/lifetracker/CycleSetupPreview.vue'
 import TableLayout from '../components/lifetracker/TableLayout.vue'
@@ -180,6 +181,27 @@ function handleAdvanceTurn(delta) {
     announceText.value = `Turn ${state.turnCount}`
   }
 }
+
+// Cycle win detection. The winner is derived live from seat state; an
+// "I'm not actually dead" override revokes an elimination, which can
+// also revoke a previously declared win — the watcher handles both
+// directions: it sets isWinner + fires the announcement when a winner
+// appears, and clears isWinner when the condition no longer holds.
+const cycleWinnerIndex = computed(() => {
+  if (state.mode !== 'cycle' || state.phase !== 'playing') return null
+  return findCycleWinner(state.seats)
+})
+
+watch(cycleWinnerIndex, (next, prev) => {
+  if (prev !== null && prev !== next && state.seats[prev]) {
+    state.seats[prev].isWinner = false
+  }
+  if (next !== null && next !== prev && state.seats[next]) {
+    state.seats[next].isWinner = true
+    const winnerName = state.seats[next].player || `Seat ${next + 1}`
+    announceText.value = `${winnerName} wins!`
+  }
+})
 
 // Role picker
 const rolePickerSeat = ref(null)
