@@ -359,8 +359,8 @@ function turnPos(seatIndex) {
 }
 
 .card-house-img {
-  width: 65%;
-  max-height: 55%;
+  width: 85%;
+  max-height: 70%;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
 }

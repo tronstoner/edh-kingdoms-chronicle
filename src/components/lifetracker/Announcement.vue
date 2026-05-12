@@ -3,6 +3,7 @@ import { watch } from 'vue'
 
 const props = defineProps({
   text: String,
+  subtitle: { type: String, default: null },
   duration: { type: Number, default: 2500 },
 })
 
@@ -20,8 +21,14 @@ watch(() => props.text, (val) => {
 
 <template>
   <div v-if="text" class="announce-overlay" :style="{ animationDuration: duration + 'ms' }" :key="text">
-    <span class="announce-text announce-top font-beleren" :style="{ animationDuration: duration + 'ms' }">{{ text }}</span>
-    <span class="announce-text announce-bottom font-beleren" :style="{ animationDuration: duration + 'ms' }">{{ text }}</span>
+    <div class="announce-block announce-top" :style="{ animationDuration: duration + 'ms' }">
+      <span class="announce-title font-beleren">{{ text }}</span>
+      <span v-if="subtitle" class="announce-subtitle font-beleren">{{ subtitle }}</span>
+    </div>
+    <div class="announce-block announce-bottom" :style="{ animationDuration: duration + 'ms' }">
+      <span class="announce-title font-beleren">{{ text }}</span>
+      <span v-if="subtitle" class="announce-subtitle font-beleren">{{ subtitle }}</span>
+    </div>
   </div>
 </template>
 
@@ -38,21 +45,40 @@ watch(() => props.text, (val) => {
   animation: announce-fade 2.5s ease-out forwards;
 }
 
-.announce-text {
+.announce-block {
   position: absolute;
-  font-size: clamp(4rem, 12vw, 7rem);
-  color: #c9a54e;
-  text-shadow: 0 0 40px #1a1612, 0 0 80px #1a1612;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   animation: announce-pop 2.5s ease-out forwards;
 }
 
+.announce-title {
+  font-size: clamp(4rem, 12vw, 7rem);
+  line-height: 1;
+  color: #c9a54e;
+  text-shadow: 0 0 40px #1a1612, 0 0 80px #1a1612;
+  white-space: nowrap;
+}
+
+.announce-subtitle {
+  font-size: clamp(1.6rem, 4.5vw, 3rem);
+  line-height: 1.1;
+  color: #c9a54e;
+  text-shadow: 0 0 30px #1a1612, 0 0 60px #1a1612;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .announce-top {
-  top: 20%;
+  top: 18%;
   rotate: 180deg;
 }
 
 .announce-bottom {
-  bottom: 20%;
+  bottom: 18%;
 }
 
 @keyframes announce-fade {

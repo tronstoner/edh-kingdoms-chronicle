@@ -174,10 +174,12 @@ function handleCmdTax(delta) {
 
 // Turn advance with announcement
 const announceText = ref(null)
+const announceSubtitle = ref(null)
 
 function handleAdvanceTurn(delta) {
   advanceTurn(delta)
   if (delta > 0) {
+    announceSubtitle.value = null
     announceText.value = `Turn ${state.turnCount}`
   }
 }
@@ -199,7 +201,8 @@ watch(cycleWinnerIndex, (next, prev) => {
   if (next !== null && next !== prev && state.seats[next]) {
     state.seats[next].isWinner = true
     const winnerName = state.seats[next].player || `Seat ${next + 1}`
-    announceText.value = `${winnerName} wins!`
+    announceSubtitle.value = 'claims the Throne!'
+    announceText.value = winnerName
   }
 })
 
@@ -378,7 +381,11 @@ function handleClearCycleGames() {
       />
 
       <!-- Turn announcement -->
-      <Announcement :text="announceText" @done="announceText = null" />
+      <Announcement
+        :text="announceText"
+        :subtitle="announceSubtitle"
+        @done="announceText = null; announceSubtitle = null"
+      />
 
       <!-- Mid-game seat editor -->
       <DeckPicker
