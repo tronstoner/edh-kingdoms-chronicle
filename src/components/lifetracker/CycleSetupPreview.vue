@@ -83,6 +83,7 @@ function turnPos(seatIndex) {
                 <div class="card-back-pattern"></div>
               </div>
               <div class="card-face card-front" :style="{ borderColor: houseColor(seats[seatIndex]?.house) }">
+                <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
                 <img
                   v-if="seats[seatIndex]?.house"
                   class="card-house-img"
@@ -104,8 +105,6 @@ function turnPos(seatIndex) {
                 </div>
               </div>
             </div>
-            <div v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</div>
-            <div v-else-if="showStart" class="turn-badge">Turn {{ turnPos(seatIndex) }}</div>
           </div>
         </template>
       </div>
@@ -123,6 +122,7 @@ function turnPos(seatIndex) {
                 <div class="card-back-pattern"></div>
               </div>
               <div class="card-face card-front" :style="{ borderColor: houseColor(seats[seatIndex]?.house) }">
+                <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
                 <img
                   v-if="seats[seatIndex]?.house"
                   class="card-house-img"
@@ -144,8 +144,6 @@ function turnPos(seatIndex) {
                 </div>
               </div>
             </div>
-            <div v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</div>
-            <div v-else-if="showStart" class="turn-badge">Turn {{ turnPos(seatIndex) }}</div>
           </div>
         </template>
       </div>
@@ -168,35 +166,41 @@ function turnPos(seatIndex) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  gap: 24px;
-  overflow: hidden;
+  padding: 18px;
+  gap: 14px;
+  /* Allow scrolling if content is taller than the viewport (e.g. iPad
+     landscape where height is the tight axis). */
+  overflow-y: auto;
 }
 
 .preview-header {
   text-align: center;
+  flex-shrink: 0;
 }
 
 .preview-title {
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: #c9a54e;
   letter-spacing: 0.05em;
   margin: 0;
+  line-height: 1.1;
 }
 
 .preview-subtitle {
   font-family: 'EB Garamond', serif;
   font-style: italic;
   color: #8a7e66;
-  margin: 4px 0 0;
+  margin: 2px 0 0;
+  font-size: 0.85rem;
 }
 
 .cards-grid {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 14px;
   width: 100%;
   max-width: 900px;
+  flex-shrink: 0;
 }
 
 .cards-row {
@@ -211,12 +215,12 @@ function turnPos(seatIndex) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .card-player {
   font-family: 'Cinzel', serif;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #d4c8a8;
   letter-spacing: 0.04em;
   text-align: center;
@@ -335,35 +339,35 @@ function turnPos(seatIndex) {
 }
 
 .start-badge {
+  /* Sits inside the revealed card's front face, anchored at the top. */
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
   font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #c9a54e;
   border: 1px solid #c9a54e;
   border-radius: 3px;
-  padding: 3px 10px;
+  padding: 2px 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   background: #c9a54e22;
+  white-space: nowrap;
+  z-index: 2;
   animation: pop 0.5s ease;
 }
 
-.turn-badge {
-  font-family: 'Cinzel', serif;
-  font-size: 0.7rem;
-  color: #8a7e66;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 @keyframes pop {
-  0% { transform: scale(0.6); opacity: 0; }
-  60% { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1); }
+  0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
+  60% { transform: translateX(-50%) scale(1.15); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); }
 }
 
 .preview-actions {
   display: flex;
   gap: 12px;
+  flex-shrink: 0;
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.4s, transform 0.4s;
@@ -377,10 +381,45 @@ function turnPos(seatIndex) {
 .btn {
   font-family: 'Cinzel', serif;
   font-size: 1rem;
-  padding: 12px 24px;
+  padding: 10px 22px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+/* Landscape with limited height (iPad mini / 11" landscape, ~768-834px):
+   keep header + cards in the centred column flow (so the cards stay
+   aligned under the title) and float the buttons absolutely to the
+   right side of the screen so they don't push the cards off-centre. */
+@media (orientation: landscape) and (max-height: 900px) {
+  .cycle-preview {
+    padding: 14px 18px;
+    gap: 10px;
+  }
+
+  .cards-grid { gap: 12px; }
+
+  .preview-title { font-size: 1.4rem; }
+  .preview-subtitle { font-size: 0.8rem; }
+
+  .preview-actions {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    flex-direction: column;
+    width: 150px;
+    /* Compose the entry animation's translate with the vertical centring
+       translate so neither overrides the other. */
+    transform: translateY(calc(-50% + 8px));
+  }
+
+  .preview-actions.visible {
+    transform: translateY(-50%);
+  }
+
+  .btn {
+    width: 100%;
+  }
 }
 
 .btn-primary {
