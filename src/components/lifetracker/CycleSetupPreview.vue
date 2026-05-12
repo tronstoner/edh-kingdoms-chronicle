@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { HOUSE_COLORS, houseImageUrl, cycleRelations, turnPositionFor } from '../../lifetracker/cycle.js'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { HOUSES, HOUSE_COLORS, houseImageUrl, cycleRelations, turnPositionFor } from '../../lifetracker/cycle.js'
 import CycleRelationIcon from './CycleRelationIcon.vue'
 
 const props = defineProps({
@@ -14,24 +14,79 @@ const emit = defineEmits(['redeal', 'begin', 'back'])
 const revealed = ref([false, false, false, false])
 const dealing = ref(true)
 const showStart = ref(false)
+// Per-card displayed house during the spin. Reset every interval tick to
+// a random house so each pass past the viewer shows a different identity
+// until the card locks to its actual assignment at reveal time.
+const shuffledHouse = ref([null, null, null, null])
+let shuffleInterval = null
+
+function randomHouse(exclude) {
+  const opts = HOUSES.filter(h => h !== exclude)
+  return opts[Math.floor(Math.random() * opts.length)]
+}
+
+function displayedHouse(seatIndex) {
+  if (revealed.value[seatIndex]) return props.seats[seatIndex]?.house
+  return shuffledHouse.value[seatIndex] || props.seats[seatIndex]?.house
+}
+
+// Per-card shuffle timing. All four cards start spinning at the same moment
+// and start at the same rotational speed; ease-out brings each one to rest
+// at a staggered time, and the matching reveal kicks in right when that
+// card stops. Rotations scale with duration so the *initial* spin speed
+// stays roughly constant across all four — they only differ in how long
+// they keep going.
+const shuffleSpec = [
+  { duration: 950,  rotation: 1080 },
+  { duration: 1280, rotation: 1440 },
+  { duration: 1620, rotation: 1800 },
+  { duration: 1980, rotation: 2160 },
+]
+
+const FLIP_MS = 600
 
 function runAnimation() {
   revealed.value = [false, false, false, false]
   dealing.value = true
   showStart.value = false
-  // Shuffle pass = .9s of rattle; then reveal each card spaced .25s apart;
-  // then show starting-player highlight.
-  setTimeout(() => {
-    dealing.value = false
-    props.seats.forEach((_, i) => {
-      setTimeout(() => {
-        revealed.value[i] = true
-      }, i * 280)
+
+  // Seed with random non-actual houses so the very first time the front
+  // face becomes visible (just past 90° of the first spin), it's already
+  // showing a "wrong" house — never spoils the assignment.
+  shuffledHouse.value = props.seats.map(s => randomHouse(s?.house))
+
+  if (shuffleInterval) clearInterval(shuffleInterval)
+  shuffleInterval = setInterval(() => {
+    shuffledHouse.value = shuffledHouse.value.map((cur, i) => {
+      if (revealed.value[i]) return cur
+      return randomHouse(cur)
     })
+  }, 130)
+
+  shuffleSpec.forEach(({ duration }, i) => {
     setTimeout(() => {
-      showStart.value = true
-    }, props.seats.length * 280 + 350)
-  }, 900)
+      revealed.value[i] = true
+    }, duration)
+  })
+
+  const last = shuffleSpec[shuffleSpec.length - 1].duration
+  setTimeout(() => {
+    clearInterval(shuffleInterval)
+    shuffleInterval = null
+    dealing.value = false
+    showStart.value = true
+  }, last + FLIP_MS)
+}
+
+onUnmounted(() => {
+  if (shuffleInterval) clearInterval(shuffleInterval)
+})
+
+function shuffleStyle(i) {
+  return {
+    '--shuffle-duration': `${shuffleSpec[i].duration}ms`,
+    '--shuffle-rot': `${shuffleSpec[i].rotation}deg`,
+  }
 }
 
 onMounted(runAnimation)
@@ -77,30 +132,33 @@ function turnPos(seatIndex) {
             <div
               class="card"
               :class="{ revealed: revealed[seatIndex], dealing }"
-              :style="revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : undefined"
+              :style="{
+                ...shuffleStyle(seatIndex),
+                ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
+              }"
             >
               <div class="card-face card-back">
                 <div class="card-back-pattern"></div>
               </div>
-              <div class="card-face card-front" :style="{ borderColor: houseColor(seats[seatIndex]?.house) }">
+              <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
                 <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
                 <img
-                  v-if="seats[seatIndex]?.house"
+                  v-if="displayedHouse(seatIndex)"
                   class="card-house-img"
-                  :src="houseImageUrl(seats[seatIndex].house)"
-                  :alt="seats[seatIndex].house"
+                  :src="houseImageUrl(displayedHouse(seatIndex))"
+                  :alt="displayedHouse(seatIndex)"
                 />
-                <div class="card-house-name" :style="{ color: houseColor(seats[seatIndex]?.house) }">
-                  House {{ seats[seatIndex]?.house }}
+                <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
+                  House {{ displayedHouse(seatIndex) }}
                 </div>
                 <div class="card-house-relations">
                   <div class="rel-row">
                     <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(seats[seatIndex]?.house).feud) }">{{ relations(seats[seatIndex]?.house).feud }}</span>
+                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
                   </div>
                   <div class="rel-row">
                     <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(seats[seatIndex]?.house).rival) }">{{ relations(seats[seatIndex]?.house).rival }}</span>
+                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
                   </div>
                 </div>
               </div>
@@ -116,30 +174,33 @@ function turnPos(seatIndex) {
             <div
               class="card"
               :class="{ revealed: revealed[seatIndex], dealing }"
-              :style="revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : undefined"
+              :style="{
+                ...shuffleStyle(seatIndex),
+                ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
+              }"
             >
               <div class="card-face card-back">
                 <div class="card-back-pattern"></div>
               </div>
-              <div class="card-face card-front" :style="{ borderColor: houseColor(seats[seatIndex]?.house) }">
+              <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
                 <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
                 <img
-                  v-if="seats[seatIndex]?.house"
+                  v-if="displayedHouse(seatIndex)"
                   class="card-house-img"
-                  :src="houseImageUrl(seats[seatIndex].house)"
-                  :alt="seats[seatIndex].house"
+                  :src="houseImageUrl(displayedHouse(seatIndex))"
+                  :alt="displayedHouse(seatIndex)"
                 />
-                <div class="card-house-name" :style="{ color: houseColor(seats[seatIndex]?.house) }">
-                  House {{ seats[seatIndex]?.house }}
+                <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
+                  House {{ displayedHouse(seatIndex) }}
                 </div>
                 <div class="card-house-relations">
                   <div class="rel-row">
                     <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(seats[seatIndex]?.house).feud) }">{{ relations(seats[seatIndex]?.house).feud }}</span>
+                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
                   </div>
                   <div class="rel-row">
                     <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(seats[seatIndex]?.house).rival) }">{{ relations(seats[seatIndex]?.house).rival }}</span>
+                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
                   </div>
                 </div>
               </div>
@@ -282,17 +343,19 @@ function turnPos(seatIndex) {
 }
 
 .card.dealing {
-  animation: shuffle 0.9s ease-in-out;
+  /* Per-card duration + total rotation are injected via inline style so
+     all four start at the same spin speed and ease out at different
+     times, revealing one by one. End rotation is always a multiple of
+     360° so the card returns to "back facing viewer" before the reveal
+     flip kicks in. cubic-bezier mimics a heavy spinning object slowing
+     to a stop. */
+  animation: spin-shuffle var(--shuffle-duration, 1200ms)
+    cubic-bezier(0.12, 0.78, 0.28, 1) forwards;
 }
 
-@keyframes shuffle {
-  0%   { transform: translate(0, 0) rotate(0); }
-  15%  { transform: translate(-12px, -10px) rotate(-6deg); }
-  30%  { transform: translate(14px, -6px) rotate(8deg); }
-  45%  { transform: translate(-10px, 8px) rotate(-5deg); }
-  60%  { transform: translate(12px, 4px) rotate(7deg); }
-  75%  { transform: translate(-6px, -4px) rotate(-3deg); }
-  100% { transform: translate(0, 0) rotate(0); }
+@keyframes spin-shuffle {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(var(--shuffle-rot, 1440deg)); }
 }
 
 .card-house-img {
