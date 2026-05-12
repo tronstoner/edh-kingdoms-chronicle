@@ -1,7 +1,20 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { HOUSES, HOUSE_COLORS, houseImageUrl, cycleRelations, turnPositionFor } from '../../lifetracker/cycle.js'
+import { ref, onMounted, onUnmounted } from 'vue'
+import {
+  HOUSES,
+  HOUSE_COLORS,
+  houseImageUrl,
+  cycleRelations,
+  turnPositionFor,
+  CYCLE_SHAPES,
+  representativeArrangement,
+} from '../../lifetracker/cycle.js'
+import {
+  loadCycleShapeOptions,
+  saveCycleShapeOptions,
+} from '../../composables/useLifetrackerState.js'
 import CycleRelationIcon from './CycleRelationIcon.vue'
+import CycleDirectionsMap from './CycleDirectionsMap.vue'
 
 const props = defineProps({
   seats: Array,
@@ -19,6 +32,13 @@ const showStart = ref(false)
 // until the card locks to its actual assignment at reveal time.
 const shuffledHouse = ref([null, null, null, null])
 let shuffleInterval = null
+
+// Shape filter (persisted across sessions). Drives which arrangements
+// are eligible when re-dealing.
+const shapeOptions = ref(loadCycleShapeOptions())
+
+// Whether the kill-list map is open.
+const mapOpen = ref(false)
 
 function randomHouse(exclude) {
   const opts = HOUSES.filter(h => h !== exclude)
@@ -92,15 +112,31 @@ function shuffleStyle(i) {
 onMounted(runAnimation)
 
 function handleRedeal() {
-  emit('redeal')
+  emit('redeal', JSON.parse(JSON.stringify(shapeOptions.value)))
   // Allow parent to re-deal then trigger animation again on next tick.
   setTimeout(runAnimation, 50)
 }
 
-const seatRows = computed(() => [
-  [props.seats[0], props.seats[1]],
-  [props.seats[3], props.seats[2]], // bottom-left, bottom-right physically
-])
+// Toggling a shape option saves to localStorage and re-deals so the new
+// constraint takes effect immediately. If all shapes get disabled the
+// deal function falls back to the full pool — we don't lock the user out.
+function setShapeEnabled(shapeId, value) {
+  shapeOptions.value = {
+    ...shapeOptions.value,
+    [shapeId]: { ...shapeOptions.value[shapeId], enabled: value },
+  }
+  saveCycleShapeOptions(shapeOptions.value)
+  handleRedeal()
+}
+
+function setShapeMirror(shapeId, value) {
+  shapeOptions.value = {
+    ...shapeOptions.value,
+    [shapeId]: { ...shapeOptions.value[shapeId], mirror: value },
+  }
+  saveCycleShapeOptions(shapeOptions.value)
+  handleRedeal()
+}
 
 function houseColor(house) {
   return HOUSE_COLORS[house] || '#8a7e66'
@@ -114,6 +150,45 @@ function turnPos(seatIndex) {
   if (props.startingSeatIndex == null) return null
   return turnPositionFor(seatIndex, props.startingSeatIndex, props.seats.length)
 }
+
+// Tiny illustrative SVG for each shape card in the picker.
+// Mirrors HTML/research/the-cycle.html Appendix figures but at small scale,
+// drawn from the canonical (non-mirrored) representative arrangement.
+function shapeIconArrangement(shapeId) {
+  return representativeArrangement(shapeId, false) || ['A', 'B', 'C', 'D']
+}
+
+// Seat coords inside the small picker SVG (viewBox 80x70).
+const PICKER_NODES = [
+  { x: 18, y: 18 },
+  { x: 62, y: 18 },
+  { x: 18, y: 52 },
+  { x: 62, y: 52 },
+]
+
+function pickerCycleLines(arrangement) {
+  // arrangement[seat] = 'A'|'B'|'C'|'D'. Build the A→B→C→D→A arrows.
+  const seatOf = {}
+  arrangement.forEach((h, i) => { seatOf[h] = i })
+  const order = ['A', 'B', 'C', 'D']
+  const lines = []
+  for (let i = 0; i < 4; i++) {
+    const from = PICKER_NODES[seatOf[order[i]]]
+    const to = PICKER_NODES[seatOf[order[(i + 1) % 4]]]
+    // Trim endpoints back so arrows don't pierce nodes.
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const len = Math.hypot(dx, dy) || 1
+    const r = 7
+    lines.push({
+      x1: from.x + (dx / len) * r,
+      y1: from.y + (dy / len) * r,
+      x2: to.x - (dx / len) * r,
+      y2: to.y - (dy / len) * r,
+    })
+  }
+  return lines
+}
 </script>
 
 <template>
@@ -123,90 +198,177 @@ function turnPos(seatIndex) {
       <p class="preview-subtitle">Dealing the Houses…</p>
     </div>
 
-    <div class="cards-grid" :class="{ shuffling: dealing }">
-      <div class="cards-row">
-        <!-- Top row: seats 0 (top-left) and 1 (top-right) -->
-        <template v-for="seatIndex in [0, 1]" :key="seatIndex">
-          <div class="card-cell">
-            <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
-            <div
-              class="card"
-              :class="{ revealed: revealed[seatIndex], dealing }"
-              :style="{
-                ...shuffleStyle(seatIndex),
-                ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
-              }"
+    <div class="preview-body">
+      <!-- Left rail: shape filter -->
+      <aside class="shape-panel">
+        <h3 class="shape-panel-title">Cycle shape</h3>
+        <p class="shape-panel-hint">Limit how the houses can sit on the table.</p>
+        <div class="shape-list">
+          <div
+            v-for="shape in CYCLE_SHAPES"
+            :key="shape.id"
+            class="shape-card"
+            :class="{ disabled: !shapeOptions[shape.id].enabled }"
+          >
+            <button
+              class="shape-icon-btn"
+              type="button"
+              :aria-pressed="shapeOptions[shape.id].enabled"
+              :title="shapeOptions[shape.id].enabled ? `Disable ${shape.label}` : `Enable ${shape.label}`"
+              @click="setShapeEnabled(shape.id, !shapeOptions[shape.id].enabled)"
             >
-              <div class="card-face card-back">
-                <div class="card-back-pattern"></div>
-              </div>
-              <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
-                <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
-                <img
-                  v-if="displayedHouse(seatIndex)"
-                  class="card-house-img"
-                  :src="houseImageUrl(displayedHouse(seatIndex))"
-                  :alt="displayedHouse(seatIndex)"
+              <svg viewBox="0 0 80 70" class="shape-icon">
+                <defs>
+                  <marker
+                    :id="`pickerArrow-${shape.id}`"
+                    viewBox="0 0 10 10"
+                    refX="9" refY="5"
+                    markerWidth="5" markerHeight="5"
+                    orient="auto"
+                  >
+                    <path d="M 0 0 L 10 5 L 0 10 z" :fill="shapeOptions[shape.id].enabled ? '#c9a54e' : '#3d3529'" />
+                  </marker>
+                </defs>
+                <line
+                  v-for="(ln, i) in pickerCycleLines(shapeIconArrangement(shape.id))"
+                  :key="i"
+                  :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+                  :stroke="shapeOptions[shape.id].enabled ? '#c9a54e' : '#3d3529'"
+                  stroke-width="1.6"
+                  :marker-end="`url(#pickerArrow-${shape.id})`"
+                  opacity="0.9"
                 />
-                <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
-                  House {{ displayedHouse(seatIndex) }}
+                <g v-for="(node, i) in PICKER_NODES" :key="`n${i}`">
+                  <circle
+                    :cx="node.x" :cy="node.y" r="7"
+                    fill="#1a1612"
+                    :stroke="shapeOptions[shape.id].enabled ? '#c9a54e' : '#5a4f3d'"
+                    stroke-width="1.4"
+                  />
+                  <text
+                    :x="node.x" :y="node.y + 3"
+                    text-anchor="middle"
+                    font-family="Cinzel, serif"
+                    font-size="8"
+                    font-weight="700"
+                    :fill="shapeOptions[shape.id].enabled ? '#d4c8a8' : '#5a4f3d'"
+                  >{{ shapeIconArrangement(shape.id)[i] }}</text>
+                </g>
+              </svg>
+            </button>
+            <div class="shape-meta">
+              <label class="shape-toggle">
+                <input
+                  type="checkbox"
+                  :checked="shapeOptions[shape.id].enabled"
+                  @change="setShapeEnabled(shape.id, $event.target.checked)"
+                />
+                <span class="shape-label">{{ shape.label }}</span>
+              </label>
+              <label class="shape-mirror" :class="{ off: !shapeOptions[shape.id].enabled }">
+                <input
+                  type="checkbox"
+                  :checked="shapeOptions[shape.id].mirror"
+                  :disabled="!shapeOptions[shape.id].enabled"
+                  @change="setShapeMirror(shape.id, $event.target.checked)"
+                />
+                <span>Allow mirror</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center: the dealt cards -->
+      <div class="cards-grid" :class="{ shuffling: dealing }">
+        <div class="cards-row">
+          <template v-for="seatIndex in [0, 1]" :key="seatIndex">
+            <div class="card-cell">
+              <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
+              <div
+                class="card"
+                :class="{ revealed: revealed[seatIndex], dealing }"
+                :style="{
+                  ...shuffleStyle(seatIndex),
+                  ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
+                }"
+              >
+                <div class="card-face card-back">
+                  <div class="card-back-pattern"></div>
                 </div>
-                <div class="card-house-relations">
-                  <div class="rel-row">
-                    <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
+                <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
+                  <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
+                  <img
+                    v-if="displayedHouse(seatIndex)"
+                    class="card-house-img"
+                    :class="{ clickable: revealed[seatIndex] }"
+                    :src="houseImageUrl(displayedHouse(seatIndex))"
+                    :alt="displayedHouse(seatIndex)"
+                    :title="revealed[seatIndex] ? 'Show kill list map' : ''"
+                    @click="revealed[seatIndex] && (mapOpen = true)"
+                  />
+                  <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
+                    House {{ displayedHouse(seatIndex) }}
                   </div>
-                  <div class="rel-row">
-                    <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
+                  <div class="card-house-relations">
+                    <div class="rel-row">
+                      <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
+                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
+                    </div>
+                    <div class="rel-row">
+                      <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
+                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </template>
-      </div>
-      <div class="cards-row">
-        <!-- Bottom row: physically the user-facing side; seat 2 (bottom-left), seat 3 (bottom-right) -->
-        <template v-for="seatIndex in [2, 3]" :key="seatIndex">
-          <div class="card-cell">
-            <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
-            <div
-              class="card"
-              :class="{ revealed: revealed[seatIndex], dealing }"
-              :style="{
-                ...shuffleStyle(seatIndex),
-                ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
-              }"
-            >
-              <div class="card-face card-back">
-                <div class="card-back-pattern"></div>
-              </div>
-              <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
-                <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
-                <img
-                  v-if="displayedHouse(seatIndex)"
-                  class="card-house-img"
-                  :src="houseImageUrl(displayedHouse(seatIndex))"
-                  :alt="displayedHouse(seatIndex)"
-                />
-                <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
-                  House {{ displayedHouse(seatIndex) }}
+          </template>
+        </div>
+        <div class="cards-row">
+          <template v-for="seatIndex in [2, 3]" :key="seatIndex">
+            <div class="card-cell">
+              <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
+              <div
+                class="card"
+                :class="{ revealed: revealed[seatIndex], dealing }"
+                :style="{
+                  ...shuffleStyle(seatIndex),
+                  ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
+                }"
+              >
+                <div class="card-face card-back">
+                  <div class="card-back-pattern"></div>
                 </div>
-                <div class="card-house-relations">
-                  <div class="rel-row">
-                    <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
+                <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
+                  <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
+                  <img
+                    v-if="displayedHouse(seatIndex)"
+                    class="card-house-img"
+                    :class="{ clickable: revealed[seatIndex] }"
+                    :src="houseImageUrl(displayedHouse(seatIndex))"
+                    :alt="displayedHouse(seatIndex)"
+                    :title="revealed[seatIndex] ? 'Show kill list map' : ''"
+                    @click="revealed[seatIndex] && (mapOpen = true)"
+                  />
+                  <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
+                    House {{ displayedHouse(seatIndex) }}
                   </div>
-                  <div class="rel-row">
-                    <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
-                    <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
+                  <div class="card-house-relations">
+                    <div class="rel-row">
+                      <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
+                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
+                    </div>
+                    <div class="rel-row">
+                      <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
+                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </template>
+          </template>
+        </div>
       </div>
     </div>
 
@@ -215,6 +377,12 @@ function turnPos(seatIndex) {
       <button class="btn btn-secondary" @click="handleRedeal">Re-deal</button>
       <button class="btn btn-primary" @click="emit('begin')">Begin Game</button>
     </div>
+
+    <CycleDirectionsMap
+      v-if="mapOpen"
+      :seats="seats"
+      @close="mapOpen = false"
+    />
   </div>
 </template>
 
@@ -229,8 +397,6 @@ function turnPos(seatIndex) {
   justify-content: center;
   padding: 18px;
   gap: 14px;
-  /* Allow scrolling if content is taller than the viewport (e.g. iPad
-     landscape where height is the tight axis). */
   overflow-y: auto;
 }
 
@@ -255,13 +421,132 @@ function turnPos(seatIndex) {
   font-size: 0.85rem;
 }
 
+.preview-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Float the shape picker absolutely along the left edge so the cards
+   stay centred in the viewport regardless of the panel's width. Mirrors
+   how the action buttons float to the right in landscape mode. */
+.shape-panel {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shape-panel-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c9a54e;
+  margin: 0;
+}
+
+.shape-panel-hint {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  color: #8a7e66;
+  font-size: 0.75rem;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.shape-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shape-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #2a2520;
+  background: #231f1a;
+  border-radius: 4px;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+
+.shape-card.disabled {
+  opacity: 0.55;
+  border-color: #1f1b16;
+}
+
+.shape-icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 3px;
+  transition: transform 0.15s;
+}
+
+.shape-icon-btn:hover { transform: scale(1.05); }
+
+.shape-icon {
+  width: 56px;
+  height: 50px;
+  display: block;
+}
+
+.shape-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.shape-toggle, .shape-mirror {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: 'EB Garamond', serif;
+  color: #d4c8a8;
+  font-size: 0.78rem;
+}
+
+.shape-toggle input, .shape-mirror input {
+  accent-color: #c9a54e;
+  cursor: pointer;
+}
+
+.shape-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.shape-mirror {
+  color: #8a7e66;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+.shape-mirror.off {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .cards-grid {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: 100%;
-  max-width: 900px;
-  flex-shrink: 0;
+  flex: 1;
+  max-width: 760px;
+  min-width: 0;
 }
 
 .cards-row {
@@ -343,12 +628,6 @@ function turnPos(seatIndex) {
 }
 
 .card.dealing {
-  /* Per-card duration + total rotation are injected via inline style so
-     all four start at the same spin speed and ease out at different
-     times, revealing one by one. End rotation is always a multiple of
-     360° so the card returns to "back facing viewer" before the reveal
-     flip kicks in. cubic-bezier mimics a heavy spinning object slowing
-     to a stop. */
   animation: spin-shuffle var(--shuffle-duration, 1200ms)
     cubic-bezier(0.12, 0.78, 0.28, 1) forwards;
 }
@@ -363,6 +642,16 @@ function turnPos(seatIndex) {
   max-height: 70%;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+  transition: transform 0.15s, filter 0.15s;
+}
+
+.card-house-img.clickable {
+  cursor: pointer;
+}
+
+.card-house-img.clickable:hover {
+  transform: scale(1.04);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) brightness(1.1);
 }
 
 .card-house-name {
@@ -402,7 +691,6 @@ function turnPos(seatIndex) {
 }
 
 .start-badge {
-  /* Sits inside the revealed card's front face, anchored at the top. */
   position: absolute;
   top: 8px;
   left: 50%;
@@ -465,14 +753,15 @@ function turnPos(seatIndex) {
   .preview-title { font-size: 1.4rem; }
   .preview-subtitle { font-size: 0.8rem; }
 
+  .shape-panel { width: 180px; }
+  .shape-icon { width: 50px; height: 44px; }
+
   .preview-actions {
     position: absolute;
     right: 24px;
     top: 50%;
     flex-direction: column;
     width: 150px;
-    /* Compose the entry animation's translate with the vertical centring
-       translate so neither overrides the other. */
     transform: translateY(calc(-50% + 8px));
   }
 
@@ -482,6 +771,30 @@ function turnPos(seatIndex) {
 
   .btn {
     width: 100%;
+  }
+}
+
+/* Portrait / narrow viewports: stack the shape panel above the cards so
+   it doesn't overlap them. Un-absolute it from the left edge. */
+@media (max-width: 720px) {
+  .preview-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .shape-panel {
+    position: static;
+    transform: none;
+    width: 100%;
+  }
+  .shape-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .shape-card {
+    flex: 1 1 200px;
+    max-width: 260px;
   }
 }
 

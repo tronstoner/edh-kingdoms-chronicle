@@ -21,7 +21,7 @@ const props = defineProps({
 
 const isCycle = computed(() => props.mode === 'cycle')
 
-const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole', 'zombify', 'clone', 'clearUndead'])
+const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole', 'zombify', 'clone', 'clearUndead', 'openCycleMap'])
 
 const deckColors = computed(() => props.seat.deck?.colors || '')
 const gradient = useManaGradient(deckColors)
@@ -220,7 +220,11 @@ const panelClasses = computed(() => {
       </template>
       <!-- Cycle: open House badge -->
       <template v-else>
-        <CycleHouseBadge :house="seat.house" :dead-houses="deadHouses" />
+        <CycleHouseBadge
+          :house="seat.house"
+          :dead-houses="deadHouses"
+          @open-map="emit('openCycleMap')"
+        />
       </template>
     </div>
 

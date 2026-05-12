@@ -5,6 +5,7 @@ import { useLifetrackerState } from '../composables/useLifetrackerState.js'
 import { findCycleWinner } from '../lifetracker/cycle.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
 import CycleSetupPreview from '../components/lifetracker/CycleSetupPreview.vue'
+import CycleDirectionsMap from '../components/lifetracker/CycleDirectionsMap.vue'
 import TableLayout from '../components/lifetracker/TableLayout.vue'
 import { LAYOUTS } from '../composables/useTableLayouts.js'
 import DeckPicker from '../components/lifetracker/DeckPicker.vue'
@@ -99,8 +100,8 @@ function handleStart() {
   }
 }
 
-function handleCycleRedeal() {
-  dealCycle()
+function handleCycleRedeal(shapeOptions) {
+  dealCycle(shapeOptions)
 }
 
 function handleCycleBegin() {
@@ -110,6 +111,8 @@ function handleCycleBegin() {
 function handleCycleBack() {
   state.phase = 'setup'
 }
+
+const cycleMapOpen = ref(false)
 
 function handleSetSeat(index, player, deck) {
   state.seats[index].player = player
@@ -378,6 +381,14 @@ function handleClearCycleGames() {
         @export="handleShowExport"
         @new-game="discardSaved"
         @back="handleBack"
+        @open-cycle-map="cycleMapOpen = true"
+      />
+
+      <!-- Cycle kill-list map (sigil-triggered overlay) -->
+      <CycleDirectionsMap
+        v-if="cycleMapOpen && state.mode === 'cycle'"
+        :seats="state.seats"
+        @close="cycleMapOpen = false"
       />
 
       <!-- Turn announcement -->

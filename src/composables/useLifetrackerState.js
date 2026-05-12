@@ -1,10 +1,34 @@
 import { reactive, watch } from 'vue'
-import { assignHouses, randomStart } from '../lifetracker/cycle.js'
+import { assignHousesForShapes, randomStart, DEFAULT_SHAPE_OPTIONS } from '../lifetracker/cycle.js'
 
 const LS_CURRENT = 'edhlog-lt-current'
 const LS_COMPLETED = 'edhlog-lt-completed'
 const LS_COMPLETED_CYCLE = 'edhlog-lt-completed-cycle'
 const LS_LAST_SETUP = 'edhlog-lt-last-setup'
+const LS_CYCLE_SHAPES = 'edhlog-lt-cycle-shapes'
+
+export function loadCycleShapeOptions() {
+  try {
+    const raw = localStorage.getItem(LS_CYCLE_SHAPES)
+    const parsed = raw ? JSON.parse(raw) : null
+    if (!parsed) return JSON.parse(JSON.stringify(DEFAULT_SHAPE_OPTIONS))
+    return {
+      diagonal:   { ...DEFAULT_SHAPE_OPTIONS.diagonal,   ...(parsed.diagonal   || {}) },
+      vertical:   { ...DEFAULT_SHAPE_OPTIONS.vertical,   ...(parsed.vertical   || {}) },
+      horizontal: { ...DEFAULT_SHAPE_OPTIONS.horizontal, ...(parsed.horizontal || {}) },
+    }
+  } catch {
+    return JSON.parse(JSON.stringify(DEFAULT_SHAPE_OPTIONS))
+  }
+}
+
+export function saveCycleShapeOptions(opts) {
+  try {
+    localStorage.setItem(LS_CYCLE_SHAPES, JSON.stringify(opts))
+  } catch {
+    // ignore quota errors
+  }
+}
 
 function createSeat(index, playerCount) {
   const commanderDamage = {}
@@ -153,9 +177,9 @@ export function useLifetrackerState() {
     }
   }
 
-  function dealCycle() {
+  function dealCycle(shapeOptions) {
     if (state.mode !== 'cycle') return
-    const houses = assignHouses()
+    const houses = assignHousesForShapes(shapeOptions || loadCycleShapeOptions())
     state.seats.forEach((seat, i) => {
       seat.house = houses[i]
     })

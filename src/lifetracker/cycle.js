@@ -57,6 +57,95 @@ export function assignHouses() {
   return shuffle(HOUSES)
 }
 
+// Cycle "shapes on the table" — see Appendix of research/the-cycle.html.
+// The cycle math is invariant, but the seating yields one of three shapes
+// based on where the feud pairs sit relative to the table grid.
+export const CYCLE_SHAPES = [
+  { id: 'diagonal',   label: 'Diagonal feuds' },
+  { id: 'vertical',   label: 'Vertical feuds' },
+  { id: 'horizontal', label: 'Horizontal feuds' },
+]
+
+// Physical seat layout in the 4-2t2b table: 0=TL, 1=TR, 2=BL, 3=BR.
+// SEAT_X/SEAT_Y are normalised grid coords (-1/+1) used for shape math.
+const SEAT_X = [-1, 1, -1, 1]
+const SEAT_Y = [-1, -1, 1, 1]
+
+// Classify a seat→house assignment by its shape and chirality.
+// `houses` is an array of 4 House names (or letters) indexed by seat.
+export function classifyArrangement(houses) {
+  if (!houses || houses.length !== 4) return null
+  const pos = {}
+  houses.forEach((h, i) => {
+    const id = HOUSE_TO_ID[h] || h
+    pos[id] = i
+  })
+  if (pos.A == null || pos.B == null || pos.C == null || pos.D == null) return null
+  const sameCol = SEAT_X[pos.A] === SEAT_X[pos.C]
+  const sameRow = SEAT_Y[pos.A] === SEAT_Y[pos.C]
+  let shape
+  if (sameCol) shape = 'vertical'
+  else if (sameRow) shape = 'horizontal'
+  else shape = 'diagonal'
+  // Chirality: cross product of (B-A) × (D-A). Each shape's HTML "base"
+  // example normalises to mirror=false; horizontal flips because its
+  // canonical traversal winds the opposite way.
+  const cross =
+    (SEAT_X[pos.B] - SEAT_X[pos.A]) * (SEAT_Y[pos.D] - SEAT_Y[pos.A]) -
+    (SEAT_Y[pos.B] - SEAT_Y[pos.A]) * (SEAT_X[pos.D] - SEAT_X[pos.A])
+  let mirror = cross < 0
+  if (shape === 'horizontal') mirror = !mirror
+  return { shape, mirror }
+}
+
+function permutations(arr) {
+  if (arr.length <= 1) return [arr.slice()]
+  const out = []
+  for (let i = 0; i < arr.length; i++) {
+    const rest = [...arr.slice(0, i), ...arr.slice(i + 1)]
+    for (const p of permutations(rest)) out.push([arr[i], ...p])
+  }
+  return out
+}
+
+// All 24 House assignments precomputed with their shape classification.
+// Used to filter the deal pool down to whichever shapes the user enabled.
+const ALL_ARRANGEMENTS = permutations(HOUSES).map(perm => ({
+  perm,
+  ...classifyArrangement(perm),
+}))
+
+export const DEFAULT_SHAPE_OPTIONS = {
+  diagonal:   { enabled: true, mirror: true },
+  vertical:   { enabled: true, mirror: true },
+  horizontal: { enabled: true, mirror: true },
+}
+
+// Pick a random House assignment that satisfies the user's shape filter.
+// `opts` shape: { diagonal: {enabled, mirror}, vertical: {...}, horizontal: {...} }.
+// Falls back to the full pool if the filter excludes everything.
+export function assignHousesForShapes(opts) {
+  const o = opts || DEFAULT_SHAPE_OPTIONS
+  let pool = ALL_ARRANGEMENTS.filter(({ shape, mirror }) => {
+    const so = o[shape]
+    if (!so || !so.enabled) return false
+    if (mirror && !so.mirror) return false
+    return true
+  })
+  if (pool.length === 0) pool = ALL_ARRANGEMENTS
+  return pool[Math.floor(Math.random() * pool.length)].perm.slice()
+}
+
+// Return a representative seat→house arrangement for a given shape +
+// mirror flag, used to render preview icons in the shape picker.
+// House letters returned (A/B/C/D), not display names.
+export function representativeArrangement(shape, mirror) {
+  const match = ALL_ARRANGEMENTS.find(
+    a => a.shape === shape && a.mirror === !!mirror
+  )
+  return match ? match.perm.map(h => HOUSE_TO_ID[h]) : null
+}
+
 // Random starting seat in [0, seatCount).
 export function randomStart(seatCount) {
   return Math.floor(Math.random() * seatCount)

@@ -8,6 +8,8 @@ const props = defineProps({
   deadHouses: { type: Array, default: () => [] },
 })
 
+const emit = defineEmits(['open-map'])
+
 const color = computed(() => HOUSE_COLORS[props.house] || '#8a7e66')
 const img = computed(() => houseImageUrl(props.house))
 const rel = computed(() => cycleRelations(props.house) || {})
@@ -19,7 +21,14 @@ function isDead(houseName) {
 
 <template>
   <div v-if="house" class="house-badge">
-    <img class="house-img" :src="img" :alt="house" />
+    <img
+      class="house-img clickable"
+      :src="img"
+      :alt="house"
+      title="Show kill list map"
+      @pointerdown.stop
+      @click.stop="emit('open-map')"
+    />
     <div class="house-plate" :style="{ borderColor: color }">
       <div class="house-name" :style="{ color }">{{ house }}</div>
       <div class="house-rels">
@@ -64,6 +73,16 @@ function isDead(houseName) {
   /* Push the heraldry upward so the plate below doesn't bury the icon. */
   object-position: center 22%;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
+}
+
+.house-img.clickable {
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.15s;
+}
+
+.house-img.clickable:hover {
+  transform: scale(1.04);
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6)) brightness(1.15);
 }
 
 .house-plate {

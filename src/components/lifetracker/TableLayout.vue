@@ -16,6 +16,7 @@ const emit = defineEmits([
   'changeLife', 'openSeat', 'override', 'openCmdDamage',
   'revealRole', 'zombify', 'clone', 'clearUndead',
   'advanceTurn', 'endGame', 'export', 'newGame', 'back',
+  'openCycleMap',
 ])
 
 const layout = computed(() => LAYOUTS[props.layoutId])
@@ -55,6 +56,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @zombify="emit('zombify', seatIndex)"
           @clone="emit('clone', seatIndex)"
           @clear-undead="emit('clearUndead', seatIndex)"
+          @open-cycle-map="emit('openCycleMap')"
         />
       </div>
     </template>
