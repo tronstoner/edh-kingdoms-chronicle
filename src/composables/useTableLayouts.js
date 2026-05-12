@@ -1,4 +1,16 @@
 export const LAYOUTS = {
+  '4-2t2b': {
+    id: '4-2t2b',
+    playerCount: 4,
+    label: '2 + 2',
+    menuColumn: true,
+    gridTemplateColumns: '1fr 64px 1fr',
+    menuGridColumn: 2,
+    rows: [
+      { seats: [0, 1], seatGridColumns: [1, 3], rotate: 180 },
+      { seats: [2, 3], seatGridColumns: [1, 3], rotate: 0 },
+    ],
+  },
   '5-3t2b': {
     id: '5-3t2b',
     playerCount: 5,
@@ -22,9 +34,11 @@ export const LAYOUTS = {
     playerCount: 6,
     label: '3 + 3',
     menuColumn: true,
+    gridTemplateColumns: '1fr 1fr 64px 1fr',
+    menuGridColumn: 3,
     rows: [
-      { seats: [0, 1, 2], rotate: 180 },
-      { seats: [3, 4, 5], rotate: 0 },
+      { seats: [0, 1, 2], seatGridColumns: [1, 2, 4], rotate: 180 },
+      { seats: [3, 4, 5], seatGridColumns: [1, 2, 4], rotate: 0 },
     ],
   },
 }
@@ -34,5 +48,7 @@ export function layoutsForCount(playerCount) {
 }
 
 export function defaultLayout(playerCount) {
-  return playerCount === 6 ? LAYOUTS['6-3t3b'] : LAYOUTS['5-3t2b']
+  if (playerCount === 4) return LAYOUTS['4-2t2b']
+  if (playerCount === 6) return LAYOUTS['6-3t3b']
+  return LAYOUTS['5-3t2b']
 }

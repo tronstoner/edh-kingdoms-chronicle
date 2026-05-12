@@ -8,6 +8,8 @@ const props = defineProps({
   layoutId: String,
   seats: Array,
   turnCount: Number,
+  mode: { type: String, default: 'kingdoms' },
+  startingSeatIndex: { type: Number, default: null },
 })
 
 const emit = defineEmits([
@@ -20,16 +22,21 @@ const layout = computed(() => LAYOUTS[props.layoutId])
 </script>
 
 <template>
-  <!-- 6-player: CSS grid with menu column between seats 2 and 3 -->
-  <div v-if="layout.menuColumn" class="table-layout table-layout--6p">
+  <!-- Menu-column layouts (4-player 2+2, 6-player 3+3): CSS grid with menu column between seat columns -->
+  <div
+    v-if="layout.menuColumn"
+    class="table-layout table-layout--grid"
+    :style="{ gridTemplateColumns: layout.gridTemplateColumns }"
+  >
     <template v-for="(row, ri) in layout.rows" :key="ri">
       <div
-        v-for="seatIndex in row.seats.slice(0, 2)"
+        v-for="(seatIndex, si) in row.seats"
         :key="seatIndex"
         class="table-cell"
         :style="{
           transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined,
           gridRow: ri + 1,
+          gridColumn: row.seatGridColumns[si],
         }"
       >
         <PlayerPanel
@@ -38,6 +45,8 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           :rotated="row.rotate === 180"
           :all-seats="seats"
           :layout-rows="layout.rows"
+          :mode="mode"
+          :starting-seat-index="startingSeatIndex"
           @change-life="(delta) => emit('changeLife', seatIndex, delta)"
           @override="emit('override', seatIndex)"
           @open-seat="emit('openSeat', seatIndex)"
@@ -48,32 +57,8 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @clear-undead="emit('clearUndead', seatIndex)"
         />
       </div>
-      <div
-        class="table-cell"
-        :style="{
-          transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined,
-          gridRow: ri + 1,
-          gridColumn: 4,
-        }"
-      >
-        <PlayerPanel
-          v-if="seats[row.seats[2]]"
-          :seat="seats[row.seats[2]]"
-          :rotated="row.rotate === 180"
-          :all-seats="seats"
-          :layout-rows="layout.rows"
-          @change-life="(delta) => emit('changeLife', row.seats[2], delta)"
-          @override="emit('override', row.seats[2])"
-          @open-seat="emit('openSeat', row.seats[2])"
-          @open-cmd-damage="emit('openCmdDamage', row.seats[2])"
-          @reveal-role="emit('revealRole', row.seats[2])"
-          @zombify="emit('zombify', row.seats[2])"
-          @clone="emit('clone', row.seats[2])"
-          @clear-undead="emit('clearUndead', row.seats[2])"
-        />
-      </div>
     </template>
-    <div class="menu-column">
+    <div class="menu-column" :style="{ gridColumn: layout.menuGridColumn }">
       <GameMenuInline
         :turn-count="turnCount"
         vertical
@@ -205,14 +190,13 @@ const layout = computed(() => LAYOUTS[props.layoutId])
   z-index: 15;
 }
 
-.table-layout--6p {
+.table-layout--grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 64px 1fr;
   grid-template-rows: 1fr 1fr;
+  gap: 3px;
 }
 
 .menu-column {
-  grid-column: 3;
   grid-row: 1 / -1;
   display: flex;
   align-items: center;

@@ -3,6 +3,7 @@ import { ref, provide, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLifetrackerState } from '../composables/useLifetrackerState.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
+import CycleSetupPreview from '../components/lifetracker/CycleSetupPreview.vue'
 import TableLayout from '../components/lifetracker/TableLayout.vue'
 import { LAYOUTS } from '../composables/useTableLayouts.js'
 import DeckPicker from '../components/lifetracker/DeckPicker.vue'
@@ -18,6 +19,7 @@ const {
   state,
   newGame,
   startGame,
+  dealCycle,
   changeLife,
   changePoison,
   changeCommanderDamage,
@@ -75,12 +77,37 @@ function handleBack() {
   router.push('/dashboard')
 }
 
+function handleSetMode(mode, count, layoutId) {
+  newGame(count, layoutId, mode)
+}
+
 function handleSetCount(count, layoutId) {
-  newGame(count, layoutId)
+  newGame(count, layoutId, state.mode)
 }
 
 function handleSetLayout(layoutId) {
   state.layoutId = layoutId
+}
+
+function handleStart() {
+  if (state.mode === 'cycle') {
+    dealCycle()
+    state.phase = 'cycle-preview'
+  } else {
+    startGame()
+  }
+}
+
+function handleCycleRedeal() {
+  dealCycle()
+}
+
+function handleCycleBegin() {
+  startGame()
+}
+
+function handleCycleBack() {
+  state.phase = 'setup'
 }
 
 function handleSetSeat(index, player, deck) {
@@ -216,6 +243,7 @@ function handleDeathRevealRole(seatIndex) {
 const showConclude = ref(false)
 const showExport = ref(false)
 const completedGames = ref([])
+const completedCycleGames = ref([])
 
 function applyConcludeData({ seats, firstKO, gameEnd }) {
   for (let i = 0; i < state.seats.length; i++) {
@@ -247,14 +275,21 @@ function handleConcludeSaveAndExport(data) {
 }
 
 function handleShowExport() {
-  completedGames.value = getCompletedGames()
+  completedGames.value = getCompletedGames('kingdoms')
+  completedCycleGames.value = getCompletedGames('cycle')
   showExport.value = true
 }
 
 function handleClearGames() {
-  clearCompletedGames()
+  clearCompletedGames('kingdoms')
   completedGames.value = []
-  showExport.value = false
+  if (!completedCycleGames.value.length) showExport.value = false
+}
+
+function handleClearCycleGames() {
+  clearCompletedGames('cycle')
+  completedCycleGames.value = []
+  if (!completedGames.value.length) showExport.value = false
 }
 </script>
 
@@ -275,15 +310,27 @@ function handleClearGames() {
     <!-- Setup phase -->
     <div v-else-if="state.phase === 'setup'" class="lt-setup">
       <SetupScreen
+        :mode="state.mode"
         :player-count="state.playerCount"
         :layout-id="state.layoutId"
+        @set-mode="handleSetMode"
         @set-count="handleSetCount"
         @set-layout="handleSetLayout"
-        @start="startGame"
+        @start="handleStart"
         @export="handleShowExport"
         @back="handleBack"
       />
     </div>
+
+    <!-- Cycle preview (House deal + starting player reveal) -->
+    <CycleSetupPreview
+      v-else-if="state.phase === 'cycle-preview'"
+      :seats="state.seats"
+      :starting-seat-index="state.startingSeatIndex"
+      @redeal="handleCycleRedeal"
+      @begin="handleCycleBegin"
+      @back="handleCycleBack"
+    />
 
     <!-- Playing phase -->
     <template v-else-if="state.phase === 'playing'">
@@ -291,6 +338,8 @@ function handleClearGames() {
         :layout-id="state.layoutId"
         :seats="state.seats"
         :turn-count="state.turnCount"
+        :mode="state.mode"
+        :starting-seat-index="state.startingSeatIndex"
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
@@ -327,6 +376,7 @@ function handleClearGames() {
         :all-seats="state.seats"
         :layout-rows="LAYOUTS[state.layoutId].rows"
         :rotated="LAYOUTS[state.layoutId].rows[0].seats.includes(cmdDamageTarget)"
+        :mode="state.mode"
         @change="handleCmdDamageChange"
         @toggle-partners="handleTogglePartners"
         @change-poison="handleCmdPoison"
@@ -336,9 +386,9 @@ function handleClearGames() {
         @close="cmdDamageTarget = null"
       />
 
-      <!-- Role picker -->
+      <!-- Role picker (Kingdoms only) -->
       <RolePicker
-        v-if="rolePickerSeat !== null"
+        v-if="rolePickerSeat !== null && state.mode !== 'cycle'"
         :seat="state.seats[rolePickerSeat]"
         :all-seats="state.seats"
         :player-count="state.playerCount"
@@ -365,6 +415,7 @@ function handleClearGames() {
         v-if="showConclude"
         :seats="state.seats"
         :turn-count="state.turnCount"
+        :mode="state.mode"
         @save="handleConcludeSave"
         @save-and-export="handleConcludeSaveAndExport"
         @close="showConclude = false"
@@ -376,8 +427,10 @@ function handleClearGames() {
     <ExportModal
       v-if="showExport"
       :games="completedGames"
+      :cycle-games="completedCycleGames"
       @close="showExport = false"
       @clear-games="handleClearGames"
+      @clear-cycle-games="handleClearCycleGames"
     />
   </div>
 </template>

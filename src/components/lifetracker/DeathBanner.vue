@@ -1,9 +1,15 @@
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   playerCount: Number,
   roleRevealed: Boolean,
   roleNotes: String,
+  mode: { type: String, default: 'kingdoms' },
 });
+
+const isCycle = computed(() => props.mode === 'cycle')
+const deathLabel = computed(() => isCycle.value ? 'ELIMINATED' : 'DEAD')
 
 const emit = defineEmits([
   "override",
@@ -18,30 +24,32 @@ const emit = defineEmits([
   <div class="death-banner" @click.stop @pointerdown.stop>
     <div class="death-icon-group">
       <i class="ms ms-graveyard death-skull"></i>
-      <span class="death-label font-beleren">DEAD</span>
+      <span class="death-label font-beleren">{{ deathLabel }}</span>
     </div>
     <div class="death-actions">
-      <button
-        v-if="!roleRevealed"
-        class="death-btn"
-        @click="emit('revealRole')"
-      >
-        Reveal role
-      </button>
-      <button
-        v-if="!roleNotes"
-        class="death-btn death-btn-zombie"
-        @click="emit('zombify')"
-      >
-        &#x1F9DF; Zombified
-      </button>
-      <button
-        v-if="!roleNotes && playerCount === 6"
-        class="death-btn death-btn-clone"
-        @click="emit('clone')"
-      >
-        &#x1F9EC; Cloned
-      </button>
+      <template v-if="!isCycle">
+        <button
+          v-if="!roleRevealed"
+          class="death-btn"
+          @click="emit('revealRole')"
+        >
+          Reveal role
+        </button>
+        <button
+          v-if="!roleNotes"
+          class="death-btn death-btn-zombie"
+          @click="emit('zombify')"
+        >
+          &#x1F9DF; Zombified
+        </button>
+        <button
+          v-if="!roleNotes && playerCount === 6"
+          class="death-btn death-btn-clone"
+          @click="emit('clone')"
+        >
+          &#x1F9EC; Cloned
+        </button>
+      </template>
       <button class="death-btn death-btn-override" @click="emit('override')">
         I'm not actually dead
       </button>

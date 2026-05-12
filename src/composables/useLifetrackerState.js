@@ -1,7 +1,9 @@
 import { reactive, watch } from 'vue'
+import { assignHouses, randomStart } from '../lifetracker/cycle.js'
 
 const LS_CURRENT = 'edhlog-lt-current'
 const LS_COMPLETED = 'edhlog-lt-completed'
+const LS_COMPLETED_CYCLE = 'edhlog-lt-completed-cycle'
 const LS_LAST_SETUP = 'edhlog-lt-last-setup'
 
 function createSeat(index, playerCount) {
@@ -15,6 +17,7 @@ function createSeat(index, playerCount) {
     deck: null,
     role: null,
     roleRevealed: false,
+    house: null,
     life: 40,
     poison: 0,
     poisonEnabled: false,
@@ -30,15 +33,21 @@ function createSeat(index, playerCount) {
   }
 }
 
-function loadLastSetup() {
+function loadLastSetup(mode) {
   try {
     const raw = localStorage.getItem(LS_LAST_SETUP)
-    return raw ? JSON.parse(raw) : null
+    const all = raw ? JSON.parse(raw) : null
+    if (!all) return null
+    // Legacy: pre-mode setups were a single object (Kingdoms).
+    if (!all.byMode) {
+      return mode === 'kingdoms' ? all : null
+    }
+    return all.byMode[mode] || null
   } catch { return null }
 }
 
 function saveLastSetup(state) {
-  const setup = {
+  const entry = {
     playerCount: state.playerCount,
     layoutId: state.layoutId,
     seats: state.seats.map(s => ({
@@ -46,11 +55,18 @@ function saveLastSetup(state) {
       deck: s.deck,
     })),
   }
-  localStorage.setItem(LS_LAST_SETUP, JSON.stringify(setup))
+  let all
+  try {
+    const raw = localStorage.getItem(LS_LAST_SETUP)
+    all = raw ? JSON.parse(raw) : {}
+  } catch { all = {} }
+  if (!all.byMode) all = { byMode: {} }
+  all.byMode[state.mode] = entry
+  localStorage.setItem(LS_LAST_SETUP, JSON.stringify(all))
 }
 
-function createGame(playerCount, layoutId) {
-  const lastSetup = loadLastSetup()
+function createGame(playerCount, layoutId, mode = 'kingdoms') {
+  const lastSetup = loadLastSetup(mode)
   const seats = []
   for (let i = 0; i < playerCount; i++) {
     const seat = createSeat(i, playerCount)
@@ -62,11 +78,13 @@ function createGame(playerCount, layoutId) {
   }
   return {
     id: Date.now().toString(36),
+    mode,
     phase: 'setup',
     playerCount,
     layoutId: (lastSetup && lastSetup.playerCount === playerCount) ? lastSetup.layoutId : layoutId,
     turnCount: 0,
     startTime: new Date().toISOString(),
+    startingSeatIndex: null,
     seats,
   }
 }
@@ -86,22 +104,28 @@ function clearCurrent() {
   localStorage.removeItem(LS_CURRENT)
 }
 
-function loadCompleted() {
+function completedKey(mode) {
+  return mode === 'cycle' ? LS_COMPLETED_CYCLE : LS_COMPLETED
+}
+
+function loadCompleted(mode) {
   try {
-    const raw = localStorage.getItem(LS_COMPLETED)
+    const raw = localStorage.getItem(completedKey(mode))
     return raw ? JSON.parse(raw) : []
   } catch { return [] }
 }
 
 function saveCompleted(game) {
-  const list = loadCompleted()
+  const key = completedKey(game.mode)
+  const list = loadCompleted(game.mode)
   list.push(game)
-  localStorage.setItem(LS_COMPLETED, JSON.stringify(list))
+  localStorage.setItem(key, JSON.stringify(list))
 }
 
 export function useLifetrackerState() {
   const saved = loadCurrent()
-  const state = reactive(saved || createGame(5, '5-3t2b'))
+  if (saved && !saved.mode) saved.mode = 'kingdoms'
+  const state = reactive(saved || createGame(5, '5-3t2b', 'kingdoms'))
 
   let saveTimeout = null
   watch(() => state, () => {
@@ -109,21 +133,33 @@ export function useLifetrackerState() {
     saveTimeout = setTimeout(() => saveCurrent(state), 500)
   }, { deep: true })
 
-  function newGame(playerCount, layoutId) {
-    const fresh = createGame(playerCount, layoutId)
+  function newGame(playerCount, layoutId, mode) {
+    const nextMode = mode || state.mode || 'kingdoms'
+    const fresh = createGame(playerCount, layoutId, nextMode)
     // Clear seats array and repopulate to maintain reactivity
     state.seats.splice(0, state.seats.length, ...fresh.seats)
     state.id = fresh.id
+    state.mode = fresh.mode
     state.phase = fresh.phase
     state.playerCount = fresh.playerCount
     state.layoutId = fresh.layoutId
     state.turnCount = fresh.turnCount
     state.startTime = fresh.startTime
+    state.startingSeatIndex = fresh.startingSeatIndex
     if (fresh.concludeData) {
       state.concludeData = fresh.concludeData
     } else {
       delete state.concludeData
     }
+  }
+
+  function dealCycle() {
+    if (state.mode !== 'cycle') return
+    const houses = assignHouses()
+    state.seats.forEach((seat, i) => {
+      seat.house = houses[i]
+    })
+    state.startingSeatIndex = randomStart(state.seats.length)
   }
 
   function startGame() {
@@ -247,14 +283,19 @@ export function useLifetrackerState() {
     saveCompleted(JSON.parse(JSON.stringify(state)))
   }
 
-  function getCompletedGames() {
-    return loadCompleted()
+  function getCompletedGames(mode) {
+    return loadCompleted(mode || state.mode)
   }
 
-  function clearCompletedGames() {
-    localStorage.removeItem(LS_COMPLETED)
-    localStorage.removeItem(LS_LAST_SETUP)
-    localStorage.removeItem('edhlog-lt-session-guests')
+  function clearCompletedGames(mode) {
+    if (mode) {
+      localStorage.removeItem(completedKey(mode))
+    } else {
+      localStorage.removeItem(LS_COMPLETED)
+      localStorage.removeItem(LS_COMPLETED_CYCLE)
+      localStorage.removeItem(LS_LAST_SETUP)
+      localStorage.removeItem('edhlog-lt-session-guests')
+    }
   }
 
   function persistSetup() {
@@ -267,13 +308,17 @@ export function useLifetrackerState() {
 
   function discardSaved() {
     clearCurrent()
-    newGame(5, '5-3t2b')
+    const mode = state.mode || 'kingdoms'
+    const count = mode === 'cycle' ? 4 : (state.playerCount === 6 ? 6 : 5)
+    const layoutId = mode === 'cycle' ? '4-2t2b' : (count === 6 ? '6-3t3b' : '5-3t2b')
+    newGame(count, layoutId, mode)
   }
 
   return {
     state,
     newGame,
     startGame,
+    dealCycle,
     changeLife,
     changePoison,
     changeCommanderDamage,

@@ -3,15 +3,21 @@ import { computed } from 'vue'
 import { useManaGradient, manaGradient } from '../../composables/useManaGradient.js'
 import { colorIcons, factionIcon } from '../../mana.js'
 import { ROLE_COLORS, roleIconUrl, conversionIconUrl, lifetrackerRoleLabel } from '../../roles.js'
+import { HOUSE_COLORS, cycleRelations, turnPositionFor } from '../../lifetracker/cycle.js'
 import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
+import CycleHouseBadge from './CycleHouseBadge.vue'
 
 const props = defineProps({
   seat: Object,
   rotated: Boolean,
   allSeats: Array,
   layoutRows: Array,
+  mode: { type: String, default: 'kingdoms' },
+  startingSeatIndex: { type: Number, default: null },
 })
+
+const isCycle = computed(() => props.mode === 'cycle')
 
 const emit = defineEmits(['changeLife', 'override', 'openSeat', 'openCmdDamage', 'revealRole', 'zombify', 'clone', 'clearUndead'])
 
@@ -31,6 +37,77 @@ const roleColor = computed(() => {
   if (!props.seat.role || !props.seat.roleRevealed) return null
   return ROLE_COLORS[props.seat.role]
 })
+
+const houseColor = computed(() => {
+  if (!isCycle.value || !props.seat.house) return null
+  return HOUSE_COLORS[props.seat.house]
+})
+
+const accentColor = computed(() => houseColor.value || roleColor.value)
+
+// In Cycle mode, the sigil sits on the side of the panel closest to the
+// table's centre so all four sigils converge. In content coords this means:
+//   row pos 0 (left-of-row, device coords)  → 'left'  if rotated, 'right' otherwise
+//   row pos 1 (right-of-row, device coords) → 'right' if rotated, 'left'  otherwise
+// Resulting layout for 4-2t2b:
+//   seat 0 (TL): 'left'   seat 1 (TR): 'right'
+//   seat 2 (BL): 'right'  seat 3 (BR): 'left'
+// Counters live on the opposite side so the panel layout stays symmetric.
+const sigilSide = computed(() => {
+  if (!isCycle.value) return 'left'
+  const row = props.layoutRows?.find(r => r.seats.includes(props.seat.index))
+  if (!row) return 'left'
+  const pos = row.seats.indexOf(props.seat.index)
+  const lastPos = row.seats.length - 1
+  const deviceInner = pos === 0 ? 'right' : (pos === lastPos ? 'left' : 'left')
+  if (row.rotate === 180) return deviceInner === 'right' ? 'left' : 'right'
+  return deviceInner
+})
+
+const counterSide = computed(() => sigilSide.value === 'left' ? 'right' : 'left')
+
+// In Cycle, classify each opponent relative to the panel's House.
+const myRelations = computed(() => {
+  if (!isCycle.value || !props.seat.house) return null
+  return cycleRelations(props.seat.house)
+})
+
+// Houses whose seat is currently eliminated. Drives strike-through on
+// feud/rival names in every panel's sigil.
+const deadHouses = computed(() => {
+  if (!isCycle.value) return []
+  return props.allSeats
+    .filter(s => s.isDead && !s.deathOverridden && s.house)
+    .map(s => s.house)
+})
+
+function cycleRelationFor(otherSeatIndex) {
+  if (!isCycle.value || otherSeatIndex === props.seat.index) return null
+  const rel = myRelations.value
+  if (!rel) return null
+  const otherHouse = props.allSeats?.[otherSeatIndex]?.house
+  if (!otherHouse) return null
+  if (otherHouse === rel.feud) return 'feud'
+  if (otherHouse === rel.rival) return 'rival'
+  if (otherHouse === rel.hunter) return 'hunter'
+  return null
+}
+
+// House colour of the seat being plotted (unused now that the minimap
+// glyphs are neutral cream, but kept for future highlight use).
+function targetHouseColor(otherSeatIndex) {
+  const h = props.allSeats?.[otherSeatIndex]?.house
+  return h ? HOUSE_COLORS[h] : null
+}
+
+// Position the relation glyph at the cell corner closest to the middle of
+// the minimap (where the four cells meet) so the four glyphs cluster
+// inward — mirrors how the sigils cluster toward the table's centre.
+function relIconPosition(rowIndex, colIndex) {
+  const vert = rowIndex === 0 ? 'bottom' : 'top'
+  const horiz = colIndex === 0 ? 'right' : 'left'
+  return { [vert]: '2px', [horiz]: '2px' }
+}
 
 function dealerHasPartners(fromIndex) {
   return props.allSeats?.[fromIndex]?.hasPartners || false
@@ -78,7 +155,7 @@ const panelClasses = computed(() => {
 <template>
   <div
     :class="panelClasses"
-    :style="roleColor ? { borderTopColor: roleColor, borderTopWidth: '3px' } : undefined"
+    :style="accentColor ? { borderTopColor: accentColor, borderTopWidth: '3px' } : undefined"
   >
     <!-- Mana color gradient background -->
     <div v-if="gradientOverlay" class="gradient-bg" :style="{ background: gradientOverlay }"></div>
@@ -102,41 +179,61 @@ const panelClasses = computed(() => {
       {{ seat.life }}
     </div>
 
-    <!-- Role + status badges (left side, stacked vertically) -->
-    <div class="left-badges">
-      <div
-        v-if="seat.role && seat.roleRevealed"
-        class="role-tag"
-        :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
-        @pointerdown.stop
-        @click.stop="emit('revealRole')"
-      >
-        <img class="role-tag-img" :src="roleIconUrl(seat.role)" alt="" />
-        <span class="role-tag-label">
-          <span v-for="word in lifetrackerRoleLabel(seat.role).split(' ')" :key="word">{{ word }}</span>
-        </span>
-      </div>
-      <div
-        v-else
-        class="role-tag role-tag-pick"
-        @pointerdown.stop
-        @click.stop="emit('revealRole')"
-      >
-        <i class="ms ms-ability-cloak role-tag-pick-icon"></i>
-        <span class="role-tag-label"><span>Role</span></span>
-      </div>
-      <div v-if="seat.roleNotes === 'Zombie'" class="role-tag role-tag-conversion" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
-        <img class="role-tag-img" :src="conversionIconUrl('Zombie')" alt="" />
-        <span class="role-tag-label"><span>Zombie</span></span>
-      </div>
-      <div v-else-if="seat.roleNotes === 'Clone'" class="role-tag role-tag-conversion" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('clearUndead')">
-        <img class="role-tag-img" :src="conversionIconUrl('Clone')" alt="" />
-        <span class="role-tag-label"><span>Clone</span></span>
-      </div>
+    <!-- Identity badges (stacked vertically; side mirrors toward centre in Cycle) -->
+    <!-- In Cycle, nudge tight to the inner panel edge so all four sigils
+         cluster near the device's vertical centre line. Kingdoms keeps the
+         original 8px inset. -->
+    <div class="left-badges" :style="{ [sigilSide]: isCycle ? '2px' : '8px' }">
+      <!-- Kingdoms: role tag (interactive reveal) -->
+      <template v-if="!isCycle">
+        <div
+          v-if="seat.role && seat.roleRevealed"
+          class="role-tag"
+          :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
+          @pointerdown.stop
+          @click.stop="emit('revealRole')"
+        >
+          <img class="role-tag-img" :src="roleIconUrl(seat.role)" alt="" />
+          <span class="role-tag-label">
+            <span v-for="word in lifetrackerRoleLabel(seat.role).split(' ')" :key="word">{{ word }}</span>
+          </span>
+        </div>
+        <div
+          v-else
+          class="role-tag role-tag-pick"
+          @pointerdown.stop
+          @click.stop="emit('revealRole')"
+        >
+          <i class="ms ms-ability-cloak role-tag-pick-icon"></i>
+          <span class="role-tag-label"><span>Role</span></span>
+        </div>
+        <div v-if="seat.roleNotes === 'Zombie'" class="role-tag role-tag-conversion" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
+          <img class="role-tag-img" :src="conversionIconUrl('Zombie')" alt="" />
+          <span class="role-tag-label"><span>Zombie</span></span>
+        </div>
+        <div v-else-if="seat.roleNotes === 'Clone'" class="role-tag role-tag-conversion" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('clearUndead')">
+          <img class="role-tag-img" :src="conversionIconUrl('Clone')" alt="" />
+          <span class="role-tag-label"><span>Clone</span></span>
+        </div>
+      </template>
+      <!-- Cycle: open House badge -->
+      <template v-else>
+        <CycleHouseBadge :house="seat.house" :dead-houses="deadHouses" />
+      </template>
     </div>
 
-    <!-- Non-zero counters (only shown when relevant) -->
-    <div class="counter-badges" @pointerdown.stop @click.stop="emit('openCmdDamage')">
+    <!-- Cycle: turn-order pip -->
+    <div
+      v-if="isCycle && startingSeatIndex !== null"
+      class="turn-pip"
+      :class="{ 'turn-pip-first': seat.index === startingSeatIndex }"
+    >
+      <span v-if="seat.index === startingSeatIndex">1st</span>
+      <span v-else>{{ turnPositionFor(seat.index, startingSeatIndex, allSeats.length) }}</span>
+    </div>
+
+    <!-- Non-zero counters (only shown when relevant; side mirrors sigil) -->
+    <div class="counter-badges" :style="{ [counterSide]: '8px' }" @pointerdown.stop @click.stop="emit('openCmdDamage')">
       <div v-if="seat.poison > 0" class="badge badge-poison">
         <i class="ms ms-ability-phyrexian badge-icon"></i>
         <span class="badge-val">{{ seat.poison }}</span>
@@ -151,13 +248,60 @@ const panelClasses = computed(() => {
     <div v-if="!seat.isDead || seat.deathOverridden" class="cmd-minimap" @pointerdown.stop @click.stop="emit('openCmdDamage')">
       <div v-for="(row, ri) in (rotated ? [...layoutRows].reverse() : layoutRows)" :key="ri" class="minimap-row">
         <div
-          v-for="si in (rotated ? [...row.seats].reverse() : row.seats)"
+          v-for="(si, ci) in (rotated ? [...row.seats].reverse() : row.seats)"
           :key="si"
           class="minimap-cell"
-          :class="{ 'minimap-self': si === seat.index }"
+          :class="{ 'minimap-self': si === seat.index, 'minimap-eliminated': allSeats[si] && allSeats[si].isDead && !allSeats[si].deathOverridden }"
         >
           <div class="minimap-grad" :style="seatGradientStyle(si)"></div>
           <span class="minimap-dmg" :class="{ 'has-damage': hasDmg(si) }">{{ dmgText(si) }}</span>
+          <span
+            v-if="isCycle && si !== seat.index && cycleRelationFor(si)"
+            class="minimap-rel"
+            :style="relIconPosition(ri, ci)"
+            :title="cycleRelationFor(si)"
+          >
+            <!-- Feud: two crossed swords. Same path reused but rotated
+                 around a point UP in the blade (y=9) rather than viewBox
+                 centre — that pushes the crossguards out into the lower
+                 corners of the icon so they don't smear together. -->
+            <svg
+              v-if="cycleRelationFor(si) === 'feud'"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <g fill="currentColor">
+                <path transform="rotate(45 12 9)" d="M12 1 L13.75 2.75 L13.75 15 L17 15 L17 17 L13.5 17 L13.5 21 L14.25 21.5 L14.25 23 L9.75 23 L9.75 21.5 L10.5 21 L10.5 17 L7 17 L7 15 L10.25 15 L10.25 2.75 Z"/>
+                <path transform="rotate(-45 12 9)" d="M12 1 L13.75 2.75 L13.75 15 L17 15 L17 17 L13.5 17 L13.5 21 L14.25 21.5 L14.25 23 L9.75 23 L9.75 21.5 L10.5 21 L10.5 17 L7 17 L7 15 L10.25 15 L10.25 2.75 Z"/>
+              </g>
+            </svg>
+            <!-- Rival: single sword, filled, tip pointing up-right. -->
+            <svg
+              v-else-if="cycleRelationFor(si) === 'rival'"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill="currentColor"
+                transform="rotate(45 12 12)"
+                d="M12 1 L13.75 2.75 L13.75 15 L17 15 L17 17 L13.5 17 L13.5 21 L14.25 21.5 L14.25 23 L9.75 23 L9.75 21.5 L10.5 21 L10.5 17 L7 17 L7 15 L10.25 15 L10.25 2.75 Z"
+              />
+            </svg>
+            <!-- Hunter / non-target: filled Lucide shield. -->
+            <svg
+              v-else
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </span>
+          <span
+            v-if="allSeats[si] && allSeats[si].isDead && !allSeats[si].deathOverridden && si !== seat.index"
+            class="minimap-skull"
+            aria-hidden="true"
+          >☠</span>
         </div>
       </div>
     </div>
@@ -171,6 +315,7 @@ const panelClasses = computed(() => {
       :player-count="allSeats.length"
       :role-revealed="seat.roleRevealed"
       :role-notes="seat.roleNotes"
+      :mode="mode"
       @override="emit('override')"
       @reveal-role="emit('revealRole')"
       @zombify="emit('zombify')"
@@ -301,7 +446,6 @@ const panelClasses = computed(() => {
 .left-badges {
   position: absolute;
   top: 8px;
-  left: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -370,7 +514,6 @@ const panelClasses = computed(() => {
 .counter-badges {
   position: absolute;
   top: 8px;
-  right: 8px;
   display: flex;
   gap: 4px;
   z-index: 8;
@@ -450,6 +593,75 @@ const panelClasses = computed(() => {
   color: #d4c8a8;
 }
 
+.minimap-rel {
+  position: absolute;
+  /* Side insets set inline so the icon clusters toward the minimap's
+     centre (matching the sigil layout). Cream font colour reads against
+     any deck-gradient backdrop; a light drop-shadow keeps the outline
+     defined without the harsh outline look. */
+  width: clamp(16px, 3.2vw, 22px);
+  height: clamp(16px, 3.2vw, 22px);
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d4c8a8;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.7));
+}
+
+.minimap-rel svg {
+  width: 100%;
+  height: 100%;
+}
+
+.minimap-skull {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+  color: #d4c8a8;
+  z-index: 3;
+  pointer-events: none;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.minimap-eliminated .minimap-grad { opacity: 0.15; }
+.minimap-eliminated .minimap-dmg { opacity: 0.3; }
+
+.turn-pip {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  z-index: 9;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.55rem, 1.3vw, 0.7rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a7e66;
+  border: 1px solid #3d3529;
+  border-radius: 3px;
+  padding: 2px 6px;
+  background: rgba(26, 22, 18, 0.55);
+  pointer-events: none;
+}
+
+.turn-pip-first {
+  color: #c9a54e;
+  border-color: #c9a54e;
+  background: #c9a54e22;
+}
+
+
+/* When the seat is eliminated, drain the colour from its own sigil so it
+   matches the death banner's b/w treatment. Targets the child component's
+   root via :deep() since house-badge lives in CycleHouseBadge. */
+.player-panel.is-dead :deep(.house-badge) {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
 
 .is-winner {
   border-color: #c9a54e !important;

@@ -3,12 +3,14 @@ import { ref, onUnmounted } from 'vue'
 import { useLifeCounter } from '../../composables/useLifeCounter.js'
 import { manaGradient } from '../../composables/useManaGradient.js'
 import { roleIconUrl, lifetrackerRoleLabel, conversionIconUrl } from '../../roles.js'
+import { HOUSE_COLORS, houseImageUrl } from '../../lifetracker/cycle.js'
 
 const props = defineProps({
   seat: Object,
   allSeats: Array,
   layoutRows: Array,
   rotated: Boolean,
+  mode: { type: String, default: 'kingdoms' },
 })
 
 const ROLE_COLORS = {
@@ -110,6 +112,7 @@ function hasPartners(si) {
 function hasIcons(si) {
   const s = props.allSeats[si]
   if (!s) return false
+  if (props.mode === 'cycle') return !!s.house
   return (s.role && s.roleRevealed) || !!conversionIconUrl(s.roleNotes)
 }
 
@@ -142,8 +145,12 @@ onUnmounted(() => {
     <div class="cmd-panel" :class="{ closing }" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }" @click.stop>
       <!-- Counters row -->
       <div class="counters-row">
-        <!-- Reveal role button -->
-        <button class="counter-box role-box" @click="emit('revealRole')">
+        <!-- Identity: role (Kingdoms, interactive) or House (Cycle, static) -->
+        <button
+          v-if="mode !== 'cycle'"
+          class="counter-box role-box"
+          @click="emit('revealRole')"
+        >
           <div class="counter-center">
             <template v-if="seat.role && seat.roleRevealed">
               <img :src="roleIconUrl(seat.role)" alt="" class="role-box-img" />
@@ -157,6 +164,12 @@ onUnmounted(() => {
             </template>
           </div>
         </button>
+        <div v-else class="counter-box role-box" style="cursor: default;">
+          <div class="counter-center">
+            <img v-if="seat.house" :src="houseImageUrl(seat.house)" alt="" class="role-box-img" />
+            <span v-if="seat.house" class="reveal-label active role-box-label" :style="{ color: HOUSE_COLORS[seat.house] }">{{ seat.house }}</span>
+          </div>
+        </div>
         <!-- Death toggle -->
         <button class="counter-box reveal-role-box" :class="{ 'death-active': seat.isDead }" @click="emit('toggleDead')">
           <div class="counter-center">
@@ -210,17 +223,23 @@ onUnmounted(() => {
             <div v-if="!hasPartners(si)" class="cmd-seat" :class="{ 'cmd-self': si === seat.index }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
               <div
-                v-if="(allSeats[si]?.role && allSeats[si]?.roleRevealed) || conversionIconUrl(allSeats[si]?.roleNotes)"
+                v-if="(mode === 'cycle' && allSeats[si]?.house) || (allSeats[si]?.role && allSeats[si]?.roleRevealed) || conversionIconUrl(allSeats[si]?.roleNotes)"
                 class="cmd-seat-icons"
               >
                 <img
-                  v-if="allSeats[si]?.role && allSeats[si]?.roleRevealed"
+                  v-if="mode === 'cycle' && allSeats[si]?.house"
+                  :src="houseImageUrl(allSeats[si].house)"
+                  :alt="allSeats[si].house"
+                  class="cmd-seat-role cmd-seat-house"
+                />
+                <img
+                  v-if="mode !== 'cycle' && allSeats[si]?.role && allSeats[si]?.roleRevealed"
                   :src="roleIconUrl(allSeats[si].role)"
                   alt=""
                   class="cmd-seat-role"
                 />
                 <img
-                  v-if="conversionIconUrl(allSeats[si]?.roleNotes)"
+                  v-if="mode !== 'cycle' && conversionIconUrl(allSeats[si]?.roleNotes)"
                   :src="conversionIconUrl(allSeats[si].roleNotes)"
                   alt=""
                   class="cmd-seat-role cmd-seat-role-conversion"
@@ -261,17 +280,23 @@ onUnmounted(() => {
             <div v-else class="cmd-seat cmd-seat-split" :class="{ 'cmd-self': si === seat.index, 'has-icons': hasIcons(si) }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
               <div
-                v-if="(allSeats[si]?.role && allSeats[si]?.roleRevealed) || conversionIconUrl(allSeats[si]?.roleNotes)"
+                v-if="(mode === 'cycle' && allSeats[si]?.house) || (allSeats[si]?.role && allSeats[si]?.roleRevealed) || conversionIconUrl(allSeats[si]?.roleNotes)"
                 class="cmd-seat-icons"
               >
                 <img
-                  v-if="allSeats[si]?.role && allSeats[si]?.roleRevealed"
+                  v-if="mode === 'cycle' && allSeats[si]?.house"
+                  :src="houseImageUrl(allSeats[si].house)"
+                  :alt="allSeats[si].house"
+                  class="cmd-seat-role cmd-seat-house"
+                />
+                <img
+                  v-if="mode !== 'cycle' && allSeats[si]?.role && allSeats[si]?.roleRevealed"
                   :src="roleIconUrl(allSeats[si].role)"
                   alt=""
                   class="cmd-seat-role"
                 />
                 <img
-                  v-if="conversionIconUrl(allSeats[si]?.roleNotes)"
+                  v-if="mode !== 'cycle' && conversionIconUrl(allSeats[si]?.roleNotes)"
                   :src="conversionIconUrl(allSeats[si].roleNotes)"
                   alt=""
                   class="cmd-seat-role cmd-seat-role-conversion"
@@ -592,6 +617,15 @@ onUnmounted(() => {
 .cmd-seat-role-conversion {
   width: clamp(18px, 3.6vw, 28px);
   height: clamp(18px, 3.6vw, 28px);
+}
+
+/* House sigil — slightly larger than role icons since the heraldry
+   detail benefits from extra size, and shadowed harder so it reads on
+   any deck gradient. */
+.cmd-seat-house {
+  width: clamp(28px, 5.5vw, 44px);
+  height: clamp(28px, 5.5vw, 44px);
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.75));
 }
 
 /* Single commander tap zone */

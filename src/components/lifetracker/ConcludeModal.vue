@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ROLE_COLORS, roleIconUrl, lifetrackerRoleLabel } from '../../roles.js'
+import { HOUSE_COLORS, houseImageUrl, cycleRelations } from '../../lifetracker/cycle.js'
 
 const ROLES = ['King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
 const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
@@ -8,15 +9,29 @@ const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
 const props = defineProps({
   seats: Array,
   turnCount: Number,
+  mode: { type: String, default: 'kingdoms' },
 })
 
 const emit = defineEmits(['save', 'saveAndExport', 'close'])
 
-const rows = ref(props.seats.map(s => ({
+const isCycle = computed(() => props.mode === 'cycle')
+
+// Default winner pick for Cycle: the unique alive player whose feud + rival are both dead.
+function defaultCycleWinner(idx) {
+  const s = props.seats[idx]
+  if (!s.house || s.isDead) return false
+  const rel = cycleRelations(s.house)
+  if (!rel) return false
+  const houseDead = (house) => props.seats.some(o => o.house === house && o.isDead && !o.deathOverridden)
+  return houseDead(rel.feud) && houseDead(rel.rival)
+}
+
+const rows = ref(props.seats.map((s, i) => ({
   player: s.player,
   deck: s.deck?.name || '',
   role: s.role || '',
-  result: s.isWinner ? 'Win' : (s.isDead ? 'Loss' : ''),
+  house: s.house || '',
+  result: s.isWinner ? 'Win' : (isCycle.value && defaultCycleWinner(i) ? 'Win' : (s.isDead ? 'Loss' : '')),
   roleNotes: s.roleNotes || '',
 })))
 
@@ -61,18 +76,26 @@ function handleSaveAndExport() {
       <div class="conclude-rows">
         <div v-for="(r, i) in rows" :key="i" class="conclude-row">
           <div class="row-top">
-            <span class="row-player font-beleren">{{ r.player }}</span>
+            <span class="row-player font-beleren">{{ r.player || `Seat ${i + 1}` }}</span>
             <span class="row-deck">{{ r.deck }}</span>
+            <span
+              v-if="isCycle && r.house"
+              class="row-house"
+              :style="{ color: HOUSE_COLORS[r.house], borderColor: HOUSE_COLORS[r.house] + '88' }"
+            >
+              <img class="row-house-img" :src="houseImageUrl(r.house)" alt="" />
+              {{ r.house }}
+            </span>
             <button
               class="row-result"
               :class="{ 'result-win': r.result === 'Win', 'result-loss': r.result === 'Loss' }"
               @click="toggleResult(i)"
             >{{ r.result || '—' }}</button>
-            <select v-model="r.roleNotes" class="row-select">
+            <select v-if="!isCycle" v-model="r.roleNotes" class="row-select">
               <option v-for="rn in ROLE_NOTES" :key="rn" :value="rn">{{ rn || '—' }}</option>
             </select>
           </div>
-          <div class="row-roles">
+          <div v-if="!isCycle" class="row-roles">
             <button
               v-for="role in ROLES"
               :key="role"
@@ -151,6 +174,24 @@ function handleSaveAndExport() {
   font-size: 1rem;
   color: #d4c8a8;
   min-width: 70px;
+}
+
+.row-house {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid;
+  border-radius: 3px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.row-house-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
 .row-deck {
