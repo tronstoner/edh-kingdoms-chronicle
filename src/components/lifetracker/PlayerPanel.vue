@@ -224,14 +224,14 @@ const panelClasses = computed(() => {
       </template>
     </div>
 
-    <!-- Cycle: turn-order pip -->
+    <!-- Cycle: only the starting player gets a turn-order pip. The
+         remaining 2nd/3rd/4th positions are implied by clockwise order
+         and don't need an explicit indicator on each seat. -->
     <div
-      v-if="isCycle && startingSeatIndex !== null"
-      class="turn-pip"
-      :class="{ 'turn-pip-first': seat.index === startingSeatIndex }"
+      v-if="isCycle && startingSeatIndex !== null && seat.index === startingSeatIndex"
+      class="turn-pip turn-pip-first"
     >
-      <span v-if="seat.index === startingSeatIndex">1st</span>
-      <span v-else>{{ turnPositionFor(seat.index, startingSeatIndex, allSeats.length) }}</span>
+      <span>1st</span>
     </div>
 
     <!-- Non-zero counters (only shown when relevant; side mirrors sigil) -->
