@@ -6,8 +6,12 @@
 // landscape down to phone portrait without losing the iPad look.
 //
 // Usage:
-//   1. Start the dev server in another terminal: `npm run dev`
-//   2. Run: `node tools/verify-lifetracker.mjs [--base http://localhost:5174/kingdoms]`
+//   1. Make sure Playwright is installed. It is an optionalDependency
+//      so `npm ci --omit=optional` (CI / prod builds) skips it. For
+//      local verification run a plain `npm install` (or
+//      `npm install playwright`) and `npx playwright install chromium`.
+//   2. Start the dev server in another terminal: `npm run dev`
+//   3. Run: `node tools/verify-lifetracker.mjs [--base http://localhost:5174/kingdoms]`
 //
 // Outputs PNGs to ./tools/verify-out/ and prints computed sizes for the
 // life total, minimap, and minimap cell so regressions are catchable
