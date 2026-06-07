@@ -11,7 +11,7 @@ const props = defineProps({
   mode: { type: String, default: 'kingdoms' },
   startingSeatIndex: { type: Number, default: null },
   nudgeActive: { type: Boolean, default: false },
-  fuseThresholdMs: { type: Number, default: 0 },
+  fuseProgress: { type: Number, default: 0 },
   fuseStartedAt: { type: String, default: null },
 })
 
@@ -67,7 +67,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
       <GameMenuInline
         :turn-count="turnCount"
         :nudge-active="nudgeActive"
-        :fuse-threshold-ms="fuseThresholdMs"
+        :fuse-progress="fuseProgress"
         :fuse-started-at="fuseStartedAt"
         vertical
         @advance-turn="(d) => emit('advanceTurn', d)"
@@ -112,7 +112,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           <GameMenuInline
             :turn-count="turnCount"
             :nudge-active="nudgeActive"
-            :fuse-threshold-ms="fuseThresholdMs"
+            :fuse-progress="fuseProgress"
             :fuse-started-at="fuseStartedAt"
             @advance-turn="(d) => emit('advanceTurn', d)"
             @end-game="emit('endGame')"

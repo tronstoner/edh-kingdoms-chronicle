@@ -63,17 +63,24 @@ const turnNudgeActive = computed(() => {
   return elapsed >= threshold
 })
 
-// Fuse / radial — pass the per-round threshold and the round's start
-// timestamp to GameMenuInline. Visuals run on a CSS animation in that
-// component (compositor-thread, smooth, no JS load).
-const fuseThresholdMs = computed(() => {
+// Fuse / radial progress (0..1) — ticks once per second along with
+// the `now` ref so the visual updates feel like a clock hand jumping
+// each second rather than a smooth sweep. The button still applies a
+// short CSS transition between ticks so each jump glides rather than
+// pops.
+const fuseProgress = computed(() => {
   if (!settings.turnNudgeEnabled) return 0
   if (state.phase !== 'playing') return 0
   if (state.turnCount === 0) return 0
-  const v = turnNudgeThreshold.value
-  return isFinite(v) ? v : 0
+  if (!state.lastTurnAdvanceAt) return 0
+  const threshold = turnNudgeThreshold.value
+  if (!isFinite(threshold) || threshold <= 0) return 0
+  const elapsed = now.value - new Date(state.lastTurnAdvanceAt).getTime()
+  return Math.max(0, Math.min(1, elapsed / threshold))
 })
 
+// :key on the fuse / radial spans — remount on round advance so the
+// CSS transition doesn't animate the progress back to 0 visually.
 const fuseStartedAt = computed(() => state.lastTurnAdvanceAt)
 
 function applySettingsUpdate(next) {
@@ -414,7 +421,7 @@ function handleClearCycleGames() {
         :mode="state.mode"
         :starting-seat-index="state.startingSeatIndex"
         :nudge-active="turnNudgeActive"
-        :fuse-threshold-ms="fuseThresholdMs"
+        :fuse-progress="fuseProgress"
         :fuse-started-at="fuseStartedAt"
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"

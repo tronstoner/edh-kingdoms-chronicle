@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import { useFullscreen } from '../../composables/useFullscreen.js'
 
@@ -9,37 +9,21 @@ const props = defineProps({
   // Drives the gold pulse on the turn-cycle button. The parent computes
   // this from the per-round threshold (settings + elapsed time).
   nudgeActive: { type: Boolean, default: false },
-  // Per-round threshold and the round's start timestamp. The button's
-  // fuse ring and radial pie-fill share a single CSS animation that
-  // interpolates --fuse-progress 0% → 100% over `fuseThresholdMs`.
-  fuseThresholdMs: { type: Number, default: 0 },
+  // 0..1 progress through the per-round threshold. Parent ticks this
+  // once per second; the button's fuse ring and radial backdrop both
+  // read it as a CSS variable and CSS transitions glide the jumps.
+  fuseProgress: { type: Number, default: 0 },
+  // Round's start timestamp — used as the :key on the fuse / radial
+  // spans so they remount cleanly on round advance / undo (avoids the
+  // transition animating progress backward to 0).
   fuseStartedAt: { type: String, default: null },
 })
 
 const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back', 'openSettings'])
 
-// Snapshot elapsed-since-startedAt only when the round (or threshold)
-// changes — used as a negative animation-delay so a mid-round reload
-// picks up at the right frame instead of starting over at 0%.
-const fuseElapsedAtKey = ref(0)
-watch(
-  () => [props.fuseStartedAt, props.fuseThresholdMs],
-  ([startedAt]) => {
-    if (!startedAt) { fuseElapsedAtKey.value = 0; return }
-    fuseElapsedAtKey.value = Math.max(0, Date.now() - new Date(startedAt).getTime())
-  },
-  { immediate: true },
-)
-
-const showFuse = computed(() =>
-  !!props.fuseStartedAt && props.fuseThresholdMs > 0 && isFinite(props.fuseThresholdMs)
-)
-// :key on the fuse / radial spans — when it changes Vue remounts both,
-// restarting the CSS animations in lockstep on round advance / undo.
-const fuseKey = computed(() => `${props.fuseStartedAt || ''}|${props.fuseThresholdMs}`)
+const showFuse = computed(() => !!props.fuseStartedAt && props.fuseProgress > 0)
 const fuseStyle = computed(() => ({
-  '--fuse-duration': `${props.fuseThresholdMs}ms`,
-  '--fuse-elapsed': `${fuseElapsedAtKey.value}ms`,
+  '--fuse-progress': `${(Math.min(1, Math.max(0, props.fuseProgress)) * 100).toFixed(2)}%`,
 }))
 
 const showMore = ref(false)
@@ -86,7 +70,7 @@ function onTurnPointerLeave() {
            the round burns down. Sits behind the icon/counter. -->
       <span
         v-if="showFuse"
-        :key="`r${fuseKey}`"
+        :key="`r${fuseStartedAt}`"
         class="turn-radial"
         :style="fuseStyle"
         aria-hidden="true"
@@ -97,7 +81,7 @@ function onTurnPointerLeave() {
            outline. Visible above everything inside the button. -->
       <span
         v-if="showFuse"
-        :key="`f${fuseKey}`"
+        :key="`f${fuseStartedAt}`"
         class="turn-fuse"
         :style="fuseStyle"
         aria-hidden="true"
@@ -240,18 +224,19 @@ function onTurnPointerLeave() {
   }
 }
 
-/* Registered custom property — required for the keyframe below to
-   interpolate the percentage smoothly (without @property the value
-   would step from 0% to 100% in one jump). */
+/* Registered custom property — without @property, CSS transitions
+   on --fuse-progress would jump instantly. Registered as <percentage>
+   so the value interpolates between each 1-second tick. */
 @property --fuse-progress {
   syntax: '<percentage>';
   inherits: false;
   initial-value: 0%;
 }
 
-/* Radial pie-fill — a subtle gold wedge behind the icon that sweeps
-   clockwise from noon as the round burns down. Animation runs on the
-   compositor thread; no JS work after the initial mount. */
+/* Radial pie-fill — a subtle gold wedge behind the icon that grows
+   clockwise from noon. Parent JS sets --fuse-progress once per second;
+   the transition glides each step so jumps feel like a clock hand
+   easing rather than popping. */
 .turn-radial {
   position: absolute;
   inset: 0;
@@ -262,14 +247,11 @@ function onTurnPointerLeave() {
     transparent 0
   );
   z-index: 0;
-  animation: turn-fuse-fill var(--fuse-duration, 60000ms) linear forwards;
-  animation-delay: calc(-1 * var(--fuse-elapsed, 0ms));
+  transition: --fuse-progress 280ms cubic-bezier(0.25, 0.85, 0.4, 1);
 }
 
 /* Fuse ring — same conic gradient at full opacity, masked to a 2px
-   ring between border-box and content-box so only the outline shows.
-   Drives the identical animation as the radial — :key remount keeps
-   them in lockstep. */
+   ring between border-box and content-box so only the outline shows. */
 .turn-fuse {
   position: absolute;
   inset: 0;
@@ -291,12 +273,7 @@ function onTurnPointerLeave() {
     linear-gradient(#000 0 0);
   mask-composite: exclude;
   z-index: 3;
-  animation: turn-fuse-fill var(--fuse-duration, 60000ms) linear forwards;
-  animation-delay: calc(-1 * var(--fuse-elapsed, 0ms));
-}
-
-@keyframes turn-fuse-fill {
-  to { --fuse-progress: 100%; }
+  transition: --fuse-progress 280ms cubic-bezier(0.25, 0.85, 0.4, 1);
 }
 
 /* Keep the icon and counter visually above the radial backdrop. */
