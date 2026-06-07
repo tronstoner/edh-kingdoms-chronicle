@@ -128,6 +128,23 @@ async function capture(browser, viewport) {
   const out = resolve(OUT, `${viewport.label}.png`)
   await page.screenshot({ path: out, fullPage: false })
 
+  // Capture with the commander damage modal open from a bottom-row seat
+  // (Davian, index 3) so the modal sits in front of the table.
+  await page.evaluate(() => {
+    document.querySelectorAll('.player-panel')[3]?.querySelector('.cmd-minimap')?.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true })
+    )
+  })
+  // Use a real click on the minimap to be safe:
+  const minimaps = await page.locator('.player-panel .cmd-minimap').all()
+  if (minimaps[3]) await minimaps[3].click({ position: { x: 10, y: 10 } })
+  try {
+    await page.waitForSelector('.cmd-panel', { timeout: 2000 })
+    await page.waitForTimeout(150)
+    const outModal = resolve(OUT, `${viewport.label}-cmddmg.png`)
+    await page.screenshot({ path: outModal, fullPage: false })
+  } catch { /* modal didn't open */ }
+
   const sizes = await page.evaluate(() => {
     const pick = (n, sel) => {
       const el = n.querySelector(sel)
@@ -135,13 +152,32 @@ async function capture(browser, viewport) {
       const rect = el.getBoundingClientRect()
       return { w: Math.round(rect.width), h: Math.round(rect.height), font: getComputedStyle(el).fontSize }
     }
-    return [...document.querySelectorAll('.player-panel')].slice(0, 1).map(p => ({
+    const panel = [...document.querySelectorAll('.player-panel')].slice(0, 1).map(p => ({
       panel: { w: p.clientWidth, h: p.clientHeight },
       lifeTotal: pick(p, '.life-total'),
       minimap: pick(p, '.cmd-minimap'),
       minimapCell: pick(p, '.minimap-cell'),
       roleTagImg: pick(p, '.role-tag-img'),
     }))[0]
+    const menu = (() => {
+      const m = document.querySelector('.menu-gap, .menu-column')
+      if (!m) return null
+      const turn = m.querySelector('.turn-btn')
+      return { container: { w: m.clientWidth, h: m.clientHeight }, turnBtn: turn ? { w: turn.clientWidth, h: turn.clientHeight } : null }
+    })()
+    const cmd = (() => {
+      const p = document.querySelector('.cmd-panel')
+      if (!p) return null
+      const counterBoxes = p.querySelectorAll('.counter-box')
+      const counter0 = counterBoxes[0]
+      return {
+        panel: { w: p.clientWidth, h: p.clientHeight },
+        counterBox: counter0 ? { w: counter0.clientWidth, h: counter0.clientHeight } : null,
+        counterCount: counterBoxes.length,
+        cmdSeatHeight: p.querySelector('.cmd-seat')?.clientHeight ?? null,
+      }
+    })()
+    return { panel, menu, cmd }
   })
 
   await ctx.close()

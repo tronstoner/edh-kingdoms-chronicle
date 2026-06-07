@@ -384,18 +384,28 @@ onUnmounted(() => {
   background: #231f1a;
   border: 2px solid #3d3529;
   border-radius: 3px;
-  padding: 24px;
+  /* Padding scales with the panel so it doesn't eat half a narrow modal. */
+  padding: clamp(12px, 3cqi, 24px);
   width: 92vw;
   max-width: 800px;
+  /* Cap height + scroll so tall content doesn't push the modal off-screen
+     on phone-landscape (which is short). */
+  max-height: 95vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(8px, 1.75cqi, 14px);
+  /* Container query context — interior sizes scale to the modal width
+     (cqi). iPad-tuned values land at 800px modal width. */
+  container-type: inline-size;
 }
 
-/* Counters row */
+/* Counters row — wraps to a second line when the modal is narrower than
+   ~4 × min-counter-width. */
 .counters-row {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: clamp(4px, 0.75cqi, 6px);
   justify-content: center;
 }
 
@@ -422,7 +432,7 @@ onUnmounted(() => {
 
 .reveal-label {
   font-family: 'Cinzel', serif;
-  font-size: 1rem;
+  font-size: clamp(0.7rem, 2cqi, 1rem);
   font-weight: 700;
   color: #8a7e6644;
   white-space: nowrap;
@@ -443,9 +453,13 @@ onUnmounted(() => {
 }
 
 .counter-box {
-  flex: 0 0 auto;
-  width: 130px;
-  height: clamp(100px, 22vw, 160px);
+  /* Flex 1 across the row up to a sensible max. The min-width is tuned
+     so wrapping prefers a clean 2+2 over a 3+1 on narrow modals. iPad
+     width (~800px) fits all 4 in a row. */
+  flex: 1 1 0;
+  min-width: 130px;
+  max-width: 160px;
+  height: clamp(80px, 20cqi, 160px);
   background: #1a1612;
   border: 1px solid #3d3529;
   border-radius: 3px;
@@ -472,7 +486,7 @@ onUnmounted(() => {
   position: absolute;
   bottom: 30%;
   font-family: 'Cinzel', serif;
-  font-size: 1.3rem;
+  font-size: clamp(0.85rem, 2.6cqi, 1.3rem);
   color: #8a7e6633;
   pointer-events: none;
   z-index: 2;
@@ -515,12 +529,12 @@ onUnmounted(() => {
 }
 
 .counter-icon {
-  font-size: 4rem;
+  font-size: clamp(2rem, 8cqi, 4rem);
 }
 
 .role-box-img {
-  width: clamp(48px, 9vw, 80px);
-  height: clamp(48px, 9vw, 80px);
+  width: clamp(34px, 10cqi, 80px);
+  height: clamp(34px, 10cqi, 80px);
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
@@ -543,7 +557,7 @@ onUnmounted(() => {
 
 .counter-val {
   font-family: 'Cinzel', serif;
-  font-size: 2.2rem;
+  font-size: clamp(1.4rem, 4.4cqi, 2.2rem);
   font-weight: 700;
   color: #8a7e6644;
 }
@@ -575,7 +589,7 @@ onUnmounted(() => {
 .cmd-seat {
   flex: 1;
   position: relative;
-  height: clamp(120px, 30vw, 220px);
+  height: clamp(90px, 27.5cqi, 220px);
   overflow: hidden;
   border-radius: 3px;
   touch-action: none;
@@ -597,7 +611,7 @@ onUnmounted(() => {
 
 .cmd-seat-icons {
   position: absolute;
-  top: clamp(20px, 4vw, 28px);
+  top: clamp(12px, 3.5cqi, 28px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -608,23 +622,23 @@ onUnmounted(() => {
 }
 
 .cmd-seat-role {
-  width: clamp(22px, 4.5vw, 36px);
-  height: clamp(22px, 4.5vw, 36px);
+  width: clamp(16px, 4.5cqi, 36px);
+  height: clamp(16px, 4.5cqi, 36px);
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
 .cmd-seat-role-conversion {
-  width: clamp(18px, 3.6vw, 28px);
-  height: clamp(18px, 3.6vw, 28px);
+  width: clamp(14px, 3.5cqi, 28px);
+  height: clamp(14px, 3.5cqi, 28px);
 }
 
 /* House sigil — slightly larger than role icons since the heraldry
    detail benefits from extra size, and shadowed harder so it reads on
    any deck gradient. */
 .cmd-seat-house {
-  width: clamp(28px, 5.5vw, 44px);
-  height: clamp(28px, 5.5vw, 44px);
+  width: clamp(20px, 5.5cqi, 44px);
+  height: clamp(20px, 5.5cqi, 44px);
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.75));
 }
 
@@ -666,7 +680,7 @@ onUnmounted(() => {
 
 .zone-hint {
   font-family: 'Cinzel', serif;
-  font-size: clamp(1.2rem, 4vw, 2rem);
+  font-size: clamp(0.9rem, 4cqi, 2rem);
   color: #8a7e6633;
   pointer-events: none;
 }
@@ -694,7 +708,7 @@ onUnmounted(() => {
   right: 0;
   text-align: center;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.7rem, 2.2vw, 1rem);
+  font-size: clamp(0.55rem, 2cqi, 1rem);
   color: #8a7e66;
 }
 
@@ -706,7 +720,7 @@ onUnmounted(() => {
 
 .cmd-seat-dmg {
   font-family: 'Cinzel', serif;
-  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-size: clamp(1.4rem, 7cqi, 3.5rem);
   font-weight: 700;
   color: #d4c8a844;
   line-height: 1.1;
@@ -798,11 +812,11 @@ onUnmounted(() => {
 
 /* In partner mode shift the whole damage group below the icons (only when icons are shown). */
 .cmd-seat-split.has-icons {
-  padding-top: clamp(36px, 7.5vw, 56px);
+  padding-top: clamp(24px, 7cqi, 56px);
 }
 
 .cmd-split-dmg {
-  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  font-size: clamp(1rem, 5cqi, 2.5rem);
 }
 
 .cmd-split-name {
@@ -812,7 +826,7 @@ onUnmounted(() => {
   right: 0;
   text-align: center;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.8vw, 0.85rem);
+  font-size: clamp(0.5rem, 1.7cqi, 0.85rem);
   color: #d4c8a888;
   pointer-events: none;
   z-index: 3;
