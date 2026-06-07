@@ -111,14 +111,17 @@ function isDead(houseName) {
   /* Default (narrow / phone-sized badges): taller plate so the icon
      rows don't clip. Wider badges get the original shorter plate via
      the @container rule below. */
-  height: 44%;
+  height: 48%;
   background: rgba(20, 16, 12, 0.9);
   border: 1px solid;
   border-radius: 3px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  padding: 3px 6px;
+  /* Extra bottom padding so the "g" descender in "Dragon" / "Klugorn"
+     etc. doesn't touch the plate border on phone-sized badges where
+     the rel-row line-height of 1 leaves no room below the baseline. */
+  padding: 3px 6px 5px;
   box-sizing: border-box;
 }
 
