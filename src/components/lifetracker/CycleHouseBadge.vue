@@ -33,7 +33,10 @@ function isDead(houseName) {
       <div class="house-name" :style="{ color }">{{ house }}</div>
       <div class="house-rels">
         <div class="rel">
-          <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
+          <span class="rel-label">
+            <CycleRelationIcon kind="feud" />
+            <span class="rel-label-text">Feud</span>
+          </span>
           <span
             class="rel-value"
             :class="{ 'rel-dead': isDead(rel.feud) }"
@@ -41,7 +44,10 @@ function isDead(houseName) {
           >{{ rel.feud }}</span>
         </div>
         <div class="rel">
-          <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
+          <span class="rel-label">
+            <CycleRelationIcon kind="rival" />
+            <span class="rel-label-text">Rival</span>
+          </span>
           <span
             class="rel-value"
             :class="{ 'rel-dead': isDead(rel.rival) }"
@@ -62,6 +68,10 @@ function isDead(houseName) {
   width: clamp(80px, 38cqmin, 150px);
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
+  /* Container so the kill-list plate can drop the "Feud" / "Rival" word
+     labels when the badge is too narrow to fit them next to the opposing
+     house name. */
+  container-type: inline-size;
 }
 
 .house-img {
@@ -70,8 +80,8 @@ function isDead(houseName) {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* Push the heraldry upward so the plate below doesn't bury the icon. */
-  object-position: center 22%;
+  /* Push the heraldry upward so the taller plate below doesn't bury it. */
+  object-position: center 16%;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
 }
 
@@ -90,17 +100,20 @@ function isDead(houseName) {
   /* Sign-shaped plate, narrower than the sigil so the heraldry shows
      around it at the bottom corners. Wide enough to fit "Dragon" in the
      rival row without crowding the right border. */
-  left: 11%;
-  right: 11%;
+  left: 9%;
+  right: 9%;
   bottom: 4%;
-  height: 36%;
+  /* Taller plate so the house name + two icon/name relation rows fit
+     without clipping on small sigils (was 36%, which clipped at
+     phone/iPhone-SE sizes). */
+  height: 44%;
   background: rgba(20, 16, 12, 0.9);
   border: 1px solid;
   border-radius: 3px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  padding: 3px 4px;
+  padding: 3px 5px;
   box-sizing: border-box;
 }
 
@@ -161,5 +174,19 @@ function isDead(houseName) {
   text-decoration: line-through;
   text-decoration-thickness: 1px;
   opacity: 0.55;
+}
+
+/* Hide the "Feud" / "Rival" word labels by default — they appear only
+   on badges wide enough to fit them comfortably alongside the opposing
+   house name (~ tablet / iPad sized panels). The crossed-sword and
+   sword icons carry the meaning on smaller screens. */
+.rel-label-text {
+  display: none;
+}
+
+@container (min-width: 115px) {
+  .rel-label-text {
+    display: inline;
+  }
 }
 </style>

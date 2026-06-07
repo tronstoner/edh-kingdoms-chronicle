@@ -41,6 +41,10 @@ const VIEWPORTS = [
   { label: 'short-landscape-800x480', width: 800, height: 480, players: 6, cloneLord: true },
   { label: 'short-landscape-800x480-partners', width: 800, height: 480, players: 6, partnersOn: true },
   { label: 'iphone-se-landscape', width: 667, height: 375, players: 6, cloneLord: true, partnersOn: true },
+  { label: 'cycle-ipad-landscape', width: 1180, height: 820, cycle: true },
+  { label: 'cycle-ipad-mini-portrait', width: 768, height: 1024, cycle: true },
+  { label: 'cycle-iphone-se-landscape', width: 667, height: 375, cycle: true },
+  { label: 'cycle-phone-portrait', width: 390, height: 844, cycle: true },
   { label: 'phone-landscape', width: 844, height: 390 },
   { label: 'phone-landscape-partners', width: 844, height: 390, partnersOn: true },
   { label: 'phone-portrait', width: 390, height: 844 },
@@ -122,18 +126,72 @@ function buildState(playerCount = 5, opts = {}) {
   }
 }
 
+// 4-player Cycle fixture — exercises the House sigil + kill-list plate.
+// House assignment matches a "Diagonal feuds" shape: Lion/Ash on top
+// row, Dragon/Oak on bottom (so adjacent rivals + cross-table feuds).
+function buildCycleState() {
+  const playerCount = 4
+  const houses = ['Dragon', 'Oak', 'Lion', 'Ash']
+  const players = ['Leo', 'David', 'Ralf', 'Ivan']
+  const decks = [
+    { name: 'Oler Burn', colors: 'R' },
+    { name: 'Disa Lburgsyj', colors: 'BUG' },
+    { name: 'Ashling Spellslinger', colors: 'UR' },
+    { name: 'Klauth Dragons', colors: 'RG' },
+  ]
+  const seats = []
+  for (let i = 0; i < playerCount; i++) {
+    const commanderDamage = {}
+    for (let j = 0; j < playerCount; j++) commanderDamage[j] = { cmd1: 0, cmd2: 0 }
+    seats.push({
+      index: i,
+      player: players[i],
+      deck: decks[i],
+      role: null,
+      roleRevealed: false,
+      house: houses[i],
+      life: [40, 40, 36, 40][i],
+      poison: 0,
+      poisonEnabled: false,
+      commanderTax: 0,
+      commanderDamage,
+      hasPartners: false,
+      isDead: false,
+      deathOverridden: false,
+      deathTurn: null,
+      isWinner: false,
+      roleNotes: null,
+      history: [],
+    })
+  }
+  return {
+    id: 'verify-cycle',
+    mode: 'cycle',
+    phase: 'playing',
+    playerCount,
+    layoutId: '4-2t2b',
+    turnCount: 3,
+    startTime: new Date(0).toISOString(),
+    startingSeatIndex: 3,
+    seats,
+  }
+}
+
 async function capture(browser, viewport) {
   const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2 })
   const page = await ctx.newPage()
   const errors = []
   page.on('pageerror', e => errors.push(e.message))
 
-  await page.addInitScript((state) => {
-    localStorage.setItem('edhlog-lt-current', JSON.stringify(state))
-  }, buildState(viewport.players || 5, {
-    partnersOn: !!viewport.partnersOn,
-    cloneLord: !!viewport.cloneLord,
-  }))
+  const state = viewport.cycle
+    ? buildCycleState()
+    : buildState(viewport.players || 5, {
+        partnersOn: !!viewport.partnersOn,
+        cloneLord: !!viewport.cloneLord,
+      })
+  await page.addInitScript((s) => {
+    localStorage.setItem('edhlog-lt-current', JSON.stringify(s))
+  }, state)
 
   await page.goto(ROUTE, { waitUntil: 'domcontentloaded' })
 
