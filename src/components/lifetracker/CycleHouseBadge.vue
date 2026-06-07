@@ -80,7 +80,11 @@ function isDead(houseName) {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* Push the heraldry upward so the taller plate below doesn't bury it. */
+  /* Heraldry shifted up to make room for the kill-list plate below.
+     On large badges (iPad/tablet) the plate is shorter (36%) so the
+     heraldry only needs a small nudge; on narrow badges the plate is
+     taller (44%) so the heraldry has to move further up. The
+     @container rule below restores the iPad value. */
   object-position: center 16%;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
 }
@@ -103,9 +107,9 @@ function isDead(houseName) {
   left: 9%;
   right: 9%;
   bottom: 4%;
-  /* Taller plate so the house name + two icon/name relation rows fit
-     without clipping on small sigils (was 36%, which clipped at
-     phone/iPhone-SE sizes). */
+  /* Default (narrow / phone-sized badges): taller plate so the icon
+     rows don't clip. Wider badges get the original shorter plate via
+     the @container rule below. */
   height: 44%;
   background: rgba(20, 16, 12, 0.9);
   border: 1px solid;
@@ -192,6 +196,15 @@ function isDead(houseName) {
 @container (min-width: 115px) {
   .rel-label-text {
     display: inline;
+  }
+  /* Wider badge → labels are visible and the rows are slightly more
+     compact, so reclaim some heraldry by going back to the original
+     36% plate height. */
+  .house-plate {
+    height: 36%;
+  }
+  .house-img {
+    object-position: center 22%;
   }
 }
 </style>
