@@ -170,11 +170,11 @@ function onTurnPointerLeave() {
   0%,
   100% {
     border-color: #c9a54e44;
-    box-shadow: 0 0 0 0 rgba(201, 165, 78, 0);
+    box-shadow: inset 0 0 0 0 rgba(201, 165, 78, 0);
   }
   50% {
     border-color: #c9a54e;
-    box-shadow: 0 0 12px 2px rgba(201, 165, 78, 0.45);
+    box-shadow: inset 0 0 14px 2px rgba(201, 165, 78, 0.5);
   }
 }
 
