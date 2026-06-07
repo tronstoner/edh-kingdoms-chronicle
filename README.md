@@ -12,6 +12,7 @@ Analytics dashboard for tracking Magic: The Gathering games using the **Kingdoms
 - **Deck stats** — filterable/sortable deck performance with mana color pips and Moxfield links
 - **Cumulative win timeline** — line chart tracking player victories over time
 - **Recent games** — detailed game log with role badges and zombie/clone conversion markers
+- **Live lifetracker** (`/lifetracker`) — companion app for tracking games at the table: per-seat life totals, commander damage matrix, role / zombie-clone state, turn-cycle counter with per-round timer nudge, session settings, and a "Conclude" flow that hands the result back to the dashboard. Supports 4-player **The Cycle** variant alongside 5/6-player Kingdoms. Responsive from iPad-landscape down to phone-portrait via container queries (see [LIFETRACKER-DESIGN.md](LIFETRACKER-DESIGN.md)).
 - **MTG-themed UI** — Cinzel + EB Garamond fonts, mana symbols (Andrew Gioia's Mana font, MIT/OFL), dark parchment palette
 
 ## Tech Stack
@@ -70,6 +71,22 @@ npm run dev
 ```
 
 Open http://localhost:5173 and sign in with a Google account that has access to the spreadsheet.
+
+### Verifier tool (optional)
+
+`tools/verify-lifetracker.mjs` is a headless Playwright script that boots a dev server with the `?demo` bypass, preloads a fixture game state, and screenshots the lifetracker across a matrix of viewports (iPad landscape, iPad-Air portrait, iPad-mini portrait, iPhone-SE landscape, phone portrait) plus Cycle-mode and partner-on variants. Useful for confirming layout work doesn't regress at smaller sizes.
+
+```bash
+# Playwright is an optionalDependency — installed by `npm install` but
+# skipped by `npm ci --omit=optional`. If missing, install it locally:
+npm install playwright && npx playwright install chromium
+
+# In one terminal:
+npm run dev
+# In another:
+node tools/verify-lifetracker.mjs
+# PNGs land in tools/verify-out/ (gitignored)
+```
 
 ## Kingdoms Rules
 

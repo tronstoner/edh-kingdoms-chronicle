@@ -64,6 +64,62 @@ A planned "desktop mode" disables all seat rotation — every panel renders righ
 
 This mode does not exist yet but the rotation system should remain easy to disable at the layout level (e.g. a `rotate: 0` override on all rows).
 
+## Responsive Sizing — Container Queries
+
+The lifetracker is tuned for an iPad-landscape table (~1180×820). To keep that look intact while scaling gracefully down to phone-sized viewports, interior elements size themselves against **their own container**, not the viewport.
+
+- **`PlayerPanel.vue`** is a `container-type: size` context. Life total, minimap, role tag, badges, death banner, and the Cycle house badge use `cqmin` percentages tuned so iPad-panel dimensions hit the previous `vw`-clamp ceilings exactly.
+- **`CommanderDamageModal.vue`** is a `container-type: inline-size` context on `.cmd-panel`. Counter row uses `cqi` plus a `vh` term (`min(20cqi, 22vh)` etc.) so the modal also shrinks vertically on short viewports.
+- **Nested containers**: `.counter-box` and `.cmd-seat` are themselves `container-type: size` contexts. Their interior (`.role-box-img`, `.cmd-seat-icons`, `.cmd-split-half` etc.) sizes against the box/seat dimensions via `cqh`. This is what lets a multi-line role label like "Clone Lord" fit a short counter box and the dual-commander split keep its halves balanced even when the seat is 105px tall.
+- **Game menu (`GameMenuInline.vue`)**: the menu gap / column shrinks from 64px on iPad to a 40px floor on phones (`clamp(40px, 8vmin, 64px)` in `useTableLayouts.js`). The menu is a `container-type: size` context so the inline icons (turn button, battle menu, fullscreen) scale with the gap width.
+- **House badge (`CycleHouseBadge.vue`)** is its own container. `@container (min-width: 115px)` reveals the "Feud" / "Rival" word labels on iPad-sized badges and hides them on phones, where icons + opposing house names alone fit the plate.
+
+Tuning rule: pick the iPad reference pixel target, compute it as a percentage of the iPad container size, write that as the `clamp(min, Xcq*, ceiling)` middle term. iPad lands at the ceiling, smaller viewports interpolate, the floor catches phone extremes.
+
+## Turn Nudge — Fuse + Radial + Pulse
+
+The turn-cycle button has three layered indicators driven by the per-round timer:
+
+1. **Radial pie-fill backdrop** — a subtle gold wedge (`rgba(201, 165, 78, 0.22)`) behind the icon/counter that sweeps clockwise from noon as the round burns down.
+2. **Fuse ring** — a thin gold line (`#c9a54e`) tracing the button's 2px border outline at the same progress. Implemented with the same `conic-gradient` masked to the ring via `mask-composite: exclude`. Both the radial and the fuse read the same `--fuse-progress` CSS variable so they stay perfectly in sync.
+3. **Gold pulse** — when the timer fully elapses (`turnNudgeActive`), the whole button breathes between its dark base and a warm gold wash on a 1.8s `ease-in-out` cycle. Also fires immediately at `turnCount === 0` as a "start the round" reminder.
+
+### Timer mechanics
+
+- `--fuse-progress` is a registered `@property <percentage>` so CSS transitions can interpolate it between discrete values.
+- The parent (`Lifetracker.vue`) ticks a `now` ref once per second via `useNowTick(1000)` and computes `fuseProgress = elapsed / threshold` as a 0..1 value passed down through `TableLayout → GameMenuInline`.
+- The button receives the value as an inline `--fuse-progress: X%` style. A short `transition: --fuse-progress 280ms cubic-bezier(...)` glides each per-second jump so it reads as a clock hand easing rather than popping.
+- A `:key` derived from `lastTurnAdvanceAt` remounts the fuse/radial spans on round advance so the transition doesn't animate progress backward to 0 — the new spans mount fresh at the current progress.
+- `prefers-reduced-motion` disables both visuals and the pulse.
+
+### Threshold curve
+
+The per-round threshold lives in `turnNudgeThresholdMs(turnCount, playerCount, settings)`:
+
+| Round | Factor (% of cap) | At default cap = 5 min/player |
+|-------|-------------------|------------------------------|
+| 1     | 10%               | 0.5 min/player                |
+| 2     | 20%               | 1.0                           |
+| 3     | 40%               | 2.0                           |
+| 4     | 60%               | 3.0                           |
+| 5     | 80%               | 4.0                           |
+| 6+    | 100%              | 5.0                           |
+
+The cap is user-settable in the `SettingsModal` (opened from the battle menu) and **scales the whole curve** — at cap = 2, round 1 is 0.2 min/player and round 6 is 2; at cap = 10, round 1 is 1 min/player and round 6 is 10. Round duration also scales with the table (`minutes_per_player × playerCount`).
+
+### Conic-gradient caveat
+
+Both visuals use `conic-gradient`, which sweeps **angularly**. On a non-square rectangle (the turn button is ~2:1) the leading edge of the gradient appears to move faster around the corners and slower in the middle of the long edges, because equal angles cover different perimeter lengths. The radial and fuse stay perfectly synced (they share the same gradient), and at the default 5-min cap the speed variation is barely perceptible — kept as-is in preference to splitting into a perimetric SVG fuse + angular radial that would visibly desync.
+
+## Session Settings
+
+Settings persist across games in `localStorage` under `edhlog-lt-settings`, separate from the game state. Currently:
+
+- `turnNudgeEnabled` (boolean)
+- `turnNudgeMaxMinutesPerPlayer` (number, clamped 1–15)
+
+The modal is opened from the "Settings" entry in the battle menu (ms-battle `⋯` button). Designed sectioned so future groups (e.g. life-counter speed, sound, theme) drop in cleanly.
+
 ## Commander Damage Data Model
 
 Each seat tracks `commanderDamage[fromSeat] = { cmd1, cmd2 }` for damage received from every other seat. The `hasPartners` flag — whether a player runs partner commanders — lives on the **dealer's seat** (`seat.hasPartners`), not on each opponent's damage entry. This is the single source of truth: if player A toggles partner mode for player B in their own damage modal, every other player's damage map sees B as dual-commander too.
