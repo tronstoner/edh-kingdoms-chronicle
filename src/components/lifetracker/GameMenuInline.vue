@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import { useFullscreen } from '../../composables/useFullscreen.js'
 
@@ -9,17 +9,37 @@ const props = defineProps({
   // Drives the gold pulse on the turn-cycle button. The parent computes
   // this from the per-round threshold (settings + elapsed time).
   nudgeActive: { type: Boolean, default: false },
-  // 0..1 progress through the per-round threshold. Drives both the
-  // fuse ring (border outline) and the radial pie-fill backdrop. The
-  // parent ticks this once per second.
-  fuseProgress: { type: Number, default: 0 },
+  // Per-round threshold and the round's start timestamp. The button's
+  // fuse ring and radial pie-fill share a single CSS animation that
+  // interpolates --fuse-progress 0% → 100% over `fuseThresholdMs`.
+  fuseThresholdMs: { type: Number, default: 0 },
+  fuseStartedAt: { type: String, default: null },
 })
 
 const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back', 'openSettings'])
 
-const showFuse = computed(() => props.fuseProgress > 0)
+// Snapshot elapsed-since-startedAt only when the round (or threshold)
+// changes — used as a negative animation-delay so a mid-round reload
+// picks up at the right frame instead of starting over at 0%.
+const fuseElapsedAtKey = ref(0)
+watch(
+  () => [props.fuseStartedAt, props.fuseThresholdMs],
+  ([startedAt]) => {
+    if (!startedAt) { fuseElapsedAtKey.value = 0; return }
+    fuseElapsedAtKey.value = Math.max(0, Date.now() - new Date(startedAt).getTime())
+  },
+  { immediate: true },
+)
+
+const showFuse = computed(() =>
+  !!props.fuseStartedAt && props.fuseThresholdMs > 0 && isFinite(props.fuseThresholdMs)
+)
+// :key on the fuse / radial spans — when it changes Vue remounts both,
+// restarting the CSS animations in lockstep on round advance / undo.
+const fuseKey = computed(() => `${props.fuseStartedAt || ''}|${props.fuseThresholdMs}`)
 const fuseStyle = computed(() => ({
-  '--fuse-progress': `${Math.min(100, Math.max(0, props.fuseProgress * 100))}%`,
+  '--fuse-duration': `${props.fuseThresholdMs}ms`,
+  '--fuse-elapsed': `${fuseElapsedAtKey.value}ms`,
 }))
 
 const showMore = ref(false)
@@ -56,7 +76,6 @@ function onTurnPointerLeave() {
     <button
       class="menu-icon turn-btn"
       :class="{ 'turn-btn--prompt': nudgeActive }"
-      :style="showFuse ? fuseStyle : undefined"
       @pointerdown.prevent="onTurnPointerDown"
       @pointerup="onTurnPointerUp"
       @pointerleave="onTurnPointerLeave"
@@ -64,14 +83,25 @@ function onTurnPointerLeave() {
       title="Tap: next turn. Hold: undo"
     >
       <!-- Radial pie-fill backdrop: wedge sweeps clockwise from noon as
-           the round burns down. Sits behind the icon/counter (z-index 0),
-           above the button's solid background. -->
-      <span v-if="showFuse" class="turn-radial" aria-hidden="true" />
+           the round burns down. Sits behind the icon/counter. -->
+      <span
+        v-if="showFuse"
+        :key="`r${fuseKey}`"
+        class="turn-radial"
+        :style="fuseStyle"
+        aria-hidden="true"
+      />
       <i class="ms ms-planeswalker turn-icon"></i>
       <span class="turn-label font-beleren">{{ turnCount }}</span>
       <!-- Fuse ring: same conic gradient masked to just the 2px border
            outline. Visible above everything inside the button. -->
-      <span v-if="showFuse" class="turn-fuse" aria-hidden="true" />
+      <span
+        v-if="showFuse"
+        :key="`f${fuseKey}`"
+        class="turn-fuse"
+        :style="fuseStyle"
+        aria-hidden="true"
+      />
     </button>
 
     <!-- More options -->
@@ -210,10 +240,18 @@ function onTurnPointerLeave() {
   }
 }
 
+/* Registered custom property — required for the keyframe below to
+   interpolate the percentage smoothly (without @property the value
+   would step from 0% to 100% in one jump). */
+@property --fuse-progress {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 /* Radial pie-fill — a subtle gold wedge behind the icon that sweeps
-   clockwise from noon as the round burns down. Sits above the button's
-   solid background but below the icon/counter (z-index ordering set
-   on .turn-icon and .turn-label below). */
+   clockwise from noon as the round burns down. Animation runs on the
+   compositor thread; no JS work after the initial mount. */
 .turn-radial {
   position: absolute;
   inset: 0;
@@ -224,11 +262,14 @@ function onTurnPointerLeave() {
     transparent 0
   );
   z-index: 0;
+  animation: turn-fuse-fill var(--fuse-duration, 60000ms) linear forwards;
+  animation-delay: calc(-1 * var(--fuse-elapsed, 0ms));
 }
 
-/* Fuse ring — a thin gold line tracing the button's border clockwise
-   from noon. Same conic gradient as the radial, but masked to a 2px
-   ring between border-box and content-box so only the outline shows. */
+/* Fuse ring — same conic gradient at full opacity, masked to a 2px
+   ring between border-box and content-box so only the outline shows.
+   Drives the identical animation as the radial — :key remount keeps
+   them in lockstep. */
 .turn-fuse {
   position: absolute;
   inset: 0;
@@ -250,6 +291,12 @@ function onTurnPointerLeave() {
     linear-gradient(#000 0 0);
   mask-composite: exclude;
   z-index: 3;
+  animation: turn-fuse-fill var(--fuse-duration, 60000ms) linear forwards;
+  animation-delay: calc(-1 * var(--fuse-elapsed, 0ms));
+}
+
+@keyframes turn-fuse-fill {
+  to { --fuse-progress: 100%; }
 }
 
 /* Keep the icon and counter visually above the radial backdrop. */

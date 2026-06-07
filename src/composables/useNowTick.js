@@ -4,10 +4,10 @@ import { ref, onUnmounted } from 'vue'
 // interval. Used by the turn-nudge logic to compare elapsed time
 // against a per-round threshold without polling every frame.
 //
-// Default 1s tick gives the fuse and radial pie a clean per-second
-// step without burning compositor cycles on a continuous animation.
-// Calculations are cheap (one subtraction + clamp), so the load is
-// dominated by the watcher itself.
+// 1s default keeps the nudgeActive check accurate to ~1s of the
+// threshold without flooding the watcher. The fuse / radial visuals
+// don't depend on this — they run on a CSS animation handled by the
+// compositor thread.
 export function useNowTick(intervalMs = 1000) {
   const now = ref(Date.now())
   const id = setInterval(() => { now.value = Date.now() }, intervalMs)
