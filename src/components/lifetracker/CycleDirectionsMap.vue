@@ -121,7 +121,7 @@ function isTopRow(seatIndex) {
 }
 
 function houseColor(name) {
-  return HOUSE_COLORS[name] || '#c9a54e'
+  return HOUSE_COLORS[name] || 'var(--lt-gold)'
 }
 </script>
 
@@ -147,7 +147,7 @@ function houseColor(name) {
             markerWidth="8" markerHeight="8"
             orient="auto"
           >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#c9a54e" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--lt-gold)" />
           </marker>
         </defs>
 
@@ -165,9 +165,9 @@ function houseColor(name) {
               opacity="0.75"
             />
             <g :transform="iconTransform(pair.from, pair.to, 28)">
-              <circle cx="14" cy="14" r="13" fill="#1a1612" stroke="#9a93b8" stroke-width="1.5" />
+              <circle cx="14" cy="14" r="13" fill="var(--lt-bg)" stroke="#9a93b8" stroke-width="1.5" />
               <svg x="3" y="3" width="22" height="22" viewBox="0 0 24 24">
-                <g fill="#d4c8a8">
+                <g fill="var(--lt-text)">
                   <path :transform="`rotate(45 12 9)`" :d="SWORD" />
                   <path :transform="`rotate(-45 12 9)`" :d="SWORD" />
                 </g>
@@ -184,15 +184,15 @@ function houseColor(name) {
               :y1="lineGeom(edge.from, edge.to).start.y"
               :x2="lineGeom(edge.from, edge.to).end.x"
               :y2="lineGeom(edge.from, edge.to).end.y"
-              stroke="#c9a54e"
+              stroke="var(--lt-gold)"
               stroke-width="2.5"
               marker-end="url(#rivalArrow)"
               opacity="0.9"
             />
             <g :transform="iconTransform(edge.from, edge.to, 22)">
-              <circle cx="11" cy="11" r="11" fill="#1a1612" stroke="#c9a54e" stroke-width="1.5" />
+              <circle cx="11" cy="11" r="11" fill="var(--lt-bg)" stroke="var(--lt-gold)" stroke-width="1.5" />
               <svg x="2" y="2" width="18" height="18" viewBox="0 0 24 24">
-                <path fill="#c9a54e" :transform="`rotate(45 12 12)`" :d="SWORD" />
+                <path fill="var(--lt-gold)" :transform="`rotate(45 12 12)`" :d="SWORD" />
               </svg>
             </g>
           </template>
@@ -204,7 +204,7 @@ function houseColor(name) {
             <g v-if="seat" :transform="`translate(${nodeFor(i).x}, ${nodeFor(i).y})`">
               <circle
                 :r="NODE_R"
-                :fill="'#1a1612'"
+                :fill="'var(--lt-bg)'"
                 :stroke="houseColor(seat.house)"
                 stroke-width="3"
               />
@@ -224,7 +224,7 @@ function houseColor(name) {
                 <text
                   :x="0" :y="-(NODE_R + 22)"
                   text-anchor="middle"
-                  fill="#d4c8a8"
+                  fill="var(--lt-text)"
                   font-family="EB Garamond, serif"
                   font-size="14"
                 >{{ seat.player || `Seat ${i + 1}` }}</text>
@@ -253,7 +253,7 @@ function houseColor(name) {
                 <text
                   :x="0" :y="NODE_R + 36"
                   text-anchor="middle"
-                  fill="#d4c8a8"
+                  fill="var(--lt-text)"
                   font-family="EB Garamond, serif"
                   font-size="14"
                 >{{ seat.player || `Seat ${i + 1}` }}</text>
@@ -280,8 +280,8 @@ function houseColor(name) {
 }
 
 .map-card {
-  background: #1a1612;
-  border: 1px solid #3d3529;
+  background: var(--lt-bg);
+  border: 1px solid var(--lt-border);
   border-radius: 6px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
   width: min(640px, 100%);
@@ -296,13 +296,13 @@ function houseColor(name) {
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-bottom: 1px solid #2a2520;
+  border-bottom: 1px solid var(--lt-panel-bg-alt);
 }
 
 .map-title {
   font-family: 'Cinzel', serif;
   font-size: 1.2rem;
-  color: #c9a54e;
+  color: var(--lt-gold);
   margin: 0;
   letter-spacing: 0.06em;
 }
@@ -310,9 +310,9 @@ function houseColor(name) {
 .close-btn {
   width: 32px;
   height: 32px;
-  border: 1px solid #3d3529;
+  border: 1px solid var(--lt-border);
   background: none;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-size: 1.4rem;
   line-height: 1;
   border-radius: 3px;
@@ -320,8 +320,8 @@ function houseColor(name) {
 }
 
 .close-btn:hover {
-  color: #d4c8a8;
-  border-color: #8a7e66;
+  color: var(--lt-text);
+  border-color: var(--lt-text-dim);
 }
 
 .map-legend {
@@ -330,7 +330,7 @@ function houseColor(name) {
   padding: 10px 18px 0;
   margin: 0;
   font-family: 'EB Garamond', serif;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-size: 0.85rem;
   flex-wrap: wrap;
 }
@@ -348,7 +348,7 @@ function houseColor(name) {
 }
 
 .legend-glyph.rival {
-  color: #c9a54e;
+  color: var(--lt-gold);
 }
 
 .map-svg {

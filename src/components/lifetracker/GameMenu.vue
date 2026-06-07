@@ -55,8 +55,8 @@ const showConfirmNew = ref(false)
 }
 
 .menu-expanded {
-  background: #231f1a;
-  border: 1px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 1px solid var(--lt-border);
   border-bottom: none;
   border-radius: 3px 3px 0 0;
   padding: 8px;
@@ -70,22 +70,22 @@ const showConfirmNew = ref(false)
   font-size: 0.9rem;
   padding: 10px 24px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #8a7e66;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text-dim);
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
 
 .menu-btn:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 
 .menu-btn-save {
-  color: #c9a54e;
-  border-color: #c9a54e66;
+  color: var(--lt-gold);
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 .menu-bar {
@@ -93,15 +93,15 @@ const showConfirmNew = ref(false)
   align-items: center;
   gap: 8px;
   padding: 6px 16px;
-  background: #231f1aee;
-  border: 1px solid #3d3529;
+  background: color-mix(in srgb, var(--lt-panel-bg) 93%, transparent);
+  border: 1px solid var(--lt-border);
   border-bottom: none;
   border-radius: 3px 3px 0 0;
   cursor: pointer;
 }
 
 .menu-turn {
-  color: #c9a54e;
+  color: var(--lt-gold);
   font-size: 1.1rem;
   min-width: 32px;
   text-align: center;
@@ -115,7 +115,7 @@ const showConfirmNew = ref(false)
   justify-content: center;
   background: none;
   border: none;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   cursor: pointer;
   border-radius: 3px;
   transition: all 0.2s;
@@ -123,12 +123,12 @@ const showConfirmNew = ref(false)
 }
 
 .menu-action:hover {
-  color: #c9a54e;
-  background: #c9a54e11;
+  color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 7%, transparent);
 }
 
 .menu-dots {
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-size: 1.2rem;
   min-width: 24px;
   text-align: center;

@@ -179,7 +179,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
   width: 100%;
   height: 100%;
   gap: 3px;
-  background-color: #3d3529;
+  background-color: var(--lt-border);
 }
 
 .table-row {

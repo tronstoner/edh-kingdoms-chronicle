@@ -139,7 +139,7 @@ function setShapeMirror(shapeId, value) {
 }
 
 function houseColor(house) {
-  return HOUSE_COLORS[house] || '#8a7e66'
+  return HOUSE_COLORS[house] || 'var(--lt-text-dim)'
 }
 
 function relations(house) {
@@ -226,14 +226,14 @@ function pickerCycleLines(arrangement) {
                     markerWidth="5" markerHeight="5"
                     orient="auto"
                   >
-                    <path d="M 0 0 L 10 5 L 0 10 z" :fill="shapeOptions[shape.id].enabled ? '#c9a54e' : '#3d3529'" />
+                    <path d="M 0 0 L 10 5 L 0 10 z" :fill="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : 'var(--lt-border)'" />
                   </marker>
                 </defs>
                 <line
                   v-for="(ln, i) in pickerCycleLines(shapeIconArrangement(shape.id))"
                   :key="i"
                   :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
-                  :stroke="shapeOptions[shape.id].enabled ? '#c9a54e' : '#3d3529'"
+                  :stroke="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : 'var(--lt-border)'"
                   stroke-width="1.6"
                   :marker-end="`url(#pickerArrow-${shape.id})`"
                   opacity="0.9"
@@ -241,8 +241,8 @@ function pickerCycleLines(arrangement) {
                 <g v-for="(node, i) in PICKER_NODES" :key="`n${i}`">
                   <circle
                     :cx="node.x" :cy="node.y" r="7"
-                    fill="#1a1612"
-                    :stroke="shapeOptions[shape.id].enabled ? '#c9a54e' : '#5a4f3d'"
+                    fill="var(--lt-bg)"
+                    :stroke="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : '#5a4f3d'"
                     stroke-width="1.4"
                   />
                   <text
@@ -251,7 +251,7 @@ function pickerCycleLines(arrangement) {
                     font-family="Cinzel, serif"
                     font-size="8"
                     font-weight="700"
-                    :fill="shapeOptions[shape.id].enabled ? '#d4c8a8' : '#5a4f3d'"
+                    :fill="shapeOptions[shape.id].enabled ? 'var(--lt-text)' : '#5a4f3d'"
                   >{{ shapeIconArrangement(shape.id)[i] }}</text>
                 </g>
               </svg>
@@ -390,7 +390,7 @@ function pickerCycleLines(arrangement) {
 .cycle-preview {
   position: absolute;
   inset: 0;
-  background: #1a1612;
+  background: var(--lt-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -407,7 +407,7 @@ function pickerCycleLines(arrangement) {
 
 .preview-title {
   font-size: 1.6rem;
-  color: #c9a54e;
+  color: var(--lt-gold);
   letter-spacing: 0.05em;
   margin: 0;
   line-height: 1.1;
@@ -416,7 +416,7 @@ function pickerCycleLines(arrangement) {
 .preview-subtitle {
   font-family: 'EB Garamond', serif;
   font-style: italic;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   margin: 2px 0 0;
   font-size: 0.85rem;
 }
@@ -448,14 +448,14 @@ function pickerCycleLines(arrangement) {
   font-size: 0.85rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #c9a54e;
+  color: var(--lt-gold);
   margin: 0;
 }
 
 .shape-panel-hint {
   font-family: 'EB Garamond', serif;
   font-style: italic;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-size: 0.75rem;
   margin: 0 0 4px;
   line-height: 1.3;
@@ -472,8 +472,8 @@ function pickerCycleLines(arrangement) {
   gap: 10px;
   align-items: center;
   padding: 8px;
-  border: 1px solid #2a2520;
-  background: #231f1a;
+  border: 1px solid var(--lt-panel-bg-alt);
+  background: var(--lt-panel-bg);
   border-radius: 4px;
   transition: opacity 0.2s, border-color 0.2s;
 }
@@ -514,12 +514,12 @@ function pickerCycleLines(arrangement) {
   gap: 6px;
   cursor: pointer;
   font-family: 'EB Garamond', serif;
-  color: #d4c8a8;
+  color: var(--lt-text);
   font-size: 0.78rem;
 }
 
 .shape-toggle input, .shape-mirror input {
-  accent-color: #c9a54e;
+  accent-color: var(--lt-gold);
   cursor: pointer;
 }
 
@@ -530,7 +530,7 @@ function pickerCycleLines(arrangement) {
 }
 
 .shape-mirror {
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-size: 0.7rem;
   font-style: italic;
 }
@@ -567,7 +567,7 @@ function pickerCycleLines(arrangement) {
 .card-player {
   font-family: 'Cinzel', serif;
   font-size: 0.85rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
   letter-spacing: 0.04em;
   text-align: center;
   white-space: nowrap;
@@ -597,8 +597,8 @@ function pickerCycleLines(arrangement) {
 }
 
 .card-back {
-  background: linear-gradient(135deg, #2a2520, #1a1612);
-  border: 2px solid #3d3529;
+  background: linear-gradient(135deg, var(--lt-panel-bg-alt), var(--lt-bg));
+  border: 2px solid var(--lt-border);
   transition: transform 0.6s cubic-bezier(0.3, 0.7, 0.4, 1);
   transform: rotateY(0deg);
 }
@@ -606,15 +606,15 @@ function pickerCycleLines(arrangement) {
 .card-back-pattern {
   width: 60%;
   height: 60%;
-  border: 2px solid #c9a54e44;
+  border: 2px solid color-mix(in srgb, var(--lt-gold) 27%, transparent);
   border-radius: 4px;
   background:
-    repeating-linear-gradient(45deg, #c9a54e11 0, #c9a54e11 4px, transparent 4px, transparent 8px);
+    repeating-linear-gradient(45deg, color-mix(in srgb, var(--lt-gold) 7%, transparent) 0, color-mix(in srgb, var(--lt-gold) 7%, transparent) 4px, transparent 4px, transparent 8px);
 }
 
 .card-front {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   transform: rotateY(180deg);
   transition: transform 0.6s cubic-bezier(0.3, 0.7, 0.4, 1), box-shadow 0.4s;
   padding: 10px;
@@ -624,7 +624,7 @@ function pickerCycleLines(arrangement) {
 .card.revealed .card-back { transform: rotateY(-180deg); }
 .card.revealed .card-front {
   transform: rotateY(0deg);
-  box-shadow: 0 0 24px var(--house-color, #c9a54e)44;
+  box-shadow: 0 0 24px var(--house-color, var(--lt-gold))44;
 }
 
 .card.dealing {
@@ -680,14 +680,14 @@ function pickerCycleLines(arrangement) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.65rem;
 }
 
 .rel-value {
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .start-badge {
@@ -697,13 +697,13 @@ function pickerCycleLines(arrangement) {
   transform: translateX(-50%);
   font-family: 'Cinzel', serif;
   font-size: 0.7rem;
-  color: #c9a54e;
-  border: 1px solid #c9a54e;
+  color: var(--lt-gold);
+  border: 1px solid var(--lt-gold);
   border-radius: 3px;
   padding: 2px 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: #c9a54e22;
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
   white-space: nowrap;
   z-index: 2;
   animation: pop 0.5s ease;
@@ -799,24 +799,24 @@ function pickerCycleLines(arrangement) {
 }
 
 .btn-primary {
-  color: #c9a54e;
-  border: 2px solid #c9a54e66;
-  background: #c9a54e22;
+  color: var(--lt-gold);
+  border: 2px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
 }
 
 .btn-primary:hover {
-  background: #c9a54e33;
-  border-color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
 }
 
 .btn-secondary {
-  color: #8a7e66;
-  border: 1px solid #3d3529;
+  color: var(--lt-text-dim);
+  border: 1px solid var(--lt-border);
   background: none;
 }
 
 .btn-secondary:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 </style>

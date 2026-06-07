@@ -32,7 +32,7 @@ const emit = defineEmits(['confirm', 'cancel'])
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: #1a1612dd;
+  background: color-mix(in srgb, var(--lt-bg) 87%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,8 +40,8 @@ const emit = defineEmits(['confirm', 'cancel'])
 }
 
 .confirm-dialog {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   border-radius: 3px;
   padding: 32px;
   max-width: 400px;
@@ -51,14 +51,14 @@ const emit = defineEmits(['confirm', 'cancel'])
 
 .confirm-title {
   font-size: 1.2rem;
-  color: #c9a54e;
+  color: var(--lt-gold);
   margin-bottom: 12px;
 }
 
 .confirm-message {
   font-family: 'EB Garamond', serif;
   font-size: 1rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
   margin-bottom: 24px;
   line-height: 1.5;
 }
@@ -80,14 +80,14 @@ const emit = defineEmits(['confirm', 'cancel'])
 }
 
 .confirm-btn-primary {
-  color: #c9a54e;
-  border-color: #c9a54e66;
-  background: #c9a54e22;
+  color: var(--lt-gold);
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
 }
 
 .confirm-btn-primary:hover {
-  background: #c9a54e33;
-  border-color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
 }
 
 .confirm-btn-danger {
@@ -101,13 +101,13 @@ const emit = defineEmits(['confirm', 'cancel'])
 }
 
 .confirm-btn-cancel {
-  color: #8a7e66;
-  border-color: #3d3529;
+  color: var(--lt-text-dim);
+  border-color: var(--lt-border);
   background: none;
 }
 
 .confirm-btn-cancel:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 </style>

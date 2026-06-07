@@ -62,7 +62,7 @@ function select(role) {
 .role-overlay {
   position: fixed;
   inset: 0;
-  background: #1a1612ee;
+  background: color-mix(in srgb, var(--lt-bg) 93%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,8 +70,8 @@ function select(role) {
 }
 
 .role-panel {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   border-radius: 3px;
   padding: 32px;
   width: 94vw;
@@ -86,13 +86,13 @@ function select(role) {
 
 .role-title {
   font-size: 1.4rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .role-subtitle {
   font-family: 'EB Garamond', serif;
   font-size: 0.9rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-style: italic;
 }
 
@@ -111,8 +111,8 @@ function select(role) {
   gap: 12px;
   padding: 16px 14px 18px;
   border-radius: 6px;
-  border: 2px solid #3d3529;
-  background: #1a1612;
+  border: 2px solid var(--lt-border);
+  background: var(--lt-bg);
   cursor: pointer;
   transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
   width: 100%;
@@ -144,16 +144,16 @@ function select(role) {
   font-size: 0.9rem;
   padding: 8px 20px;
   border-radius: 3px;
-  border: 1px solid #3d352966;
+  border: 1px solid color-mix(in srgb, var(--lt-border) 40%, transparent);
   background: none;
-  color: #8a7e6688;
+  color: color-mix(in srgb, var(--lt-text-dim) 53%, transparent);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .role-clear-btn:hover {
-  color: #d4c8a8;
-  border-color: #8a7e66;
+  color: var(--lt-text);
+  border-color: var(--lt-text-dim);
 }
 
 .role-close-btn {
@@ -161,15 +161,15 @@ function select(role) {
   font-size: 1.1rem;
   padding: 16px 36px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
+  border: 1px solid var(--lt-border);
   background: none;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .role-close-btn:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 </style>

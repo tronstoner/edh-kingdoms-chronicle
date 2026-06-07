@@ -317,7 +317,7 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 .export-overlay {
   position: fixed;
   inset: 0;
-  background: #1a1612ee;
+  background: color-mix(in srgb, var(--lt-bg) 93%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -325,8 +325,8 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 }
 
 .export-panel {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   border-radius: 3px;
   padding: 24px;
   width: 98vw;
@@ -342,12 +342,12 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 
 .section-header {
   margin: 8px 0 10px;
-  border-bottom: 1px solid #3d3529;
+  border-bottom: 1px solid var(--lt-border);
   padding-bottom: 6px;
 }
 
 .section-title {
-  color: #c9a54e;
+  color: var(--lt-gold);
   font-size: 1.05rem;
   margin: 0;
   letter-spacing: 0.05em;
@@ -356,14 +356,14 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 .export-house {
   font-family: 'Cinzel', serif;
   font-size: 0.8rem;
-  color: #c9a54e;
+  color: var(--lt-gold);
   letter-spacing: 0.04em;
 }
 
 .export-turn {
   font-family: 'Cinzel', serif;
   font-size: 0.75rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   letter-spacing: 0.04em;
 }
 
@@ -375,10 +375,10 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 }
 
 .game-block {
-  border: 1px solid #3d3529;
+  border: 1px solid var(--lt-border);
   border-radius: 3px;
   padding: 12px;
-  background: #1a1612;
+  background: var(--lt-bg);
 }
 
 .game-block.deselected {
@@ -397,13 +397,13 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #c9a54e;
+  color: var(--lt-gold);
   cursor: pointer;
   font-size: 0.95rem;
 }
 
 .game-check input {
-  accent-color: #c9a54e;
+  accent-color: var(--lt-gold);
   width: 18px;
   height: 18px;
   cursor: pointer;
@@ -425,7 +425,7 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 .field-label {
   font-family: 'Cinzel', serif;
   font-size: 0.65rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -435,15 +435,15 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   font-size: 0.9rem;
   padding: 4px 8px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-panel-bg);
+  color: var(--lt-text);
   outline: none;
   width: 100px;
 }
 
 .field-input:focus {
-  border-color: #c9a54e66;
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 .field-input-date {
@@ -467,21 +467,21 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   gap: 8px;
   flex-wrap: wrap;
   padding: 6px 8px;
-  background: #231f1a;
-  border: 1px solid #3d352944;
+  background: var(--lt-panel-bg);
+  border: 1px solid color-mix(in srgb, var(--lt-border) 27%, transparent);
   border-radius: 3px;
 }
 
 .export-player {
   font-size: 0.9rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
   min-width: 65px;
 }
 
 .export-deck {
   font-family: 'EB Garamond', serif;
   font-size: 0.85rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-style: italic;
   flex: 1;
   min-width: 0;
@@ -495,15 +495,15 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   font-size: 0.85rem;
   padding: 4px 8px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-panel-bg);
+  color: var(--lt-text);
   outline: none;
   cursor: pointer;
 }
 
 .export-select:focus {
-  border-color: #c9a54e66;
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 .export-result {
@@ -519,20 +519,20 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 }
 
 .result-win {
-  color: #c9a54e;
-  border-color: #c9a54e66;
-  background: #c9a54e11;
+  color: var(--lt-gold);
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 7%, transparent);
 }
 
 .result-loss {
-  color: #8a7e66;
-  border-color: #3d3529;
+  color: var(--lt-text-dim);
+  border-color: var(--lt-border);
   background: none;
 }
 
 .export-preview {
-  background: #1a1612;
-  border: 1px solid #3d3529;
+  background: var(--lt-bg);
+  border: 1px solid var(--lt-border);
   border-radius: 3px;
   padding: 8px;
   margin-bottom: 16px;
@@ -544,18 +544,18 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   border-collapse: collapse;
   font-family: 'EB Garamond', serif;
   font-size: 0.75rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
 }
 
 .preview-table th {
   font-family: 'Cinzel', serif;
   font-size: 0.6rem;
-  color: #8a7e6688;
+  color: color-mix(in srgb, var(--lt-text-dim) 53%, transparent);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-align: left;
   padding: 2px 6px;
-  border-bottom: 1px solid #3d352966;
+  border-bottom: 1px solid color-mix(in srgb, var(--lt-border) 40%, transparent);
   white-space: nowrap;
 }
 
@@ -582,14 +582,14 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 }
 
 .export-btn-copy {
-  color: #c9a54e;
-  border-color: #c9a54e66;
-  background: #c9a54e22;
+  color: var(--lt-gold);
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
 }
 
 .export-btn-copy:hover {
-  background: #c9a54e33;
-  border-color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
 }
 
 .export-btn-clear {
@@ -603,14 +603,14 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 }
 
 .export-btn-cancel {
-  color: #8a7e66;
-  border-color: #3d352966;
+  color: var(--lt-text-dim);
+  border-color: color-mix(in srgb, var(--lt-border) 40%, transparent);
   background: none;
   font-size: 0.9rem;
 }
 
 .export-btn-cancel:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 </style>

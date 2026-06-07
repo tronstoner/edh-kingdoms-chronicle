@@ -19,6 +19,11 @@ export const DEFAULT_SETTINGS = {
   // Cap on minutes-per-player at which the nudge fires. Round R is a
   // fraction of this cap (10/20/40/60/80/100% for R1–R6+).
   turnNudgeMaxMinutesPerPlayer: 5,
+  // Visual theme — 'bright' is the default: white text + more saturated
+  // deck gradients, tuned for low-contrast tablets / bright rooms.
+  // 'classic' keeps the muted parchment/gold look used elsewhere in the
+  // app for users who prefer the old aesthetic.
+  theme: 'bright',
 }
 
 export function loadSettings() {

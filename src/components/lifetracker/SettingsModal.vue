@@ -15,6 +15,33 @@ function update(key, value) {
     <div class="settings-panel" @click.stop>
       <h3 class="settings-title font-beleren">Session Settings</h3>
 
+      <!-- Display group -->
+      <section class="settings-section">
+        <h4 class="settings-section-title">Display</h4>
+
+        <div class="settings-row">
+          <span class="settings-row-label">Theme</span>
+          <div class="theme-toggle" role="radiogroup" aria-label="Theme">
+            <button
+              type="button"
+              class="theme-option"
+              :class="{ 'theme-option-active': (settings.theme || 'classic') === 'classic' }"
+              role="radio"
+              :aria-checked="(settings.theme || 'classic') === 'classic'"
+              @click="update('theme', 'classic')"
+            >Classic</button>
+            <button
+              type="button"
+              class="theme-option"
+              :class="{ 'theme-option-active': settings.theme === 'bright' }"
+              role="radio"
+              :aria-checked="settings.theme === 'bright'"
+              @click="update('theme', 'bright')"
+            >Bright</button>
+          </div>
+        </div>
+      </section>
+
       <!-- Turn nudge group -->
       <section class="settings-section">
         <h4 class="settings-section-title">Turn nudge</h4>
@@ -64,7 +91,7 @@ function update(key, value) {
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background: #1a1612ee;
+  background: color-mix(in srgb, var(--lt-bg) 93%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,8 +99,8 @@ function update(key, value) {
 }
 
 .settings-panel {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   border-radius: 3px;
   padding: 20px 24px;
   width: 92vw;
@@ -87,7 +114,7 @@ function update(key, value) {
 
 .settings-title {
   font-size: 1.2rem;
-  color: #c9a54e;
+  color: var(--lt-gold);
   margin: 0;
 }
 
@@ -95,7 +122,7 @@ function update(key, value) {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-top: 1px solid #3d3529;
+  border-top: 1px solid var(--lt-border);
   padding-top: 14px;
 }
 
@@ -107,7 +134,7 @@ function update(key, value) {
 .settings-section-title {
   font-family: 'Cinzel', serif;
   font-size: 0.95rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
   margin: 0 0 4px;
   letter-spacing: 0.04em;
 }
@@ -123,18 +150,18 @@ function update(key, value) {
 .settings-row-label {
   font-family: 'Cinzel', serif;
   font-size: 0.9rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .settings-row-disabled .settings-row-label {
-  color: #8a7e6688;
+  color: color-mix(in srgb, var(--lt-text-dim) 53%, transparent);
 }
 
 .settings-toggle {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: #c9a54e;
+  accent-color: var(--lt-gold);
 }
 
 .settings-number {
@@ -143,15 +170,15 @@ function update(key, value) {
   padding: 6px 10px;
   width: 90px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text);
   outline: none;
   text-align: right;
 }
 
 .settings-number:focus {
-  border-color: #c9a54e66;
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 .settings-number:disabled {
@@ -164,16 +191,47 @@ function update(key, value) {
   font-size: 0.95rem;
   padding: 10px 24px;
   border-radius: 3px;
-  border: 1px solid #c9a54e66;
-  background: #c9a54e22;
-  color: #c9a54e;
+  border: 1px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
   cursor: pointer;
   transition: all 0.2s;
   align-self: center;
 }
 
 .settings-close:hover {
-  background: #c9a54e33;
-  border-color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  border: 1px solid var(--lt-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.theme-option {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  background: var(--lt-bg);
+  color: var(--lt-text-dim);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.theme-option + .theme-option {
+  border-left: 1px solid var(--lt-border);
+}
+
+.theme-option:hover {
+  color: var(--lt-text);
+}
+
+.theme-option-active {
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
 }
 </style>

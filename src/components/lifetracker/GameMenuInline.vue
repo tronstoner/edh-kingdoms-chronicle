@@ -161,10 +161,10 @@ function onTurnPointerLeave() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1612;
-  border: 1px solid #3d3529;
+  background: var(--lt-bg);
+  border: 1px solid var(--lt-border);
   border-radius: 3px;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   cursor: pointer;
   transition: all 0.2s;
   /* Sized to the container (menu gap / column) so the icons scale with
@@ -178,8 +178,8 @@ function onTurnPointerLeave() {
 
 .menu-icon:hover,
 .menu-icon.active {
-  color: #c9a54e;
-  border-color: #8a7e66;
+  color: var(--lt-gold);
+  border-color: var(--lt-text-dim);
 }
 
 .turn-btn {
@@ -189,8 +189,8 @@ function onTurnPointerLeave() {
   height: clamp(80px, 200cqmin, 128px);
   flex-direction: column;
   gap: 6px;
-  color: #c9a54e;
-  border-color: #c9a54e44;
+  color: var(--lt-gold);
+  border-color: color-mix(in srgb, var(--lt-gold) 27%, transparent);
   /* Needed so the absolute-positioned .turn-fuse anchors to this button. */
   position: relative;
 }
@@ -206,21 +206,21 @@ function onTurnPointerLeave() {
 @keyframes turn-pulse {
   0%,
   100% {
-    background-color: #1a1612;
-    border-color: #c9a54e44;
+    background-color: var(--lt-bg);
+    border-color: color-mix(in srgb, var(--lt-gold) 27%, transparent);
   }
   50% {
     /* Gold wash over the resting dark — the whole button breathes
        in/out of the gold rather than just a halo at the edge. */
     background-color: #6a4e1f;
-    border-color: #c9a54e;
+    border-color: var(--lt-gold);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .turn-btn--prompt {
     animation: none;
-    border-color: #c9a54e;
+    border-color: var(--lt-gold);
   }
 }
 
@@ -261,7 +261,7 @@ function onTurnPointerLeave() {
   pointer-events: none;
   background: conic-gradient(
     from 0deg,
-    #c9a54e var(--fuse-progress, 0%),
+    var(--lt-gold) var(--fuse-progress, 0%),
     transparent 0
   );
   -webkit-mask:
@@ -307,8 +307,8 @@ function onTurnPointerLeave() {
 .menu-spacer {
   flex: 1;
   width: 100%;
-  background: #1a1612;
-  border: 1px solid #3d3529;
+  background: var(--lt-bg);
+  border: 1px solid var(--lt-border);
   border-radius: 3px;
   min-height: 0;
 }
@@ -317,7 +317,7 @@ function onTurnPointerLeave() {
 :global(.menu-modal-overlay) {
   position: fixed;
   inset: 0;
-  background: #1a1612ee;
+  background: color-mix(in srgb, var(--lt-bg) 93%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -325,8 +325,8 @@ function onTurnPointerLeave() {
 }
 
 :global(.menu-modal-panel) {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   border-radius: 3px;
   padding: 8px;
   display: flex;
@@ -341,9 +341,9 @@ function onTurnPointerLeave() {
   font-size: 0.9rem;
   padding: 10px 24px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #8a7e66;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text-dim);
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -351,17 +351,17 @@ function onTurnPointerLeave() {
 }
 
 :global(.menu-modal-panel .menu-btn:hover) {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 
 :global(.menu-modal-panel .menu-btn-save) {
-  color: #c9a54e;
-  border-color: #c9a54e66;
+  color: var(--lt-gold);
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 :global(.menu-modal-panel .menu-btn-cancel) {
-  color: #8a7e6688;
+  color: color-mix(in srgb, var(--lt-text-dim) 53%, transparent);
   border-color: transparent;
 }
 </style>

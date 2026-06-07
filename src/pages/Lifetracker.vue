@@ -114,7 +114,22 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', onVisibilityChange)
   wakeLock?.release()
   wakeLock = null
+  // Drop the body class so other routes don't inherit the lifetracker
+  // theme — the rest of the app doesn't use --lt-* tokens but the class
+  // is a side-effect we own and should clean up.
+  document.body.classList.remove('lt-theme-bright')
 })
+
+// Mirror the theme setting onto <body> so Teleport-to-body overlays
+// (battle menu, confirm dialogs, modals) pick up the bright-theme
+// variable overrides. Plain CSS-only scoping wouldn't reach them.
+watch(
+  () => settings.theme,
+  (theme) => {
+    document.body.classList.toggle('lt-theme-bright', theme === 'bright')
+  },
+  { immediate: true },
+)
 
 const hasSaved = resumeOrNew()
 const showResume = ref(hasSaved && state.phase !== 'setup')
@@ -547,7 +562,7 @@ function handleClearCycleGames() {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: #1a1612;
+  background: var(--lt-bg);
   overflow: hidden;
 }
 
@@ -557,7 +572,7 @@ function handleClearCycleGames() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1612;
+  background: var(--lt-bg);
   z-index: 110;
 }
 
@@ -565,7 +580,7 @@ function handleClearCycleGames() {
   position: absolute;
   inset: 0;
   overflow-y: auto;
-  background: #1a1612;
+  background: var(--lt-bg);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -583,27 +598,27 @@ function handleClearCycleGames() {
   font-size: 1.1rem;
   padding: 0.75rem 2rem;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-panel-bg);
+  color: var(--lt-text);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .lt-btn:hover {
-  background: #2a2520;
-  border-color: #c9a54e66;
+  background: var(--lt-panel-bg-alt);
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 .lt-btn-primary {
-  background: #c9a54e22;
-  border-color: #c9a54e66;
-  color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  color: var(--lt-gold);
 }
 
 .lt-btn-primary:hover {
-  background: #c9a54e33;
-  border-color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
 }
 
 

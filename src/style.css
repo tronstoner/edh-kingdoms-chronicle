@@ -83,3 +83,71 @@ body {
 *::-webkit-scrollbar-thumb:hover {
   background: var(--color-mtg-gold);
 }
+
+/*
+ * Lifetracker theme tokens. Defaults live on :root rather than .lt-root
+ * because several lifetracker overlays (battle menu, confirm dialogs)
+ * Teleport themselves to <body>, escaping the .lt-root subtree — a
+ * scoped declaration would leave those teleported nodes without the
+ * tokens. The vars are prefixed --lt-* and unused outside the
+ * lifetracker, so making them global is harmless.
+ *
+ *  - classic (default)  : muted parchment/gold, matches the rest of the app
+ *  - bright (body.lt-theme-bright) : pure white text, brighter gold, more
+ *      saturated/opaque deck gradients — better readability on
+ *      lower-contrast tablets / bright rooms.
+ *
+ * Lifetracker.vue toggles `body.lt-theme-bright` so teleported content
+ * picks up the override too.
+ */
+:root {
+  --lt-text: #d4c8a8;
+  --lt-text-dim: #8a7e66;
+  --lt-gold: #c9a54e;
+  --lt-gold-light: #e2b84a;
+  --lt-border: #3d3529;
+  --lt-panel-bg: #231f1a;
+  --lt-panel-bg-alt: #2a2520;
+  --lt-bg: #1a1612;
+
+  /* Deck-color gradient overlays read these so the bright theme can crank
+     saturation/brightness without touching component code. */
+  --lt-gradient-opacity: 0.3;
+  --lt-gradient-saturate: 1;
+  --lt-gradient-brightness: 1;
+  --lt-minimap-grad-opacity: 0.4;
+
+  /* Role badge colours — lifetracker-only. The dashboard keeps the
+     muted hexes in roles.js / style.css; here we use brighter saturated
+     values in bright theme so role tags read against the new white text
+     without looking dingy by comparison. */
+  --lt-role-king: #e2b84a;
+  --lt-role-knight: #6ab86a;
+  --lt-role-goblin: #d95555;
+  --lt-role-lord: #a47be0;
+  --lt-role-clone-lord: #5ba3d9;
+}
+
+body.lt-theme-bright {
+  --lt-text: #ffffff;
+  --lt-text-dim: #c4c4cc;
+  --lt-gold: #f2c84e;
+  --lt-gold-light: #ffd970;
+  --lt-border: #4d4538;
+  --lt-panel-bg: #2a2520;
+  --lt-panel-bg-alt: #322c25;
+  /* Keep the table background dark — that contrast is what makes the
+     brighter panel gradients pop. */
+  --lt-bg: #1a1612;
+
+  --lt-gradient-opacity: 0.55;
+  --lt-gradient-saturate: 1.5;
+  --lt-gradient-brightness: 1.15;
+  --lt-minimap-grad-opacity: 0.65;
+
+  --lt-role-king: #ffd970;
+  --lt-role-knight: #7adb7a;
+  --lt-role-goblin: #ff6b6b;
+  --lt-role-lord: #c9a8ff;
+  --lt-role-clone-lord: #7ec6ff;
+}

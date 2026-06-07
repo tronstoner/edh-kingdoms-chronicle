@@ -41,7 +41,7 @@ watch(() => props.text, (val) => {
   align-items: center;
   justify-content: center;
   z-index: 300;
-  background: #1a1612cc;
+  background: color-mix(in srgb, var(--lt-bg) 80%, transparent);
   animation: announce-fade 2.5s ease-out forwards;
 }
 
@@ -57,16 +57,16 @@ watch(() => props.text, (val) => {
 .announce-title {
   font-size: clamp(4rem, 12vw, 7rem);
   line-height: 1;
-  color: #c9a54e;
-  text-shadow: 0 0 40px #1a1612, 0 0 80px #1a1612;
+  color: var(--lt-gold);
+  text-shadow: 0 0 40px var(--lt-bg), 0 0 80px var(--lt-bg);
   white-space: nowrap;
 }
 
 .announce-subtitle {
   font-size: clamp(1.6rem, 4.5vw, 3rem);
   line-height: 1.1;
-  color: #c9a54e;
-  text-shadow: 0 0 30px #1a1612, 0 0 60px #1a1612;
+  color: var(--lt-gold);
+  text-shadow: 0 0 30px var(--lt-bg), 0 0 60px var(--lt-bg);
   font-style: italic;
   letter-spacing: 0.04em;
   white-space: nowrap;

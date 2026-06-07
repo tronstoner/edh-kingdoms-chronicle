@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useManaGradient, manaGradient } from '../../composables/useManaGradient.js'
 import { colorIcons, factionIcon } from '../../mana.js'
-import { ROLE_COLORS, roleIconUrl, conversionIconUrl, lifetrackerRoleLabel } from '../../roles.js'
+import { roleIconUrl, conversionIconUrl, lifetrackerRoleLabel } from '../../roles.js'
 import { HOUSE_COLORS, cycleRelations, turnPositionFor } from '../../lifetracker/cycle.js'
 import LifeCounter from './LifeCounter.vue'
 import DeathBanner from './DeathBanner.vue'
@@ -35,10 +35,31 @@ const gradientOverlay = computed(() => {
   return `linear-gradient(135deg, ${grad}, ${grad})`
 })
 
+// Role badge colours come from theme CSS vars (see :root in style.css)
+// so the bright theme can dial up saturation without forking this file.
+// Returns CSS strings, not hexes — consumed only in inline styles, which
+// accept var()/color-mix() natively.
+const LT_ROLE_VARS = {
+  King: '--lt-role-king',
+  Knight: '--lt-role-knight',
+  Goblin: '--lt-role-goblin',
+  Lord: '--lt-role-lord',
+  'Zombie Lord': '--lt-role-lord',
+  'Clone Lord': '--lt-role-clone-lord',
+}
+
 const roleColor = computed(() => {
   if (!props.seat.role || !props.seat.roleRevealed) return null
-  return ROLE_COLORS[props.seat.role]
+  const v = LT_ROLE_VARS[props.seat.role]
+  return v ? `var(${v})` : null
 })
+
+const roleBorderColor = computed(() => roleColor.value)
+
+const ZOMBIE_COLOR = 'var(--lt-role-lord)'
+const ZOMBIE_BORDER = ZOMBIE_COLOR
+const CLONE_COLOR = 'var(--lt-role-clone-lord)'
+const CLONE_BORDER = CLONE_COLOR
 
 const houseColor = computed(() => {
   if (!isCycle.value || !props.seat.house) return null
@@ -191,7 +212,7 @@ const panelClasses = computed(() => {
         <div
           v-if="seat.role && seat.roleRevealed"
           class="role-tag"
-          :style="{ color: roleColor, borderColor: roleColor + 'aa' }"
+          :style="{ color: roleColor, borderColor: roleBorderColor }"
           @pointerdown.stop
           @click.stop="emit('revealRole')"
         >
@@ -209,11 +230,11 @@ const panelClasses = computed(() => {
           <i class="ms ms-ability-cloak role-tag-pick-icon"></i>
           <span class="role-tag-label"><span>Role</span></span>
         </div>
-        <div v-if="seat.roleNotes === 'Zombie'" class="role-tag role-tag-conversion" style="color: #a47be0; border-color: #a47be0aa" @pointerdown.stop @click.stop="emit('clearUndead')">
+        <div v-if="seat.roleNotes === 'Zombie'" class="role-tag role-tag-conversion" :style="{ color: ZOMBIE_COLOR, borderColor: ZOMBIE_BORDER }" @pointerdown.stop @click.stop="emit('clearUndead')">
           <img class="role-tag-img" :src="conversionIconUrl('Zombie')" alt="" />
           <span class="role-tag-label"><span>Zombie</span></span>
         </div>
-        <div v-else-if="seat.roleNotes === 'Clone'" class="role-tag role-tag-conversion" style="color: #5ba3d9; border-color: #5ba3d9aa" @pointerdown.stop @click.stop="emit('clearUndead')">
+        <div v-else-if="seat.roleNotes === 'Clone'" class="role-tag role-tag-conversion" :style="{ color: CLONE_COLOR, borderColor: CLONE_BORDER }" @pointerdown.stop @click.stop="emit('clearUndead')">
           <img class="role-tag-img" :src="conversionIconUrl('Clone')" alt="" />
           <span class="role-tag-label"><span>Clone</span></span>
         </div>
@@ -356,7 +377,7 @@ const panelClasses = computed(() => {
   user-select: none;
   -webkit-touch-callout: none;
   transition: border-color 0.3s;
-  background-color: #1a1612;
+  background-color: var(--lt-bg);
   /* Container query context — interior elements size to the panel, not
      the viewport. Tuned so iPad-landscape (~391×408 panel) matches the
      previous vw-based values; phones get the same proportions scaled. */
@@ -366,7 +387,8 @@ const panelClasses = computed(() => {
 .gradient-bg {
   position: absolute;
   inset: 0;
-  opacity: 0.3;
+  opacity: var(--lt-gradient-opacity);
+  filter: saturate(var(--lt-gradient-saturate)) brightness(var(--lt-gradient-brightness));
   z-index: 0;
   pointer-events: none;
 }
@@ -388,7 +410,7 @@ const panelClasses = computed(() => {
   display: inline;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.7rem, 4.5cqmin, 1.1rem);
-  color: #d4c8a8;
+  color: var(--lt-text);
   white-space: nowrap;
   padding: 0 8px;
 
@@ -410,7 +432,7 @@ const panelClasses = computed(() => {
 .faction-icon {
   margin-right: 6px;
   font-size: 0.85em;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   vertical-align: baseline;
 }
 
@@ -425,7 +447,7 @@ const panelClasses = computed(() => {
 .deck-name {
   font-family: 'EB Garamond', serif;
   font-size: clamp(0.55rem, 3.5cqmin, 0.85rem);
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-style: italic;
   white-space: nowrap;
   overflow: hidden;
@@ -442,14 +464,14 @@ const panelClasses = computed(() => {
   font-family: 'Cinzel', serif;
   font-size: clamp(2.25rem, 24cqmin, 6rem);
   font-weight: 700;
-  color: #d4c8a8;
+  color: var(--lt-text);
   line-height: 1;
   z-index: 1;
   transition: color 0.3s;
 }
 
 .life-danger {
-  color: #e2b84a;
+  color: var(--lt-gold-light);
 }
 
 .life-lethal {
@@ -457,7 +479,7 @@ const panelClasses = computed(() => {
 }
 
 .life-dead {
-  color: #8a7e66;
+  color: var(--lt-text-dim);
 }
 
 .left-badges {
@@ -477,9 +499,9 @@ const panelClasses = computed(() => {
   align-items: center;
   gap: 3px;
   padding: 4px 6px 6px;
-  border: 1px solid #d4c8a8aa;
+  border: 1px solid color-mix(in srgb, var(--lt-text) 67%, transparent);
   border-radius: 4px;
-  color: #d4c8a8;
+  color: var(--lt-text);
   background: rgba(26, 22, 18, 0.55);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
@@ -515,8 +537,8 @@ const panelClasses = computed(() => {
 }
 
 .role-tag-pick {
-  color: #d4c8a8;
-  border-color: #d4c8a833;
+  color: var(--lt-text);
+  border-color: color-mix(in srgb, var(--lt-text) 20%, transparent);
   background: rgba(26, 22, 18, 0.25);
   opacity: 0.55;
 }
@@ -524,7 +546,7 @@ const panelClasses = computed(() => {
 .role-tag-pick-icon {
   font-size: clamp(18px, 9.2cqmin, 36px);
   line-height: 1;
-  color: #d4c8a8;
+  color: var(--lt-text);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
@@ -542,9 +564,9 @@ const panelClasses = computed(() => {
   flex-direction: column;
   align-items: center;
   padding: 3px 6px;
-  border: 1px solid #d4c8a8aa;
+  border: 1px solid color-mix(in srgb, var(--lt-text) 67%, transparent);
   border-radius: 3px;
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .badge-icon {
@@ -567,8 +589,8 @@ const panelClasses = computed(() => {
   gap: 2px;
   padding: 4px;
   border-radius: 3px;
-  border: 1px solid #d4c8a8aa;
-  background: #1a1612;
+  border: 1px solid color-mix(in srgb, var(--lt-text) 67%, transparent);
+  background: var(--lt-bg);
   cursor: pointer;
   z-index: 8;
   width: clamp(90px, 46cqmin, 180px);
@@ -588,13 +610,14 @@ const panelClasses = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1612;
+  background: var(--lt-bg);
 }
 
 .minimap-grad {
   position: absolute;
   inset: 0;
-  opacity: 0.4;
+  opacity: var(--lt-minimap-grad-opacity);
+  filter: saturate(var(--lt-gradient-saturate)) brightness(var(--lt-gradient-brightness));
   border-radius: 3px;
 }
 
@@ -602,12 +625,12 @@ const panelClasses = computed(() => {
   position: relative;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.55rem, 3.7cqmin, 0.9rem);
-  color: #d4c8a844;
+  color: color-mix(in srgb, var(--lt-text) 27%, transparent);
   z-index: 1;
 }
 
 .minimap-dmg.has-damage {
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .minimap-rel {
@@ -623,7 +646,7 @@ const panelClasses = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d4c8a8;
+  color: var(--lt-text);
   filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.7));
 }
 
@@ -639,7 +662,7 @@ const panelClasses = computed(() => {
   align-items: center;
   justify-content: center;
   font-size: clamp(0.75rem, 4.9cqmin, 1.2rem);
-  color: #d4c8a8;
+  color: var(--lt-text);
   z-index: 3;
   pointer-events: none;
   text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
@@ -657,8 +680,8 @@ const panelClasses = computed(() => {
   font-size: clamp(0.5rem, 2.9cqmin, 0.7rem);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8a7e66;
-  border: 1px solid #3d3529;
+  color: var(--lt-text-dim);
+  border: 1px solid var(--lt-border);
   border-radius: 3px;
   padding: 2px 6px;
   background: rgba(26, 22, 18, 0.55);
@@ -666,9 +689,9 @@ const panelClasses = computed(() => {
 }
 
 .turn-pip-first {
-  color: #c9a54e;
-  border-color: #c9a54e;
-  background: #c9a54e22;
+  color: var(--lt-gold);
+  border-color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
 }
 
 
@@ -681,14 +704,14 @@ const panelClasses = computed(() => {
 }
 
 .is-winner {
-  border-color: #c9a54e !important;
-  box-shadow: inset 0 0 30px #c9a54e22;
+  border-color: var(--lt-gold) !important;
+  box-shadow: inset 0 0 30px color-mix(in srgb, var(--lt-gold) 13%, transparent);
 }
 
 .winner-glow {
   position: absolute;
   inset: 0;
-  border: 2px solid #c9a54e44;
+  border: 2px solid color-mix(in srgb, var(--lt-gold) 27%, transparent);
   pointer-events: none;
   z-index: 3;
 }

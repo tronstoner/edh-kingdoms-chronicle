@@ -63,9 +63,11 @@ onUnmounted(() => {
     <div class="zone zone-plus" :class="{ flash: flashSide === 'right' }">
       <span class="zone-label">+</span>
     </div>
-    <div v-if="pendingDelta !== 0" class="pending-delta" :class="pendingDelta > 0 ? 'delta-pos' : 'delta-neg'">
-      {{ pendingDelta > 0 ? '+' : '' }}{{ pendingDelta }}
-    </div>
+    <Transition name="delta">
+      <div v-if="pendingDelta !== 0" class="pending-delta" :class="pendingDelta > 0 ? 'delta-pos' : 'delta-neg'">
+        {{ pendingDelta > 0 ? '+' : '' }}{{ pendingDelta }}
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -100,22 +102,22 @@ onUnmounted(() => {
 .zone-label {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.1rem, 10cqmin, 2.5rem);
-  color: #8a7e6633;
+  color: color-mix(in srgb, var(--lt-text-dim) 20%, transparent);
   transition: color 0.15s;
   pointer-events: none;
 }
 
 .zone:active .zone-label,
 .flash .zone-label {
-  color: #8a7e6666;
+  color: color-mix(in srgb, var(--lt-text-dim) 40%, transparent);
 }
 
 .flash.zone-minus {
-  background: #d9555511;
+  background: color-mix(in srgb, var(--lt-role-goblin) 22%, transparent);
 }
 
 .flash.zone-plus {
-  background: #6ab86a11;
+  background: color-mix(in srgb, var(--lt-role-knight) 22%, transparent);
 }
 
 .pending-delta {
@@ -124,22 +126,35 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Cinzel', serif;
+  font-weight: 700;
   font-size: clamp(0.85rem, 6cqmin, 1.5rem);
   pointer-events: none;
   z-index: 3;
-  animation: fadeUp 0.3s ease-out;
 }
 
 .delta-pos {
-  color: #6ab86a99;
+  color: var(--lt-role-knight);
 }
 
 .delta-neg {
-  color: #d9555599;
+  color: var(--lt-role-goblin);
 }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Pop in from below on first delta, drift out to above on clear. The
+   parent transform: translateX(-50%) is preserved in every keyframe so
+   the horizontal centring doesn't snap. */
+.delta-enter-active,
+.delta-leave-active {
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.delta-enter-from {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}
+
+.delta-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
 }
 </style>

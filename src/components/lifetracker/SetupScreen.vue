@@ -96,7 +96,7 @@ function handleCountChange(count) {
 .section-label {
   font-family: 'Cinzel', serif;
   font-size: 0.75rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 8px;
@@ -116,38 +116,38 @@ function handleCountChange(count) {
   gap: 4px;
   padding: 14px 16px;
   border-radius: 3px;
-  border: 2px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
+  border: 2px solid var(--lt-border);
+  background: var(--lt-panel-bg);
+  color: var(--lt-text);
   cursor: pointer;
   transition: all 0.2s;
   text-align: left;
 }
 
 .mode-btn:hover {
-  border-color: #8a7e66;
+  border-color: var(--lt-text-dim);
 }
 
 .mode-btn.active {
-  border-color: #c9a54e;
-  background: #c9a54e22;
+  border-color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
 }
 
 .mode-name {
   font-family: 'Cinzel', serif;
   font-size: 1rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .mode-btn.active .mode-name {
-  color: #c9a54e;
+  color: var(--lt-gold);
 }
 
 .mode-desc {
   font-family: 'EB Garamond', serif;
   font-size: 0.8rem;
   font-style: italic;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
 }
 
 .count-btns {
@@ -162,21 +162,21 @@ function handleCountChange(count) {
   width: 64px;
   height: 64px;
   border-radius: 3px;
-  border: 2px solid #3d3529;
-  background: #231f1a;
-  color: #d4c8a8;
+  border: 2px solid var(--lt-border);
+  background: var(--lt-panel-bg);
+  color: var(--lt-text);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .count-btn:hover {
-  border-color: #8a7e66;
+  border-color: var(--lt-text-dim);
 }
 
 .count-btn.active {
-  border-color: #c9a54e;
-  background: #c9a54e22;
-  color: #c9a54e;
+  border-color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
 }
 
 .actions {
@@ -191,16 +191,16 @@ function handleCountChange(count) {
   font-size: 1.2rem;
   padding: 16px 40px;
   border-radius: 3px;
-  border: 2px solid #c9a54e66;
-  background: #c9a54e22;
-  color: #c9a54e;
+  border: 2px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .start-btn:hover {
-  background: #c9a54e33;
-  border-color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
 }
 
 .back-btn {
@@ -208,14 +208,14 @@ function handleCountChange(count) {
   font-size: 1rem;
   padding: 12px 24px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
+  border: 1px solid var(--lt-border);
   background: none;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   cursor: pointer;
 }
 
 .back-btn:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 </style>

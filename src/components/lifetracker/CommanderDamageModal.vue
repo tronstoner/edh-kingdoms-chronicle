@@ -13,12 +13,15 @@ const props = defineProps({
   mode: { type: String, default: 'kingdoms' },
 })
 
+// Role label colours — themed CSS vars so the bright theme picks up the
+// brighter palette automatically. See :root in style.css.
 const ROLE_COLORS = {
-  King: '#e2b84a',
-  Knight: '#6ab86a',
-  Goblin: '#d95555',
-  Lord: '#a47be0',
-  'Clone Lord': '#5ba3d9',
+  King: 'var(--lt-role-king)',
+  Knight: 'var(--lt-role-knight)',
+  Goblin: 'var(--lt-role-goblin)',
+  Lord: 'var(--lt-role-lord)',
+  'Zombie Lord': 'var(--lt-role-lord)',
+  'Clone Lord': 'var(--lt-role-clone-lord)',
 }
 
 const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'revealRole', 'toggleDead', 'close'])
@@ -367,7 +370,7 @@ onUnmounted(() => {
 .cmd-overlay {
   position: fixed;
   inset: 0;
-  background: #1a1612ee;
+  background: color-mix(in srgb, var(--lt-bg) 93%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,8 +384,8 @@ onUnmounted(() => {
 }
 
 .cmd-panel {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   border-radius: 3px;
   /* Padding scales with the panel so it doesn't eat half a narrow modal. */
   padding: clamp(12px, 3cqi, 24px);
@@ -411,11 +414,11 @@ onUnmounted(() => {
 
 .role-box {
   cursor: pointer;
-  border-color: #c9a54e44;
+  border-color: color-mix(in srgb, var(--lt-gold) 27%, transparent);
 }
 
 .role-box:hover {
-  border-color: #c9a54e;
+  border-color: var(--lt-gold);
 }
 
 .reveal-role-box {
@@ -427,7 +430,7 @@ onUnmounted(() => {
 }
 
 .reveal-role-box:hover {
-  border-color: #8a7e66;
+  border-color: var(--lt-text-dim);
 }
 
 .reveal-label {
@@ -435,17 +438,17 @@ onUnmounted(() => {
   /* Box-cqh-relative — 11% of box height matches 1rem at iPad box=148. */
   font-size: clamp(0.55rem, 11cqh, 1rem);
   font-weight: 700;
-  color: #8a7e6644;
+  color: color-mix(in srgb, var(--lt-text-dim) 27%, transparent);
   white-space: nowrap;
 }
 
 .reveal-label.active {
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .reveal-icon-ms {
   font-size: 2.5rem;
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .reveal-icon {
@@ -464,8 +467,8 @@ onUnmounted(() => {
   min-width: 130px;
   max-width: 160px;
   height: clamp(70px, min(20cqi, 22vh), 160px);
-  background: #1a1612;
-  border: 1px solid #3d3529;
+  background: var(--lt-bg);
+  border: 1px solid var(--lt-border);
   border-radius: 3px;
   overflow: hidden;
   position: relative;
@@ -495,7 +498,7 @@ onUnmounted(() => {
   bottom: 30%;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.7rem, 14cqh, 1.3rem);
-  color: #8a7e6633;
+  color: color-mix(in srgb, var(--lt-text-dim) 20%, transparent);
   pointer-events: none;
   z-index: 2;
 }
@@ -517,11 +520,11 @@ onUnmounted(() => {
 }
 
 .counter-flash-left.flash {
-  background: #6ab86a22;
+  background: color-mix(in srgb, var(--lt-role-knight) 22%, transparent);
 }
 
 .counter-flash-right.flash {
-  background: #d9555522;
+  background: color-mix(in srgb, var(--lt-role-goblin) 22%, transparent);
 }
 
 .counter-center {
@@ -564,18 +567,18 @@ onUnmounted(() => {
 .tax-icon,
 .death-icon,
 .role-icon {
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .counter-val {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.1rem, 24cqh, 2.2rem);
   font-weight: 700;
-  color: #8a7e6644;
+  color: color-mix(in srgb, var(--lt-text-dim) 27%, transparent);
 }
 
 .counter-val.active {
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .counter-val.lethal {
@@ -612,7 +615,7 @@ onUnmounted(() => {
   touch-action: none;
   -webkit-touch-callout: none;
   user-select: none;
-  background: #1a1612;
+  background: var(--lt-bg);
   /* Nested container query context — children below size to the seat's
      own height, which lets the dual-commander split, icons, and damage
      readout shrink in lockstep on short viewports. iPad reference seat
@@ -623,7 +626,8 @@ onUnmounted(() => {
 .cmd-seat-grad {
   position: absolute;
   inset: 0;
-  opacity: 0.3;
+  opacity: var(--lt-gradient-opacity);
+  filter: saturate(var(--lt-gradient-saturate)) brightness(var(--lt-gradient-brightness));
   pointer-events: none;
 }
 
@@ -694,23 +698,23 @@ onUnmounted(() => {
 
 /* Plus = red (receiving damage), minus = green (correcting) */
 .cmd-flash-minus.flash {
-  background: #6ab86a22;
+  background: color-mix(in srgb, var(--lt-role-knight) 22%, transparent);
 }
 
 .cmd-flash-plus.flash {
-  background: #d9555522;
+  background: color-mix(in srgb, var(--lt-role-goblin) 22%, transparent);
 }
 
 .zone-hint {
   font-family: 'Cinzel', serif;
   font-size: clamp(0.8rem, 15.5cqh, 2rem);
-  color: #8a7e6633;
+  color: color-mix(in srgb, var(--lt-text-dim) 20%, transparent);
   pointer-events: none;
 }
 
 .cmd-flash-half:active .zone-hint,
 .cmd-flash-half.flash .zone-hint {
-  color: #8a7e6666;
+  color: color-mix(in srgb, var(--lt-text-dim) 40%, transparent);
 }
 
 .cmd-seat-content {
@@ -740,11 +744,11 @@ onUnmounted(() => {
   text-align: center;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.5rem, 7.8cqh, 1rem);
-  color: #8a7e66;
+  color: var(--lt-text-dim);
 }
 
 .cmd-seat-name-top.has-dmg {
-  color: #d4c8a8;
+  color: var(--lt-text);
   pointer-events: none;
   z-index: 3;
 }
@@ -753,12 +757,12 @@ onUnmounted(() => {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.1rem, 27cqh, 3.5rem);
   font-weight: 700;
-  color: #d4c8a844;
+  color: color-mix(in srgb, var(--lt-text) 27%, transparent);
   line-height: 1.1;
 }
 
 .cmd-seat-dmg.has-dmg {
-  color: #d4c8a8;
+  color: var(--lt-text);
 }
 
 .cmd-seat-dmg.lethal {
@@ -772,13 +776,13 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   height: 5px;
-  background: #3d352944;
+  background: color-mix(in srgb, var(--lt-border) 27%, transparent);
   z-index: 3;
 }
 
 .cmd-bar {
   height: 100%;
-  background: #c9a54e;
+  background: var(--lt-gold);
   transition: width 0.3s;
 }
 
@@ -796,9 +800,9 @@ onUnmounted(() => {
   font-size: 0.7rem;
   padding: 4px 6px;
   border-radius: 3px;
-  border: 1px solid #3d352966;
-  background: #1a161288;
-  color: #8a7e6688;
+  border: 1px solid color-mix(in srgb, var(--lt-border) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-bg) 53%, transparent);
+  color: color-mix(in srgb, var(--lt-text-dim) 53%, transparent);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -806,8 +810,8 @@ onUnmounted(() => {
 }
 
 .partner-toggle:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 
 /* Dual commander split seat */
@@ -827,7 +831,7 @@ onUnmounted(() => {
 
 .cmd-split-divider {
   height: 2px;
-  background: #3d352966;
+  background: color-mix(in srgb, var(--lt-border) 40%, transparent);
   z-index: 2;
 }
 
@@ -865,7 +869,7 @@ onUnmounted(() => {
   text-align: center;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.45rem, 6.6cqh, 0.85rem);
-  color: #d4c8a888;
+  color: color-mix(in srgb, var(--lt-text) 53%, transparent);
   pointer-events: none;
   z-index: 3;
 }

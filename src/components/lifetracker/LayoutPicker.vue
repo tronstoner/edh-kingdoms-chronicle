@@ -53,19 +53,19 @@ const layouts = computed(() => layoutsForCount(props.playerCount))
   gap: 10px;
   padding: 18px 24px;
   border-radius: 3px;
-  border: 2px solid #3d3529;
-  background: #231f1a;
+  border: 2px solid var(--lt-border);
+  background: var(--lt-panel-bg);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .layout-option:hover {
-  border-color: #8a7e66;
+  border-color: var(--lt-text-dim);
 }
 
 .layout-option.active {
-  border-color: #c9a54e;
-  background: #c9a54e11;
+  border-color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 7%, transparent);
 }
 
 .layout-diagram {
@@ -84,20 +84,20 @@ const layouts = computed(() => layoutsForCount(props.playerCount))
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #8a7e66;
+  background: var(--lt-text-dim);
 }
 
 .active .diagram-dot {
-  background: #c9a54e;
+  background: var(--lt-gold);
 }
 
 .layout-label {
   font-family: 'EB Garamond', serif;
   font-size: 0.8rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
 }
 
 .active .layout-label {
-  color: #c9a54e;
+  color: var(--lt-gold);
 }
 </style>

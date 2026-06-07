@@ -220,7 +220,7 @@ function dismissAndSave() {
 .deck-picker {
   position: fixed;
   inset: 0;
-  background: #1a1612ee;
+  background: color-mix(in srgb, var(--lt-bg) 93%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -228,8 +228,8 @@ function dismissAndSave() {
 }
 
 .picker-content {
-  background: #231f1a;
-  border: 2px solid #3d3529;
+  background: var(--lt-panel-bg);
+  border: 2px solid var(--lt-border);
   border-radius: 3px;
   padding: 24px;
   max-width: 400px;
@@ -241,7 +241,7 @@ function dismissAndSave() {
 .section-label {
   font-family: 'Cinzel', serif;
   font-size: 0.75rem;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 8px;
@@ -258,21 +258,21 @@ function dismissAndSave() {
   font-size: 1rem;
   padding: 12px 18px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .player-btn:hover:not(:disabled) {
-  border-color: #8a7e66;
+  border-color: var(--lt-text-dim);
 }
 
 .player-btn.active {
-  border-color: #c9a54e;
-  background: #c9a54e22;
-  color: #c9a54e;
+  border-color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
 }
 
 .player-btn.used {
@@ -285,7 +285,7 @@ function dismissAndSave() {
 }
 
 .player-btn-add {
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   border-style: dashed;
 }
 
@@ -299,15 +299,15 @@ function dismissAndSave() {
   font-size: 1.1rem;
   padding: 10px 14px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text);
   outline: none;
   flex: 1;
 }
 
 .guest-input:focus {
-  border-color: #c9a54e66;
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 .guest-add-btn {
@@ -315,9 +315,9 @@ function dismissAndSave() {
   font-size: 0.9rem;
   padding: 10px 18px;
   border-radius: 3px;
-  border: 1px solid #c9a54e66;
-  background: #c9a54e22;
-  color: #c9a54e;
+  border: 1px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
   cursor: pointer;
 }
 
@@ -327,9 +327,9 @@ function dismissAndSave() {
   font-style: italic;
   padding: 10px 16px;
   border-radius: 3px;
-  border: 1px solid #3d352966;
+  border: 1px solid color-mix(in srgb, var(--lt-border) 40%, transparent);
   background: none;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   cursor: pointer;
   display: block;
   width: 100%;
@@ -338,8 +338,8 @@ function dismissAndSave() {
 }
 
 .player-confirm-btn:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 
 .deck-list {
@@ -354,9 +354,9 @@ function dismissAndSave() {
   justify-content: space-between;
   padding: 14px 16px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text);
   font-family: 'EB Garamond', serif;
   font-size: 1.1rem;
   cursor: pointer;
@@ -365,8 +365,8 @@ function dismissAndSave() {
 }
 
 .deck-btn:hover {
-  border-color: #c9a54e66;
-  background: #c9a54e11;
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 7%, transparent);
 }
 
 .deck-btn-name {
@@ -385,7 +385,7 @@ function dismissAndSave() {
 }
 
 .deck-btn-temp {
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   font-style: italic;
   border-style: dashed;
 }
@@ -401,14 +401,14 @@ function dismissAndSave() {
   font-size: 1.1rem;
   padding: 12px 16px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
-  background: #1a1612;
-  color: #d4c8a8;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text);
   outline: none;
 }
 
 .temp-input:focus {
-  border-color: #c9a54e66;
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
 }
 
 .color-toggles {
@@ -421,8 +421,8 @@ function dismissAndSave() {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 2px solid #3d3529;
-  background: #1a1612;
+  border: 2px solid var(--lt-border);
+  background: var(--lt-bg);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -431,24 +431,24 @@ function dismissAndSave() {
 }
 
 .color-toggle.active {
-  border-color: #c9a54e;
-  background: #c9a54e22;
+  border-color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
 }
 
 .confirm-btn {
   font-family: 'Cinzel', serif;
   padding: 14px 24px;
   border-radius: 3px;
-  border: 1px solid #c9a54e66;
-  background: #c9a54e22;
-  color: #c9a54e;
+  border: 1px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .confirm-btn:hover {
-  background: #c9a54e33;
-  border-color: #c9a54e;
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
 }
 
 .close-btn {
@@ -456,16 +456,16 @@ function dismissAndSave() {
   font-size: 1rem;
   padding: 12px 24px;
   border-radius: 3px;
-  border: 1px solid #3d3529;
+  border: 1px solid var(--lt-border);
   background: none;
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   cursor: pointer;
   display: block;
   margin: 0 auto;
 }
 
 .close-btn:hover {
-  border-color: #8a7e66;
-  color: #d4c8a8;
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
 }
 </style>

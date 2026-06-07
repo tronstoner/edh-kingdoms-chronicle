@@ -10,7 +10,7 @@ const props = defineProps({
 
 const emit = defineEmits(['open-map'])
 
-const color = computed(() => HOUSE_COLORS[props.house] || '#8a7e66')
+const color = computed(() => HOUSE_COLORS[props.house] || 'var(--lt-text-dim)')
 const img = computed(() => houseImageUrl(props.house))
 const rel = computed(() => cycleRelations(props.house) || {})
 
@@ -168,7 +168,7 @@ function isDead(houseName) {
   font-family: 'Cinzel', serif;
   /* Badge-relative cqmin: iPad badge 150px → 7.5% = 0.7rem ceiling. */
   font-size: clamp(0.45rem, 7.5cqmin, 0.7rem);
-  color: #8a7e66;
+  color: var(--lt-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   gap: 2px;
@@ -179,7 +179,7 @@ function isDead(houseName) {
   /* iPad badge 150px → 9.1% = 0.85rem ceiling. */
   font-size: clamp(0.5rem, 9.1cqmin, 0.85rem);
   font-weight: 600;
-  color: #d4c8a8;
+  color: var(--lt-text);
   letter-spacing: 0.02em;
 }
 
