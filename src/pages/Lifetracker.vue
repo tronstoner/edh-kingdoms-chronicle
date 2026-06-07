@@ -1,7 +1,8 @@
 <script setup>
 import { ref, provide, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useLifetrackerState } from '../composables/useLifetrackerState.js'
+import { useLifetrackerState, turnNudgeThresholdMs } from '../composables/useLifetrackerState.js'
+import { useNowTick } from '../composables/useNowTick.js'
 import { findCycleWinner } from '../lifetracker/cycle.js'
 import SetupScreen from '../components/lifetracker/SetupScreen.vue'
 import CycleSetupPreview from '../components/lifetracker/CycleSetupPreview.vue'
@@ -15,10 +16,12 @@ import ExportModal from '../components/lifetracker/ExportModal.vue'
 import ConcludeModal from '../components/lifetracker/ConcludeModal.vue'
 import ConfirmDialog from '../components/lifetracker/ConfirmDialog.vue'
 import Announcement from '../components/lifetracker/Announcement.vue'
+import SettingsModal from '../components/lifetracker/SettingsModal.vue'
 
 const router = useRouter()
 const {
   state,
+  settings,
   newGame,
   startGame,
   dealCycle,
@@ -34,6 +37,26 @@ const {
   resumeOrNew,
   discardSaved,
 } = useLifetrackerState()
+
+const now = useNowTick(5000)
+const showSettings = ref(false)
+
+// Turn-nudge: glow the cycle button once the round has been running
+// longer than the per-round threshold (1 + 0.5*(R-1) min × players,
+// capped at settings.turnNudgeMaxMinutesPerPlayer × players).
+const turnNudgeActive = computed(() => {
+  if (state.phase !== 'playing') return false
+  if (!settings.turnNudgeEnabled) return false
+  if (!state.lastTurnAdvanceAt) return false
+  const threshold = turnNudgeThresholdMs(state.turnCount, state.playerCount, settings)
+  if (!isFinite(threshold)) return false
+  const elapsed = now.value - new Date(state.lastTurnAdvanceAt).getTime()
+  return elapsed >= threshold
+})
+
+function applySettingsUpdate(next) {
+  Object.assign(settings, next)
+}
 
 provide('lifetracker', state)
 
@@ -368,6 +391,7 @@ function handleClearCycleGames() {
         :turn-count="state.turnCount"
         :mode="state.mode"
         :starting-seat-index="state.startingSeatIndex"
+        :nudge-active="turnNudgeActive"
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
@@ -382,6 +406,7 @@ function handleClearCycleGames() {
         @new-game="discardSaved"
         @back="handleBack"
         @open-cycle-map="cycleMapOpen = true"
+        @open-settings="showSettings = true"
       />
 
       <!-- Cycle kill-list map (sigil-triggered overlay) -->
@@ -461,6 +486,14 @@ function handleClearCycleGames() {
         @save="handleConcludeSave"
         @save-and-export="handleConcludeSaveAndExport"
         @close="showConclude = false"
+      />
+
+      <!-- Session settings (opened from the battle menu) -->
+      <SettingsModal
+        v-if="showSettings"
+        :settings="settings"
+        @update="applySettingsUpdate"
+        @close="showSettings = false"
       />
 
     </template>

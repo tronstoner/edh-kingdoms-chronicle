@@ -6,6 +6,47 @@ const LS_COMPLETED = 'edhlog-lt-completed'
 const LS_COMPLETED_CYCLE = 'edhlog-lt-completed-cycle'
 const LS_LAST_SETUP = 'edhlog-lt-last-setup'
 const LS_CYCLE_SHAPES = 'edhlog-lt-cycle-shapes'
+const LS_SETTINGS = 'edhlog-lt-settings'
+
+// Session settings — persisted across games, separate from the game state.
+// Currently just the turn-nudge config but the modal is designed to grow.
+export const DEFAULT_SETTINGS = {
+  turnNudgeEnabled: true,
+  // Cap on minutes-per-player at which the nudge fires. Round R uses
+  // (1 + 0.5*(R-1)) min/player, clamped at this value.
+  turnNudgeMaxMinutesPerPlayer: 5,
+}
+
+export function loadSettings() {
+  try {
+    const raw = localStorage.getItem(LS_SETTINGS)
+    const parsed = raw ? JSON.parse(raw) : null
+    return { ...DEFAULT_SETTINGS, ...(parsed || {}) }
+  } catch {
+    return { ...DEFAULT_SETTINGS }
+  }
+}
+
+export function saveSettings(settings) {
+  try {
+    localStorage.setItem(LS_SETTINGS, JSON.stringify(settings))
+  } catch {
+    // ignore quota errors
+  }
+}
+
+// ms before the turn-cycle button should start nudging, given the
+// current round, player count, and the user's max-minutes cap.
+// Returns Infinity if disabled.
+export function turnNudgeThresholdMs(turnCount, playerCount, settings) {
+  if (!settings || !settings.turnNudgeEnabled) return Infinity
+  // turnCount=0 → about to start round 1; otherwise we're inside round `turnCount`.
+  const round = Math.max(1, turnCount || 1)
+  const baseMinutes = 1 + 0.5 * (round - 1)
+  const cap = Math.max(1, Number(settings.turnNudgeMaxMinutesPerPlayer) || 5)
+  const clampedMinutes = Math.min(baseMinutes, cap)
+  return clampedMinutes * playerCount * 60_000
+}
 
 export function loadCycleShapeOptions() {
   try {
@@ -108,6 +149,9 @@ function createGame(playerCount, layoutId, mode = 'kingdoms') {
     layoutId: (lastSetup && lastSetup.playerCount === playerCount) ? lastSetup.layoutId : layoutId,
     turnCount: 0,
     startTime: new Date().toISOString(),
+    // Timestamp of the last advanceTurn (or startGame). Drives the
+    // turn-nudge pulse — elapsed since this anchors the threshold check.
+    lastTurnAdvanceAt: null,
     startingSeatIndex: null,
     seats,
   }
@@ -149,7 +193,12 @@ function saveCompleted(game) {
 export function useLifetrackerState() {
   const saved = loadCurrent()
   if (saved && !saved.mode) saved.mode = 'kingdoms'
+  // Back-fill legacy state from before lastTurnAdvanceAt existed.
+  if (saved && saved.lastTurnAdvanceAt === undefined) saved.lastTurnAdvanceAt = null
   const state = reactive(saved || createGame(5, '5-3t2b', 'kingdoms'))
+
+  const settings = reactive(loadSettings())
+  watch(settings, (val) => saveSettings({ ...val }), { deep: true })
 
   let saveTimeout = null
   watch(() => state, () => {
@@ -169,6 +218,7 @@ export function useLifetrackerState() {
     state.layoutId = fresh.layoutId
     state.turnCount = fresh.turnCount
     state.startTime = fresh.startTime
+    state.lastTurnAdvanceAt = fresh.lastTurnAdvanceAt
     state.startingSeatIndex = fresh.startingSeatIndex
     if (fresh.concludeData) {
       state.concludeData = fresh.concludeData
@@ -189,6 +239,7 @@ export function useLifetrackerState() {
   function startGame() {
     saveLastSetup(state)
     state.phase = 'playing'
+    state.lastTurnAdvanceAt = new Date().toISOString()
   }
 
   function checkDeath(seat) {
@@ -300,6 +351,7 @@ export function useLifetrackerState() {
 
   function advanceTurn(delta = 1) {
     state.turnCount = Math.max(0, state.turnCount + delta)
+    state.lastTurnAdvanceAt = new Date().toISOString()
   }
 
   function saveGame() {
@@ -340,6 +392,7 @@ export function useLifetrackerState() {
 
   return {
     state,
+    settings,
     newGame,
     startGame,
     dealCycle,

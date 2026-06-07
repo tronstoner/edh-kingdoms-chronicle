@@ -10,13 +10,14 @@ const props = defineProps({
   turnCount: Number,
   mode: { type: String, default: 'kingdoms' },
   startingSeatIndex: { type: Number, default: null },
+  nudgeActive: { type: Boolean, default: false },
 })
 
 const emit = defineEmits([
   'changeLife', 'openSeat', 'override', 'openCmdDamage',
   'revealRole', 'zombify', 'clone', 'clearUndead',
   'advanceTurn', 'endGame', 'export', 'newGame', 'back',
-  'openCycleMap',
+  'openCycleMap', 'openSettings',
 ])
 
 const layout = computed(() => LAYOUTS[props.layoutId])
@@ -63,12 +64,14 @@ const layout = computed(() => LAYOUTS[props.layoutId])
     <div class="menu-column" :style="{ gridColumn: layout.menuGridColumn }">
       <GameMenuInline
         :turn-count="turnCount"
+        :nudge-active="nudgeActive"
         vertical
         @advance-turn="(d) => emit('advanceTurn', d)"
         @end-game="emit('endGame')"
         @export="emit('export')"
         @new-game="emit('newGame')"
         @back="emit('back')"
+        @open-settings="emit('openSettings')"
       />
     </div>
   </div>
@@ -104,11 +107,13 @@ const layout = computed(() => LAYOUTS[props.layoutId])
         <div class="menu-gap" :style="{ transform: row.rotate ? `rotate(${row.rotate}deg)` : undefined }">
           <GameMenuInline
             :turn-count="turnCount"
+            :nudge-active="nudgeActive"
             @advance-turn="(d) => emit('advanceTurn', d)"
             @end-game="emit('endGame')"
             @export="emit('export')"
             @new-game="emit('newGame')"
             @back="emit('back')"
+            @open-settings="emit('openSettings')"
           />
         </div>
         <div

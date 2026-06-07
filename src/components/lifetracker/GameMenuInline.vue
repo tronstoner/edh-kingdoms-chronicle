@@ -6,9 +6,12 @@ import { useFullscreen } from '../../composables/useFullscreen.js'
 const props = defineProps({
   turnCount: Number,
   vertical: Boolean,
+  // Drives the gold pulse on the turn-cycle button. The parent computes
+  // this from the per-round threshold (settings + elapsed time).
+  nudgeActive: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back'])
+const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back', 'openSettings'])
 
 const showMore = ref(false)
 const showConfirmNew = ref(false)
@@ -43,7 +46,7 @@ function onTurnPointerLeave() {
     <!-- Turn cycle indicator / button -->
     <button
       class="menu-icon turn-btn"
-      :class="{ 'turn-btn--prompt': turnCount === 0 }"
+      :class="{ 'turn-btn--prompt': nudgeActive }"
       @pointerdown.prevent="onTurnPointerDown"
       @pointerup="onTurnPointerUp"
       @pointerleave="onTurnPointerLeave"
@@ -84,6 +87,7 @@ function onTurnPointerLeave() {
         <div class="menu-modal-panel">
           <button class="menu-btn menu-btn-save" @click="emit('endGame'); showMore = false">End Game</button>
           <button class="menu-btn" @click="emit('export'); showMore = false">Export Session</button>
+          <button class="menu-btn" @click="emit('openSettings'); showMore = false">Settings</button>
           <button class="menu-btn" @click="showConfirmNew = true; showMore = false">Discard Game</button>
           <button class="menu-btn" @click="emit('back'); showMore = false">Back to Dashboard</button>
           <button class="menu-btn menu-btn-cancel" @click="showMore = false">Cancel</button>
