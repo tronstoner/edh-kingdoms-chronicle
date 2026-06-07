@@ -432,7 +432,8 @@ onUnmounted(() => {
 
 .reveal-label {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.7rem, 2cqi, 1rem);
+  /* Box-cqh-relative — 11% of box height matches 1rem at iPad box=148. */
+  font-size: clamp(0.55rem, 11cqh, 1rem);
   font-weight: 700;
   color: #8a7e6644;
   white-space: nowrap;
@@ -472,6 +473,10 @@ onUnmounted(() => {
   -webkit-touch-callout: none;
   user-select: none;
   cursor: pointer;
+  /* Nested container query context — children below size to the box
+     itself (cqh) so a multi-line label like "Clone Lord" doesn't
+     overflow when the box is short. iPad reference box is 158×148. */
+  container-type: size;
 }
 
 .counter-flash {
@@ -489,7 +494,7 @@ onUnmounted(() => {
   position: absolute;
   bottom: 30%;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.85rem, 2.6cqi, 1.3rem);
+  font-size: clamp(0.7rem, 14cqh, 1.3rem);
   color: #8a7e6633;
   pointer-events: none;
   z-index: 2;
@@ -532,12 +537,16 @@ onUnmounted(() => {
 }
 
 .counter-icon {
-  font-size: clamp(2rem, 8cqi, 4rem);
+  /* Box-relative now that .counter-box is a container. iPad box ~148h
+     → 43cqh ≈ 4rem; short box ~104h → ~2.8rem. */
+  font-size: clamp(1.4rem, 43cqh, 4rem);
 }
 
 .role-box-img {
-  width: clamp(34px, 10cqi, 80px);
-  height: clamp(34px, 10cqi, 80px);
+  /* 54% of the box height so the icon + 2-line label (e.g. "Clone Lord")
+     always fits regardless of how short the box becomes. */
+  width: clamp(28px, 54cqh, 80px);
+  height: clamp(28px, 54cqh, 80px);
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
@@ -560,7 +569,7 @@ onUnmounted(() => {
 
 .counter-val {
   font-family: 'Cinzel', serif;
-  font-size: clamp(1.4rem, 4.4cqi, 2.2rem);
+  font-size: clamp(1.1rem, 24cqh, 2.2rem);
   font-weight: 700;
   color: #8a7e6644;
 }
@@ -604,6 +613,11 @@ onUnmounted(() => {
   -webkit-touch-callout: none;
   user-select: none;
   background: #1a1612;
+  /* Nested container query context — children below size to the seat's
+     own height, which lets the dual-commander split, icons, and damage
+     readout shrink in lockstep on short viewports. iPad reference seat
+     is ~247×206. */
+  container-type: size;
 }
 
 .cmd-seat-grad {
@@ -619,7 +633,7 @@ onUnmounted(() => {
 
 .cmd-seat-icons {
   position: absolute;
-  top: clamp(12px, 3.5cqi, 28px);
+  top: clamp(8px, 13.6cqh, 28px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -630,23 +644,24 @@ onUnmounted(() => {
 }
 
 .cmd-seat-role {
-  width: clamp(16px, 4.5cqi, 36px);
-  height: clamp(16px, 4.5cqi, 36px);
+  /* cqh = seat height now. 17.5% of iPad seat=206 ≈ 36px. */
+  width: clamp(14px, 17.5cqh, 36px);
+  height: clamp(14px, 17.5cqh, 36px);
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
 .cmd-seat-role-conversion {
-  width: clamp(14px, 3.5cqi, 28px);
-  height: clamp(14px, 3.5cqi, 28px);
+  width: clamp(12px, 13.6cqh, 28px);
+  height: clamp(12px, 13.6cqh, 28px);
 }
 
 /* House sigil — slightly larger than role icons since the heraldry
    detail benefits from extra size, and shadowed harder so it reads on
    any deck gradient. */
 .cmd-seat-house {
-  width: clamp(20px, 5.5cqi, 44px);
-  height: clamp(20px, 5.5cqi, 44px);
+  width: clamp(18px, 21.4cqh, 44px);
+  height: clamp(18px, 21.4cqh, 44px);
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.75));
 }
 
@@ -688,7 +703,7 @@ onUnmounted(() => {
 
 .zone-hint {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.9rem, 4cqi, 2rem);
+  font-size: clamp(0.8rem, 15.5cqh, 2rem);
   color: #8a7e6633;
   pointer-events: none;
 }
@@ -716,7 +731,7 @@ onUnmounted(() => {
   right: 0;
   text-align: center;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.55rem, 2cqi, 1rem);
+  font-size: clamp(0.5rem, 7.8cqh, 1rem);
   color: #8a7e66;
 }
 
@@ -728,7 +743,7 @@ onUnmounted(() => {
 
 .cmd-seat-dmg {
   font-family: 'Cinzel', serif;
-  font-size: clamp(1.4rem, 7cqi, 3.5rem);
+  font-size: clamp(1.1rem, 27cqh, 3.5rem);
   font-weight: 700;
   color: #d4c8a844;
   line-height: 1.1;
@@ -820,11 +835,15 @@ onUnmounted(() => {
 
 /* In partner mode shift the whole damage group below the icons (only when icons are shown). */
 .cmd-seat-split.has-icons {
-  padding-top: clamp(24px, 7cqi, 56px);
+  /* Seat-cqh based so the dual halves get a fair share even on short
+     viewports. 27% of iPad seat=206 → 56px (the previous fixed cap);
+     scales down to ~25-36px on phones so the two damage values still
+     fit below the icon row. */
+  padding-top: clamp(16px, 27cqh, 56px);
 }
 
 .cmd-split-dmg {
-  font-size: clamp(1rem, 5cqi, 2.5rem);
+  font-size: clamp(0.8rem, 19.4cqh, 2.5rem);
 }
 
 .cmd-split-name {
@@ -834,7 +853,7 @@ onUnmounted(() => {
   right: 0;
   text-align: center;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.5rem, 1.7cqi, 0.85rem);
+  font-size: clamp(0.45rem, 6.6cqh, 0.85rem);
   color: #d4c8a888;
   pointer-events: none;
   z-index: 3;

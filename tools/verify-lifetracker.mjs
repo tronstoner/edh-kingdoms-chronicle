@@ -38,15 +38,21 @@ mkdirSync(OUT, { recursive: true })
 const VIEWPORTS = [
   { label: 'ipad-landscape', width: 1180, height: 820 },
   { label: 'ipad-mini-portrait', width: 768, height: 1024 },
-  { label: 'short-landscape-800x480', width: 800, height: 480, players: 6 },
+  { label: 'short-landscape-800x480', width: 800, height: 480, players: 6, cloneLord: true },
+  { label: 'short-landscape-800x480-partners', width: 800, height: 480, players: 6, partnersOn: true },
   { label: 'phone-landscape', width: 844, height: 390 },
+  { label: 'phone-landscape-partners', width: 844, height: 390, partnersOn: true },
   { label: 'phone-portrait', width: 390, height: 844 },
 ]
 
 // Sample mid-game Kingdoms state. Mirrors the shape produced by
 // useLifetrackerState.createGame so the lifetracker page resumes
 // directly into the 'playing' phase.
-function buildState(playerCount = 5) {
+// `opts.partnersOn`: set hasPartners=true on a couple of seats so the
+//   commander-damage modal renders the dual-commander split layout.
+// `opts.cloneLord`: assign Clone Lord (multi-word label) to the panel
+//   whose modal we capture, to exercise the role-box overflow case.
+function buildState(playerCount = 5, opts = {}) {
   const decks = [
     { name: 'Atraxa, Praetors’ Voice', colors: 'WUBG' },
     { name: 'Krenko, Mob Boss', colors: 'R' },
@@ -59,6 +65,10 @@ function buildState(playerCount = 5) {
   const roles5 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord']
   const roles6 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord', 'Clone Lord']
   const roles = playerCount === 6 ? roles6 : roles5
+  // Optional override: force the focused seat (index 3, bottom-left of
+  // both 5-3t2b and 6-3t3b layouts) to Clone Lord so the verifier
+  // exercises the multi-line label path.
+  if (opts.cloneLord && roles[3]) roles[3] = 'Clone Lord'
   const seats = []
   for (let i = 0; i < playerCount; i++) {
     const commanderDamage = {}
@@ -87,6 +97,17 @@ function buildState(playerCount = 5) {
       history: [],
     })
   }
+  // Optional partner mode for a couple of seats so the modal renders
+  // the dual-commander split.
+  if (opts.partnersOn) {
+    if (seats[1]) seats[1].hasPartners = true
+    if (seats[4]) seats[4].hasPartners = true
+    // Add some damage on the second commander to make the split visible.
+    seats.forEach(s => {
+      if (s.commanderDamage[1]) s.commanderDamage[1].cmd2 = 6
+      if (s.commanderDamage[4]) s.commanderDamage[4].cmd2 = 3
+    })
+  }
   return {
     id: 'verify',
     mode: 'kingdoms',
@@ -108,7 +129,10 @@ async function capture(browser, viewport) {
 
   await page.addInitScript((state) => {
     localStorage.setItem('edhlog-lt-current', JSON.stringify(state))
-  }, buildState(viewport.players || 5))
+  }, buildState(viewport.players || 5, {
+    partnersOn: !!viewport.partnersOn,
+    cloneLord: !!viewport.cloneLord,
+  }))
 
   await page.goto(ROUTE, { waitUntil: 'domcontentloaded' })
 
