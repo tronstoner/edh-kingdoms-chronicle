@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import { useFullscreen } from '../../composables/useFullscreen.js'
 
@@ -9,9 +9,37 @@ const props = defineProps({
   // Drives the gold pulse on the turn-cycle button. The parent computes
   // this from the per-round threshold (settings + elapsed time).
   nudgeActive: { type: Boolean, default: false },
+  // Fuse — a thin gold line that traces the button's border clockwise
+  // from top, filling over fuseThresholdMs ms starting at fuseStartedAt.
+  // Zero/falsey threshold hides the fuse (round 0, disabled feature).
+  fuseThresholdMs: { type: Number, default: 0 },
+  fuseStartedAt: { type: String, default: null },
 })
 
 const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back', 'openSettings'])
+
+// Snapshot how much time has already elapsed at the moment the fuse
+// (re)starts. Used as a negative animation-delay so a mid-round reload
+// picks up where the round actually is, not at 0%. Re-snapshots only
+// when startedAt or threshold changes — not on every `now` tick.
+const fuseElapsedAtKey = ref(0)
+watch(
+  () => [props.fuseStartedAt, props.fuseThresholdMs],
+  ([startedAt]) => {
+    if (!startedAt) { fuseElapsedAtKey.value = 0; return }
+    fuseElapsedAtKey.value = Math.max(0, Date.now() - new Date(startedAt).getTime())
+  },
+  { immediate: true },
+)
+
+const showFuse = computed(() =>
+  !!props.fuseStartedAt && props.fuseThresholdMs > 0 && isFinite(props.fuseThresholdMs)
+)
+const fuseKey = computed(() => `${props.fuseStartedAt || ''}|${props.fuseThresholdMs}`)
+const fuseStyle = computed(() => ({
+  '--fuse-duration': `${props.fuseThresholdMs}ms`,
+  '--fuse-elapsed': `${fuseElapsedAtKey.value}ms`,
+}))
 
 const showMore = ref(false)
 const showConfirmNew = ref(false)
@@ -55,6 +83,13 @@ function onTurnPointerLeave() {
     >
       <i class="ms ms-planeswalker turn-icon"></i>
       <span class="turn-label font-beleren">{{ turnCount }}</span>
+      <span
+        v-if="showFuse"
+        :key="fuseKey"
+        class="turn-fuse"
+        :style="fuseStyle"
+        aria-hidden="true"
+      />
     </button>
 
     <!-- More options -->
@@ -160,6 +195,8 @@ function onTurnPointerLeave() {
   gap: 6px;
   color: #c9a54e;
   border-color: #c9a54e44;
+  /* Needed so the absolute-positioned .turn-fuse anchors to this button. */
+  position: relative;
 }
 
 /* Round 0 nudge — when the counter hasn't been advanced yet, pulse
@@ -188,6 +225,58 @@ function onTurnPointerLeave() {
   .turn-btn--prompt {
     animation: none;
     border-color: #c9a54e;
+  }
+}
+
+/* Custom property registered as a percentage so the keyframe below
+   actually interpolates the value (without @property it would jump
+   from 0% to 100% in one step). */
+@property --fuse-progress {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* Fuse ring — a thin gold line tracing the button's border clockwise
+   from top. Conic gradient draws a wedge that sweeps from 0% to 100%,
+   and the mask-composite XOR trick reveals only the 2px ring between
+   the border-box and content-box, so the inside of the button stays
+   untouched.
+
+   `animation-delay: calc(-1 * elapsed)` continues the animation from
+   the correct frame after a mid-round reload (the elapsed snapshot is
+   read at mount via the watch in <script>). */
+.turn-fuse {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  padding: 2px;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    #c9a54e var(--fuse-progress, 0%),
+    transparent 0
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: turn-fuse-fill var(--fuse-duration, 60000ms) linear forwards;
+  animation-delay: calc(-1 * var(--fuse-elapsed, 0ms));
+}
+
+@keyframes turn-fuse-fill {
+  to { --fuse-progress: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-fuse {
+    display: none;
   }
 }
 

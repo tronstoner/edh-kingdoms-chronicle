@@ -42,20 +42,39 @@ const now = useNowTick(5000)
 const showSettings = ref(false)
 
 // Turn-nudge: glow the cycle button once the round has been running
-// longer than the per-round threshold (1 + 0.5*(R-1) min × players,
-// capped at settings.turnNudgeMaxMinutesPerPlayer × players).
-// Round 0 (pre-first-tap) always pulses — there's no timer to elapse
-// and the whole point is to remind the table to actually start.
+// longer than the per-round threshold (curve in
+// useLifetrackerState.turnNudgeThresholdMs). Round 0 (pre-first-tap)
+// always pulses — there's no timer to elapse and the whole point is to
+// remind the table to actually start.
+const turnNudgeThreshold = computed(() => {
+  if (state.phase !== 'playing') return Infinity
+  if (state.turnCount === 0) return Infinity
+  return turnNudgeThresholdMs(state.turnCount, state.playerCount, settings)
+})
+
 const turnNudgeActive = computed(() => {
   if (state.phase !== 'playing') return false
   if (!settings.turnNudgeEnabled) return false
   if (state.turnCount === 0) return true
   if (!state.lastTurnAdvanceAt) return false
-  const threshold = turnNudgeThresholdMs(state.turnCount, state.playerCount, settings)
+  const threshold = turnNudgeThreshold.value
   if (!isFinite(threshold)) return false
   const elapsed = now.value - new Date(state.lastTurnAdvanceAt).getTime()
   return elapsed >= threshold
 })
+
+// Fuse — a thin gold line that traces the turn-cycle button's border
+// clockwise from top, filling over the per-round threshold. When full,
+// the nudgeActive pulse takes over.
+const fuseThresholdMs = computed(() => {
+  if (!settings.turnNudgeEnabled) return 0
+  if (state.phase !== 'playing') return 0
+  if (state.turnCount === 0) return 0
+  const v = turnNudgeThreshold.value
+  return isFinite(v) ? v : 0
+})
+
+const fuseStartedAt = computed(() => state.lastTurnAdvanceAt)
 
 function applySettingsUpdate(next) {
   Object.assign(settings, next)
@@ -395,6 +414,8 @@ function handleClearCycleGames() {
         :mode="state.mode"
         :starting-seat-index="state.startingSeatIndex"
         :nudge-active="turnNudgeActive"
+        :fuse-threshold-ms="fuseThresholdMs"
+        :fuse-started-at="fuseStartedAt"
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
