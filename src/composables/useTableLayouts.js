@@ -4,7 +4,10 @@ export const LAYOUTS = {
     playerCount: 4,
     label: '2 + 2',
     menuColumn: true,
-    gridTemplateColumns: '1fr 64px 1fr',
+    // Menu column shrinks with the viewport. iPad-landscape vmin is 820
+    // so 8vmin = 65.6 → clamps to 64px (the iPad-tuned target). Phones
+    // (vmin ~390) hit the 40px floor.
+    gridTemplateColumns: '1fr clamp(40px, 8vmin, 64px) 1fr',
     menuGridColumn: 2,
     rows: [
       { seats: [0, 1], seatGridColumns: [1, 3], rotate: 180 },
@@ -34,7 +37,7 @@ export const LAYOUTS = {
     playerCount: 6,
     label: '3 + 3',
     menuColumn: true,
-    gridTemplateColumns: '1fr 1fr 64px 1fr',
+    gridTemplateColumns: '1fr 1fr clamp(40px, 8vmin, 64px) 1fr',
     menuGridColumn: 3,
     rows: [
       { seats: [0, 1, 2], seatGridColumns: [1, 2, 4], rotate: 180 },

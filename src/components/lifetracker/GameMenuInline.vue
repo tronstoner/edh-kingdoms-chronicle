@@ -131,7 +131,9 @@ function onTurnPointerLeave() {
   color: #8a7e66;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 1.3rem;
+  /* Sized to the container (menu gap / column) so the icons scale with
+     the gap width — iPad gap 64px → ~1.3rem, phone gap 40px → ~0.9rem. */
+  font-size: clamp(0.9rem, 32cqmin, 1.3rem);
   padding: 0;
   touch-action: manipulation;
   user-select: none;
@@ -146,7 +148,9 @@ function onTurnPointerLeave() {
 
 .turn-btn {
   aspect-ratio: auto;
-  height: 128px;
+  /* Double-height button: 200cqmin = 2× the gap width (which is 1cqmin
+     in cqmin terms × 100 = 100). iPad gap 64 → 128px, phone gap 40 → 80px. */
+  height: clamp(80px, 200cqmin, 128px);
   flex-direction: column;
   gap: 6px;
   color: #c9a54e;
@@ -154,16 +158,16 @@ function onTurnPointerLeave() {
 }
 
 .turn-icon {
-  font-size: 2rem;
+  font-size: clamp(1.4rem, 50cqmin, 2rem);
 }
 
 .turn-label {
-  font-size: 1.6rem;
+  font-size: clamp(1.1rem, 40cqmin, 1.6rem);
   line-height: 1;
 }
 
 .fullscreen-icon {
-  font-size: 1.4rem;
+  font-size: clamp(1rem, 35cqmin, 1.4rem);
   line-height: 1;
 }
 

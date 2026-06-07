@@ -187,9 +187,13 @@ const layout = computed(() => LAYOUTS[props.layoutId])
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  width: 64px;
-  min-width: 64px;
+  /* Same responsive rule as the menu column in 4/6-player grid layouts:
+     ~64px on iPad, ~40px on phones. */
+  width: clamp(40px, 8vmin, 64px);
+  min-width: clamp(40px, 8vmin, 64px);
   z-index: 15;
+  /* Container query context so GameMenuInline icons scale with the gap. */
+  container-type: size;
 }
 
 .table-layout--grid {
@@ -204,5 +208,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
   align-items: center;
   justify-content: center;
   z-index: 15;
+  /* Container query context so GameMenuInline icons scale with the column. */
+  container-type: size;
 }
 </style>
