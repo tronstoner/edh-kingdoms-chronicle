@@ -794,7 +794,7 @@ function pickerCycleLines(arrangement) {
     align-self: center;
     flex: none;
     width: auto;
-    height: auto;
+    height: 100%;
     max-width: 45%;
     max-height: 100%;
   }
