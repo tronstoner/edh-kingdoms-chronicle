@@ -17,27 +17,26 @@ function update(key, value) {
 
       <!-- Turn nudge group -->
       <section class="settings-section">
-        <header class="settings-section-header">
-          <h4 class="settings-section-title">Turn nudge</h4>
-          <p class="settings-section-help">
-            Pulse the turn-cycle button after a round has run longer
-            than expected. The cap below sets the budget at round 6
-            onwards (min&nbsp;/&nbsp;player); earlier rounds scale
-            proportionally — 10% of the cap at round 1, 20%, 40%, 60%,
-            80%, 100% at round 6+. So halving the cap halves every
-            round's budget, not just the late ones. Total round time
-            also scales with the table — at cap 5, round 4 is
-            3 min/player → 15 min for 5 players, 12 min for 4.
-          </p>
-        </header>
+        <h4 class="settings-section-title">Turn nudge</h4>
 
         <label class="settings-row">
-          <span class="settings-row-label">Enable nudge</span>
+          <span class="settings-row-label">Enable</span>
           <input
             type="checkbox"
             class="settings-toggle"
             :checked="settings.turnNudgeEnabled"
             @change="(e) => update('turnNudgeEnabled', e.target.checked)"
+          />
+        </label>
+
+        <label class="settings-row" :class="{ 'settings-row-disabled': !settings.turnNudgeEnabled }">
+          <span class="settings-row-label">Show countdown</span>
+          <input
+            type="checkbox"
+            class="settings-toggle"
+            :disabled="!settings.turnNudgeEnabled"
+            :checked="settings.turnNudgeShowFuse"
+            @change="(e) => update('turnNudgeShowFuse', e.target.checked)"
           />
         </label>
 
@@ -105,27 +104,12 @@ function update(key, value) {
   padding-top: 0;
 }
 
-.settings-section-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .settings-section-title {
   font-family: 'Cinzel', serif;
   font-size: 0.95rem;
   color: #d4c8a8;
-  margin: 0;
+  margin: 0 0 4px;
   letter-spacing: 0.04em;
-}
-
-.settings-section-help {
-  font-family: 'EB Garamond', serif;
-  font-style: italic;
-  font-size: 0.85rem;
-  color: #8a7e66;
-  margin: 0;
-  line-height: 1.4;
 }
 
 .settings-row {

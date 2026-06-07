@@ -12,8 +12,12 @@ const LS_SETTINGS = 'edhlog-lt-settings'
 // Currently just the turn-nudge config but the modal is designed to grow.
 export const DEFAULT_SETTINGS = {
   turnNudgeEnabled: true,
-  // Cap on minutes-per-player at which the nudge fires. Round R uses
-  // (1 + 0.5*(R-1)) min/player, clamped at this value.
+  // Show the fuse ring + radial pie countdown leading up to the nudge.
+  // When false, the pulse still fires at threshold-elapsed but no visual
+  // timer ticks on the button beforehand.
+  turnNudgeShowFuse: true,
+  // Cap on minutes-per-player at which the nudge fires. Round R is a
+  // fraction of this cap (10/20/40/60/80/100% for R1–R6+).
   turnNudgeMaxMinutesPerPlayer: 5,
 }
 

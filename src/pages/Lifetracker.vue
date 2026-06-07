@@ -70,6 +70,7 @@ const turnNudgeActive = computed(() => {
 // pops.
 const fuseProgress = computed(() => {
   if (!settings.turnNudgeEnabled) return 0
+  if (!settings.turnNudgeShowFuse) return 0
   if (state.phase !== 'playing') return 0
   if (state.turnCount === 0) return 0
   if (!state.lastTurnAdvanceAt) return 0
