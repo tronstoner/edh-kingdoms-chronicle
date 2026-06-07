@@ -119,7 +119,10 @@ function isDead(houseName) {
 
 .house-name {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 3.9cqmin, 0.95rem);
+  /* Badge-relative cqmin now that .house-badge is its own container.
+     iPad badge ~150px wide → 10cqmin matches the previous 0.95rem
+     ceiling; phone badges (80px) hit the 0.6rem floor as before. */
+  font-size: clamp(0.6rem, 10cqmin, 0.95rem);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-align: center;
@@ -155,7 +158,9 @@ function isDead(houseName) {
 
 .rel-label {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.4rem, 2.25cqmin, 0.55rem);
+  /* Badge-relative cqmin: iPad badge 150px → 5.9% = 0.55rem (matches
+     previous panel-cqmin ceiling). */
+  font-size: clamp(0.4rem, 5.9cqmin, 0.55rem);
   color: #8a7e66;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -164,7 +169,7 @@ function isDead(houseName) {
 
 .rel-value {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.45rem, 2.7cqmin, 0.65rem);
+  font-size: clamp(0.45rem, 6.9cqmin, 0.65rem);
   font-weight: 600;
   color: #d4c8a8;
   letter-spacing: 0.02em;
