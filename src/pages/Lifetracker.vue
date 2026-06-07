@@ -38,7 +38,7 @@ const {
   discardSaved,
 } = useLifetrackerState()
 
-const now = useNowTick(5000)
+const now = useNowTick(1000)
 const showSettings = ref(false)
 
 // Turn-nudge: glow the cycle button once the round has been running
@@ -63,18 +63,19 @@ const turnNudgeActive = computed(() => {
   return elapsed >= threshold
 })
 
-// Fuse — a thin gold line that traces the turn-cycle button's border
-// clockwise from top, filling over the per-round threshold. When full,
-// the nudgeActive pulse takes over.
-const fuseThresholdMs = computed(() => {
+// Fuse / radial — single progress value (0..1) ticking once per
+// second. The GameMenuInline button uses it for both the ring outline
+// and the radial pie-fill backdrop.
+const fuseProgress = computed(() => {
   if (!settings.turnNudgeEnabled) return 0
   if (state.phase !== 'playing') return 0
   if (state.turnCount === 0) return 0
-  const v = turnNudgeThreshold.value
-  return isFinite(v) ? v : 0
+  if (!state.lastTurnAdvanceAt) return 0
+  const threshold = turnNudgeThreshold.value
+  if (!isFinite(threshold) || threshold <= 0) return 0
+  const elapsed = now.value - new Date(state.lastTurnAdvanceAt).getTime()
+  return Math.max(0, Math.min(1, elapsed / threshold))
 })
-
-const fuseStartedAt = computed(() => state.lastTurnAdvanceAt)
 
 function applySettingsUpdate(next) {
   Object.assign(settings, next)
@@ -414,8 +415,7 @@ function handleClearCycleGames() {
         :mode="state.mode"
         :starting-seat-index="state.startingSeatIndex"
         :nudge-active="turnNudgeActive"
-        :fuse-threshold-ms="fuseThresholdMs"
-        :fuse-started-at="fuseStartedAt"
+        :fuse-progress="fuseProgress"
         @change-life="(i, delta) => changeLife(i, delta)"
         @override="(i) => toggleDeathOverride(i)"
         @open-seat="handleOpenSeat"
