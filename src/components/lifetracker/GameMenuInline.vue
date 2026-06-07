@@ -169,12 +169,14 @@ function onTurnPointerLeave() {
 @keyframes turn-pulse {
   0%,
   100% {
+    background-color: #1a1612;
     border-color: #c9a54e44;
-    box-shadow: inset 0 0 0 0 rgba(201, 165, 78, 0);
   }
   50% {
+    /* Gold wash over the resting dark — the whole button breathes
+       in/out of the gold rather than just a halo at the edge. */
+    background-color: #6a4e1f;
     border-color: #c9a54e;
-    box-shadow: inset 0 0 14px 2px rgba(201, 165, 78, 0.5);
   }
 }
 
