@@ -59,7 +59,7 @@ function isDead(houseName) {
   /* No frame around the badge — the heraldry sits directly on the panel's
      deck-gradient background. Only the lower name/kill-list plate is a
      discrete box, laid over the bottom third of the sigil like a sign. */
-  width: clamp(108px, 16vw, 150px);
+  width: clamp(80px, 38cqmin, 150px);
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
 }
@@ -106,7 +106,7 @@ function isDead(houseName) {
 
 .house-name {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.7rem, 1.8vw, 0.95rem);
+  font-size: clamp(0.6rem, 3.9cqmin, 0.95rem);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-align: center;
@@ -142,7 +142,7 @@ function isDead(houseName) {
 
 .rel-label {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.45rem, 0.95vw, 0.55rem);
+  font-size: clamp(0.4rem, 2.25cqmin, 0.55rem);
   color: #8a7e66;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -151,7 +151,7 @@ function isDead(houseName) {
 
 .rel-value {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.5rem, 1.05vw, 0.65rem);
+  font-size: clamp(0.45rem, 2.7cqmin, 0.65rem);
   font-weight: 600;
   color: #d4c8a8;
   letter-spacing: 0.02em;

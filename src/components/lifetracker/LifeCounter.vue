@@ -99,7 +99,7 @@ onUnmounted(() => {
 
 .zone-label {
   font-family: 'Cinzel', serif;
-  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  font-size: clamp(1.1rem, 10cqmin, 2.5rem);
   color: #8a7e6633;
   transition: color 0.15s;
   pointer-events: none;
@@ -124,7 +124,7 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Cinzel', serif;
-  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-size: clamp(0.85rem, 6cqmin, 1.5rem);
   pointer-events: none;
   z-index: 3;
   animation: fadeUp 0.3s ease-out;

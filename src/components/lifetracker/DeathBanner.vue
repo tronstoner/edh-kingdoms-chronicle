@@ -80,7 +80,7 @@ const emit = defineEmits([
 }
 
 .death-skull {
-  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-size: clamp(1.75rem, 16.4cqmin, 4rem);
   color: #d4c8a8;
   text-shadow:
     0 2px 12px #000000,
@@ -88,7 +88,7 @@ const emit = defineEmits([
 }
 
 .death-label {
-  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-size: clamp(0.8rem, 5.7cqmin, 1.4rem);
   color: #d4c8a8;
   letter-spacing: 0.2em;
 }
@@ -102,7 +102,7 @@ const emit = defineEmits([
 
 .death-btn {
   font-family: "Cinzel", serif;
-  font-size: clamp(0.8rem, 2.2vw, 1rem);
+  font-size: clamp(0.7rem, 4.1cqmin, 1rem);
   padding: 12px 28px;
   border-radius: 3px;
   border: 1px solid #3d3529;
@@ -139,7 +139,7 @@ const emit = defineEmits([
 .death-btn-override {
   color: #8a7e66;
   border-color: #3d3529;
-  font-size: clamp(0.65rem, 1.8vw, 0.85rem);
+  font-size: clamp(0.55rem, 3.9cqmin, 0.85rem);
 }
 
 .death-btn-override:hover {

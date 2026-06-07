@@ -357,6 +357,10 @@ const panelClasses = computed(() => {
   -webkit-touch-callout: none;
   transition: border-color 0.3s;
   background-color: #1a1612;
+  /* Container query context — interior elements size to the panel, not
+     the viewport. Tuned so iPad-landscape (~391×408 panel) matches the
+     previous vw-based values; phones get the same proportions scaled. */
+  container-type: size;
 }
 
 .gradient-bg {
@@ -383,7 +387,7 @@ const panelClasses = computed(() => {
 .player-name {
   display: inline;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.75rem, 2.5vw, 1.1rem);
+  font-size: clamp(0.7rem, 4.5cqmin, 1.1rem);
   color: #d4c8a8;
   white-space: nowrap;
   padding: 0 8px;
@@ -420,7 +424,7 @@ const panelClasses = computed(() => {
 
 .deck-name {
   font-family: 'EB Garamond', serif;
-  font-size: clamp(0.6rem, 1.8vw, 0.85rem);
+  font-size: clamp(0.55rem, 3.5cqmin, 0.85rem);
   color: #8a7e66;
   font-style: italic;
   white-space: nowrap;
@@ -436,7 +440,7 @@ const panelClasses = computed(() => {
 
 .life-total {
   font-family: 'Cinzel', serif;
-  font-size: clamp(3rem, 12vw, 6rem);
+  font-size: clamp(2.25rem, 24cqmin, 6rem);
   font-weight: 700;
   color: #d4c8a8;
   line-height: 1;
@@ -482,8 +486,8 @@ const panelClasses = computed(() => {
 }
 
 .role-tag-img {
-  width: clamp(30px, 5.2vw, 48px);
-  height: clamp(30px, 5.2vw, 48px);
+  width: clamp(26px, 12cqmin, 48px);
+  height: clamp(26px, 12cqmin, 48px);
   object-fit: contain;
   display: block;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
@@ -494,7 +498,7 @@ const panelClasses = computed(() => {
   flex-direction: column;
   align-items: center;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.55rem, 1.4vw, 0.75rem);
+  font-size: clamp(0.5rem, 3cqmin, 0.75rem);
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: 0.02em;
@@ -502,12 +506,12 @@ const panelClasses = computed(() => {
 }
 
 .role-tag-conversion .role-tag-img {
-  width: clamp(22px, 4vw, 34px);
-  height: clamp(22px, 4vw, 34px);
+  width: clamp(18px, 8.7cqmin, 34px);
+  height: clamp(18px, 8.7cqmin, 34px);
 }
 
 .role-tag-conversion .role-tag-label {
-  font-size: clamp(0.5rem, 1.25vw, 0.65rem);
+  font-size: clamp(0.45rem, 2.7cqmin, 0.65rem);
 }
 
 .role-tag-pick {
@@ -518,7 +522,7 @@ const panelClasses = computed(() => {
 }
 
 .role-tag-pick-icon {
-  font-size: clamp(22px, 4vw, 36px);
+  font-size: clamp(18px, 9.2cqmin, 36px);
   line-height: 1;
   color: #d4c8a8;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
@@ -544,12 +548,12 @@ const panelClasses = computed(() => {
 }
 
 .badge-icon {
-  font-size: clamp(0.7rem, 2vw, 1rem);
+  font-size: clamp(0.65rem, 4.1cqmin, 1rem);
 }
 
 .badge-val {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  font-size: clamp(0.55rem, 3.3cqmin, 0.8rem);
   font-weight: 700;
 }
 
@@ -567,7 +571,7 @@ const panelClasses = computed(() => {
   background: #1a1612;
   cursor: pointer;
   z-index: 8;
-  width: clamp(120px, 30vw, 180px);
+  width: clamp(90px, 46cqmin, 180px);
 }
 
 .minimap-row {
@@ -578,7 +582,7 @@ const panelClasses = computed(() => {
 .minimap-cell {
   position: relative;
   flex: 1;
-  height: clamp(28px, 6vw, 40px);
+  height: clamp(22px, 10.2cqmin, 40px);
   border-radius: 3px;
   overflow: hidden;
   display: flex;
@@ -597,7 +601,7 @@ const panelClasses = computed(() => {
 .minimap-dmg {
   position: relative;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.65rem, 2vw, 0.9rem);
+  font-size: clamp(0.55rem, 3.7cqmin, 0.9rem);
   color: #d4c8a844;
   z-index: 1;
 }
@@ -612,8 +616,8 @@ const panelClasses = computed(() => {
      centre (matching the sigil layout). Cream font colour reads against
      any deck-gradient backdrop; a light drop-shadow keeps the outline
      defined without the harsh outline look. */
-  width: clamp(16px, 3.2vw, 22px);
-  height: clamp(16px, 3.2vw, 22px);
+  width: clamp(12px, 5.6cqmin, 22px);
+  height: clamp(12px, 5.6cqmin, 22px);
   z-index: 2;
   pointer-events: none;
   display: flex;
@@ -634,7 +638,7 @@ const panelClasses = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+  font-size: clamp(0.75rem, 4.9cqmin, 1.2rem);
   color: #d4c8a8;
   z-index: 3;
   pointer-events: none;
@@ -650,7 +654,7 @@ const panelClasses = computed(() => {
   right: 6px;
   z-index: 9;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.55rem, 1.3vw, 0.7rem);
+  font-size: clamp(0.5rem, 2.9cqmin, 0.7rem);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #8a7e66;
@@ -696,8 +700,8 @@ const panelClasses = computed(() => {
 .winner-crown {
   position: absolute;
   left: 50%;
-  top: calc(50% - clamp(1.5rem, 6vw, 3rem) - clamp(96px, 18vw, 160px) + 36px);
-  width: clamp(96px, 18vw, 160px);
+  top: calc(50% - clamp(1.1rem, 12cqmin, 3rem) - clamp(72px, 41cqmin, 160px) + 36px);
+  width: clamp(72px, 41cqmin, 160px);
   z-index: 10;
   pointer-events: none;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.8));
