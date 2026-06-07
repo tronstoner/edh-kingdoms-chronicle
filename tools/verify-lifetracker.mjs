@@ -42,6 +42,7 @@ const VIEWPORTS = [
   { label: 'short-landscape-800x480-partners', width: 800, height: 480, players: 6, partnersOn: true },
   { label: 'iphone-se-landscape', width: 667, height: 375, players: 6, cloneLord: true, partnersOn: true },
   { label: 'cycle-ipad-landscape', width: 1180, height: 820, cycle: true },
+  { label: 'cycle-ipad-air-portrait', width: 820, height: 1180, cycle: true },
   { label: 'cycle-ipad-mini-portrait', width: 768, height: 1024, cycle: true },
   { label: 'cycle-iphone-se-landscape', width: 667, height: 375, cycle: true },
   { label: 'cycle-phone-portrait', width: 390, height: 844, cycle: true },

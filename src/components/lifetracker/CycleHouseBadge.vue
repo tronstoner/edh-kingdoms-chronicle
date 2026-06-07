@@ -102,10 +102,11 @@ function isDead(houseName) {
 .house-plate {
   position: absolute;
   /* Sign-shaped plate, narrower than the sigil so the heraldry shows
-     around it at the bottom corners. Wide enough to fit "Dragon" in the
-     rival row without crowding the right border. */
-  left: 9%;
-  right: 9%;
+     around it at the bottom corners. Side insets are kept tight (5%)
+     so the rival/feud row has room for the longest opposing-house name
+     ("Dragon") without touching the plate border on iPad. */
+  left: 5%;
+  right: 5%;
   bottom: 4%;
   /* Default (narrow / phone-sized badges): taller plate so the icon
      rows don't clip. Wider badges get the original shorter plate via
@@ -117,7 +118,7 @@ function isDead(houseName) {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  padding: 3px 5px;
+  padding: 3px 6px;
   box-sizing: border-box;
 }
 
