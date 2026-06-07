@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { HOUSE_COLORS, houseImageUrl, cycleRelations } from '../../lifetracker/cycle.js'
 
 const props = defineProps({
@@ -8,20 +8,49 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-// Physical seat → SVG coordinate. Matches the 2x2 grid the rest of the
-// preview already uses: 0=TL, 1=TR, 2=BL, 3=BR.
-const VB_W = 520
-const VB_H = 380
-const NODE_R = 46
-const NODES = {
-  0: { x: 110, y: 90  },
-  1: { x: 410, y: 90  },
-  2: { x: 110, y: 290 },
-  3: { x: 410, y: 290 },
+// Reactive orientation — swaps the SVG viewBox + node coords so the
+// 2x2 diagram fills the available space whether the viewport is wide
+// (landscape: 520×380) or tall (portrait: 380×520). Without this swap
+// a tall phone leaves the diagram floating in 60% empty vertical room.
+const isPortrait = ref(false)
+let mq
+
+function updateOrientation() {
+  if (typeof window === 'undefined') return
+  isPortrait.value = window.matchMedia('(orientation: portrait)').matches
 }
 
+onMounted(() => {
+  updateOrientation()
+  mq = window.matchMedia('(orientation: portrait)')
+  mq.addEventListener('change', updateOrientation)
+})
+
+onUnmounted(() => {
+  mq?.removeEventListener('change', updateOrientation)
+})
+
+const VB_W = computed(() => (isPortrait.value ? 380 : 520))
+const VB_H = computed(() => (isPortrait.value ? 520 : 380))
+const NODE_R = 46
+const NODES = computed(() =>
+  isPortrait.value
+    ? {
+        0: { x: 90,  y: 110 },
+        1: { x: 290, y: 110 },
+        2: { x: 90,  y: 410 },
+        3: { x: 290, y: 410 },
+      }
+    : {
+        0: { x: 110, y: 90  },
+        1: { x: 410, y: 90  },
+        2: { x: 110, y: 290 },
+        3: { x: 410, y: 290 },
+      }
+)
+
 function nodeFor(seatIndex) {
-  return NODES[seatIndex]
+  return NODES.value[seatIndex]
 }
 
 function houseSeat(houseName) {
@@ -130,13 +159,12 @@ function houseColor(name) {
     <div class="map-card">
       <header class="map-header">
         <h2 class="map-title font-beleren">Kill Lists</h2>
-        <button class="close-btn" @click="emit('close')" aria-label="Close">×</button>
+        <p class="map-legend">
+          <span class="legend-item"><svg class="legend-glyph" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path :transform="`rotate(45 12 9)`" :d="SWORD" /><path :transform="`rotate(-45 12 9)`" :d="SWORD" /></g></svg> Feud · mutual</span>
+          <span class="legend-item"><svg class="legend-glyph rival" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" :transform="`rotate(45 12 12)`" :d="SWORD" /></svg> Rival · one-way</span>
+        </p>
+        <button class="lt-modal-close" @click="emit('close')" aria-label="Close">×</button>
       </header>
-
-      <p class="map-legend">
-        <span class="legend-item"><svg class="legend-glyph" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path :transform="`rotate(45 12 9)`" :d="SWORD" /><path :transform="`rotate(-45 12 9)`" :d="SWORD" /></g></svg> Feud · mutual</span>
-        <span class="legend-item"><svg class="legend-glyph rival" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" :transform="`rotate(45 12 12)`" :d="SWORD" /></svg> Rival · one-way</span>
-      </p>
 
       <svg :viewBox="`0 0 ${VB_W} ${VB_H}`" class="map-svg" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -275,17 +303,22 @@ function houseColor(name) {
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 24px;
+  padding: 12px;
   backdrop-filter: blur(4px);
 }
 
+/* Modal occupies nearly the whole viewport so the kill-list diagram —
+   the whole point of the screen — gets all the room. Title + legend
+   collapse to a single compact top bar; the SVG flex-fills the rest. */
 .map-card {
+  position: relative;
   background: var(--lt-bg);
   border: 1px solid var(--lt-border);
   border-radius: 6px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-  width: min(640px, 100%);
-  max-height: calc(100vh - 48px);
+  width: min(1100px, 100%);
+  height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -294,45 +327,30 @@ function houseColor(name) {
 .map-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
+  gap: 18px;
+  padding: 8px 14px;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--lt-panel-bg-alt);
+  flex-shrink: 0;
 }
 
 .map-title {
   font-family: 'Cinzel', serif;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: var(--lt-gold);
   margin: 0;
   letter-spacing: 0.06em;
 }
 
-.close-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--lt-border);
-  background: none;
-  color: var(--lt-text-dim);
-  font-size: 1.4rem;
-  line-height: 1;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  color: var(--lt-text);
-  border-color: var(--lt-text-dim);
-}
-
 .map-legend {
   display: flex;
-  gap: 18px;
-  padding: 10px 18px 0;
+  gap: 14px;
   margin: 0;
   font-family: 'EB Garamond', serif;
   color: var(--lt-text-dim);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .legend-item {
@@ -351,10 +369,14 @@ function houseColor(name) {
   color: var(--lt-gold);
 }
 
+/* SVG fills all remaining vertical space; preserveAspectRatio (default
+   xMidYMid meet) keeps the diagram centred inside that area. */
 .map-svg {
   width: 100%;
-  height: auto;
-  padding: 14px 18px 22px;
+  height: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 12px;
   display: block;
 }
 </style>

@@ -71,7 +71,21 @@ export const CYCLE_SHAPES = [
 const SEAT_X = [-1, 1, -1, 1]
 const SEAT_Y = [-1, -1, 1, 1]
 
-// Classify a seat→house assignment by its shape and chirality.
+// Classify a seat→house assignment by its shape and which side of the
+// table the A↔C feud pair sits on (the "mirror" axis).
+//
+// The mirror flag is POSITIONAL so the user-facing toggle behaves
+// intuitively: turning mirror off for "vertical feuds" should restrict
+// the deal to *either* the left column or the right column, not allow
+// both. Same for horizontal (top vs bottom row) and diagonal (the \
+// or / diagonal). A previous implementation used chirality (cycle
+// rotation direction) which still let both visual orientations through.
+//
+// Primary (mirror=false) positions:
+//   - Vertical:   A↔C on the left column (SEAT_X[A] < 0)
+//   - Horizontal: A↔C on the top row     (SEAT_Y[A] < 0)
+//   - Diagonal:   A↔C on the \ diagonal  (SEAT_X[A] * SEAT_Y[A] > 0)
+//
 // `houses` is an array of 4 House names (or letters) indexed by seat.
 export function classifyArrangement(houses) {
   if (!houses || houses.length !== 4) return null
@@ -87,14 +101,10 @@ export function classifyArrangement(houses) {
   if (sameCol) shape = 'vertical'
   else if (sameRow) shape = 'horizontal'
   else shape = 'diagonal'
-  // Chirality: cross product of (B-A) × (D-A). Each shape's HTML "base"
-  // example normalises to mirror=false; horizontal flips because its
-  // canonical traversal winds the opposite way.
-  const cross =
-    (SEAT_X[pos.B] - SEAT_X[pos.A]) * (SEAT_Y[pos.D] - SEAT_Y[pos.A]) -
-    (SEAT_Y[pos.B] - SEAT_Y[pos.A]) * (SEAT_X[pos.D] - SEAT_X[pos.A])
-  let mirror = cross < 0
-  if (shape === 'horizontal') mirror = !mirror
+  let mirror
+  if (shape === 'vertical')      mirror = SEAT_X[pos.A] > 0
+  else if (shape === 'horizontal') mirror = SEAT_Y[pos.A] > 0
+  else                              mirror = SEAT_X[pos.A] * SEAT_Y[pos.A] < 0
   return { shape, mirror }
 }
 

@@ -450,7 +450,7 @@ function pickerCycleLines(arrangement) {
   grid-column: 2;
   align-self: end;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   cursor: pointer;
   font-family: 'Cinzel', serif;
@@ -458,19 +458,29 @@ function pickerCycleLines(arrangement) {
   font-weight: 600;
   color: var(--lt-text);
   letter-spacing: 0.03em;
+  line-height: 1.15;
 }
 
 .shape-mirror {
   grid-column: 2;
   align-self: start;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   cursor: pointer;
   font-family: 'EB Garamond', serif;
   font-size: 0.78rem;
   color: var(--lt-text-dim);
   font-style: italic;
+  line-height: 1.15;
+}
+
+/* Nudge the checkbox a touch so its visual centre aligns with the
+   cap-height of the first label line (rather than the line's vertical
+   centre) when the label wraps to two lines. */
+.shape-toggle input,
+.shape-mirror input {
+  margin-top: 1px;
 }
 
 .shape-mirror.off { opacity: 0.6; cursor: default; }
@@ -655,16 +665,20 @@ function pickerCycleLines(arrangement) {
 .card-house-relations {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
   width: 100%;
   padding: 0 8px;
   flex-shrink: 0;
 }
 
+/* Default cards (2×2 layout): rel rows are centred below the house
+   name as one compact "FEUD  Lion" block. The horizontal compact-
+   landscape card layout overrides this back to left-aligned. */
 .rel-row {
-  display: flex;
-  justify-content: space-between;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
   font-family: 'EB Garamond', serif;
   font-size: 0.8rem;
 }
@@ -706,14 +720,20 @@ function pickerCycleLines(arrangement) {
   100% { transform: translateX(-50%) scale(1); }
 }
 
-/* ===== Compact landscape (phone landscape & wide-short windows) ===== */
+/* ===== Compact landscape (phone landscape & wide-short windows) =====
+ * Same shape-pill structure as the default (icon left, two labelled
+ * checkboxes stacked on the right) but with smaller fonts so the
+ * labels fit alongside the checkboxes. Cards switch to a horizontal
+ * info layout (shield left, name + rel rows centred vertically right)
+ * to use the wide-and-short cell shape properly.
+ */
 @media (orientation: landscape) and (max-height: 700px) {
   .cycle-preview {
     gap: 10px;
     padding: 10px;
-    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+    grid-template-columns: minmax(190px, 220px) minmax(0, 1fr);
   }
-  .sidebar { gap: 12px; }
+  .sidebar { gap: 10px; }
   .sb-header {
     display: flex;
     flex-direction: row;
@@ -721,28 +741,24 @@ function pickerCycleLines(arrangement) {
     gap: 8px;
     flex-wrap: wrap;
   }
-  .sb-title { font-size: 1.1rem; }
-  .sb-subtitle { font-size: 0.75rem; }
+  .sb-title { font-size: 1.05rem; }
+  .sb-subtitle { font-size: 0.7rem; }
   .sb-shape { gap: 6px; }
+
+  /* Compact pill: keep the two-row label layout, just shrink fonts &
+     paddings so it fits. Both labels remain readable. */
   .shape-pill {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
+    column-gap: 8px;
+    row-gap: 1px;
+    padding: 4px 8px;
     min-height: 44px;
-    padding: 4px 10px;
   }
   .shape-icon { width: 30px; height: 26px; }
-  .shape-toggle span,
-  .shape-mirror span { display: none; }
+  .shape-toggle { font-size: 0.85rem; gap: 5px; }
+  .shape-mirror { font-size: 0.78rem; gap: 5px; }
   .shape-toggle input,
-  .shape-mirror input { width: 18px; height: 18px; }
-  .shape-mirror::after {
-    content: '◐';
-    font-size: 1rem;
-    color: var(--lt-text-dim);
-    margin-left: 2px;
-  }
+  .shape-mirror input { width: 16px; height: 16px; }
+
   .sb-actions {
     flex-direction: row;
     gap: 6px;
@@ -756,6 +772,48 @@ function pickerCycleLines(arrangement) {
     font-size: 0.85rem;
     min-height: 44px;
   }
+
+  /* Card content: shield on the LEFT, name + rels stacked on the right
+     and vertically centred against the shield. Fills the short+wide
+     cell properly instead of just scaling the shield down. */
+  .card-front {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "shield name"
+      "shield rels";
+    column-gap: 12px;
+    row-gap: 4px;
+    align-items: center;
+    justify-content: start;
+    padding: 10px 12px;
+  }
+  .card-house-img {
+    grid-area: shield;
+    align-self: center;
+    flex: none;
+    width: auto;
+    height: auto;
+    max-width: 45%;
+    max-height: 100%;
+  }
+  .card-house-name {
+    grid-area: name;
+    align-self: end;
+    text-align: left;
+    font-size: clamp(0.85rem, 4.5cqi, 1.1rem);
+  }
+  .card-house-relations {
+    grid-area: rels;
+    align-self: start;
+    align-items: flex-start;
+    padding: 0;
+    gap: 1px;
+  }
+  .rel-row { font-size: 0.7rem; gap: 4px; }
+  .rel-label { font-size: 0.6rem; gap: 3px; }
+  .card-player { font-size: 0.78rem; }
 }
 
 /* ===== Portrait ===== */
