@@ -16,7 +16,21 @@ const signedIn = ref(false)
 
 provide('data', data)
 
+// Dev-only demo bypass: ?demo on a dev build skips Google sign-in and
+// provides empty data so the lifetracker (which doesn't need the
+// spreadsheet) can be opened directly. Used by tools/verify-lifetracker.mjs
+// for headless screenshot verification.
+const demoMode = import.meta.env.DEV &&
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).has('demo')
+
 onMounted(async () => {
+  if (demoMode) {
+    signedIn.value = true
+    data.value = { games: [], players: [], decks: [], roles: [] }
+    authReady.value = true
+    return
+  }
   try {
     const restored = await initGoogleAuth()
     authReady.value = true
