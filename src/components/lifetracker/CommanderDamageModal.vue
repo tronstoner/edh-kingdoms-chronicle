@@ -724,6 +724,14 @@ onUnmounted(() => {
   z-index: 2;
 }
 
+/* Single-commander seat with a role / conversion icon: nudge the
+   centred damage value a touch below seat-centre so it visually
+   anchors below the icon row instead of fighting it for the seat's
+   vertical middle. */
+.cmd-seat:not(.cmd-seat-split):has(.cmd-seat-icons) .cmd-seat-content {
+  padding-top: clamp(6px, 8cqh, 18px);
+}
+
 .cmd-seat-name-top {
   position: absolute;
   top: 6px;
@@ -835,11 +843,14 @@ onUnmounted(() => {
 
 /* In partner mode shift the whole damage group below the icons (only when icons are shown). */
 .cmd-seat-split.has-icons {
-  /* Seat-cqh based so the dual halves get a fair share even on short
-     viewports. 27% of iPad seat=206 → 56px (the previous fixed cap);
-     scales down to ~25-36px on phones so the two damage values still
-     fit below the icon row. */
-  padding-top: clamp(16px, 27cqh, 56px);
+  /* Just enough headroom for the icon row above the dual halves —
+     more than this and the two damage values bunch toward the seat's
+     bottom edge (asymmetric reading) when the seat is short.
+     The icon at top: 13.6cqh + size 17.5cqh ≈ 31cqh of seat; this
+     14cqh keeps the icon row slightly intruding into the top half
+     (icons render on top so the digit isn't actually hidden), but
+     in return both halves are centred much closer to seat-centre. */
+  padding-top: clamp(8px, 14cqh, 30px);
 }
 
 .cmd-split-dmg {
