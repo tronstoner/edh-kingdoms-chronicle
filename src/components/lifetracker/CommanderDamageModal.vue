@@ -455,11 +455,14 @@ onUnmounted(() => {
 .counter-box {
   /* Flex 1 across the row up to a sensible max. The min-width is tuned
      so wrapping prefers a clean 2+2 over a 3+1 on narrow modals. iPad
-     width (~800px) fits all 4 in a row. */
+     width (~800px) fits all 4 in a row. Height is the smaller of
+     cqi-derived (scales with modal width) and vh-derived (so a short
+     viewport like phone-landscape doesn't push the seat grid out). */
   flex: 1 1 0;
+  flex-shrink: 0;
   min-width: 130px;
   max-width: 160px;
-  height: clamp(80px, 20cqi, 160px);
+  height: clamp(70px, min(20cqi, 22vh), 160px);
   background: #1a1612;
   border: 1px solid #3d3529;
   border-radius: 3px;
@@ -584,12 +587,17 @@ onUnmounted(() => {
 .cmd-row {
   display: flex;
   gap: 3px;
+  /* Keep the row at its preferred (cmd-seat) height; if the panel runs
+     out of vertical space, scroll instead of squishing one row. */
+  flex-shrink: 0;
 }
 
 .cmd-seat {
   flex: 1;
   position: relative;
-  height: clamp(90px, 27.5cqi, 220px);
+  /* Same combined cqi+vh cap so the seat grid shrinks on short viewports
+     instead of being flex-compressed unevenly. */
+  height: clamp(70px, min(27.5cqi, 28vh), 220px);
   overflow: hidden;
   border-radius: 3px;
   touch-action: none;

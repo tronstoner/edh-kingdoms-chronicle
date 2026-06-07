@@ -38,24 +38,27 @@ mkdirSync(OUT, { recursive: true })
 const VIEWPORTS = [
   { label: 'ipad-landscape', width: 1180, height: 820 },
   { label: 'ipad-mini-portrait', width: 768, height: 1024 },
+  { label: 'short-landscape-800x480', width: 800, height: 480, players: 6 },
   { label: 'phone-landscape', width: 844, height: 390 },
   { label: 'phone-portrait', width: 390, height: 844 },
 ]
 
-// Sample mid-game 5-player Kingdoms state. Mirrors the shape produced
-// by useLifetrackerState.createGame so the lifetracker page resumes
+// Sample mid-game Kingdoms state. Mirrors the shape produced by
+// useLifetrackerState.createGame so the lifetracker page resumes
 // directly into the 'playing' phase.
-function buildState() {
-  const playerCount = 5
+function buildState(playerCount = 5) {
   const decks = [
     { name: 'Atraxa, Praetors’ Voice', colors: 'WUBG' },
     { name: 'Krenko, Mob Boss', colors: 'R' },
     { name: 'Edgar Markov', colors: 'WBR' },
     { name: 'Yuriko, the Tiger’s Shadow', colors: 'UB' },
     { name: 'Omnath, Locus of Creation', colors: 'WUBRG' },
+    { name: 'The Ur-Dragon', colors: 'WUBRG' },
   ]
-  const players = ['Aldrich', 'Brennan', 'Cyrus', 'Davian', 'Elara']
-  const roles = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord']
+  const players = ['Aldrich', 'Brennan', 'Cyrus', 'Davian', 'Elara', 'Felix']
+  const roles5 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord']
+  const roles6 = ['King', 'Knight', 'Goblin', 'Goblin', 'Lord', 'Clone Lord']
+  const roles = playerCount === 6 ? roles6 : roles5
   const seats = []
   for (let i = 0; i < playerCount; i++) {
     const commanderDamage = {}
@@ -89,7 +92,7 @@ function buildState() {
     mode: 'kingdoms',
     phase: 'playing',
     playerCount,
-    layoutId: '5-3t2b',
+    layoutId: playerCount === 6 ? '6-3t3b' : '5-3t2b',
     turnCount: 4,
     startTime: new Date(0).toISOString(),
     startingSeatIndex: 0,
@@ -105,7 +108,7 @@ async function capture(browser, viewport) {
 
   await page.addInitScript((state) => {
     localStorage.setItem('edhlog-lt-current', JSON.stringify(state))
-  }, buildState())
+  }, buildState(viewport.players || 5))
 
   await page.goto(ROUTE, { waitUntil: 'domcontentloaded' })
 
