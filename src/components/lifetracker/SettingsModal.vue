@@ -21,11 +21,13 @@ function update(key, value) {
           <h4 class="settings-section-title">Turn nudge</h4>
           <p class="settings-section-help">
             Pulse the turn-cycle button after a round has run longer
-            than expected. The budget grows with the round: round 1 is
-            a quick 0.5 min/player, then rounds 2&nbsp;→&nbsp;6 climb by
-            1 min/player each, capped at the value below. Total time
-            scales with the table — e.g. round 4 at 3 min/player is
-            12 min for 4 players, 15 min for 5.
+            than expected. The cap below sets the budget at round 6
+            onwards (min&nbsp;/&nbsp;player); earlier rounds scale
+            proportionally — 10% of the cap at round 1, 20%, 40%, 60%,
+            80%, 100% at round 6+. So halving the cap halves every
+            round's budget, not just the late ones. Total round time
+            also scales with the table — at cap 5, round 4 is
+            3 min/player → 15 min for 5 players, 12 min for 4.
           </p>
         </header>
 

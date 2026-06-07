@@ -39,24 +39,27 @@ export function saveSettings(settings) {
 // current round, player count, and the user's max-minutes cap.
 // Returns Infinity if disabled.
 //
-// Curve (minutes per player):
-//   R1 = 0.5  (quick "open the hand and play a land")
-//   R2 = 1
-//   R3 = 2
-//   R4 = 3
-//   R5 = 4
-//   R6+ = 5 (cap)
-// Designed so the curve matches how Commander pacing actually feels —
-// turn 1 should be fast, the meat of the game lives in rounds 3–4, and
-// by round 6 the table has hit the per-round budget cap.
+// Per-round factor (fraction of the cap), shaped so round 1 is a
+// quick check and the curve hits the cap by round 6:
+//   R1 = 0.10   (default cap 5 → 0.5 min/player)
+//   R2 = 0.20            → 1
+//   R3 = 0.40            → 2
+//   R4 = 0.60            → 3
+//   R5 = 0.80            → 4
+//   R6+ = 1.00 (cap)     → 5
+// The factor multiplies the cap setting, so e.g. cap = 3 scales the
+// whole curve down (R1 = 0.3 min/player, R6+ = 3) and cap = 10 scales
+// it up (R1 = 1 min/player, R6+ = 10).
 export function turnNudgeThresholdMs(turnCount, playerCount, settings) {
   if (!settings || !settings.turnNudgeEnabled) return Infinity
   // turnCount=0 → about to start round 1; otherwise we're inside round `turnCount`.
   const round = Math.max(1, turnCount || 1)
-  const baseMinutes = Math.max(0.5, round - 1)
+  // Factor matches the original-curve ratios at default cap=5:
+  // (max(0.5, R-1)) / 5, clamped to 1.0 from R6 onward.
+  const factor = Math.min(1, Math.max(0.5, round - 1) / 5)
   const cap = Math.max(1, Number(settings.turnNudgeMaxMinutesPerPlayer) || 5)
-  const clampedMinutes = Math.min(baseMinutes, cap)
-  return clampedMinutes * playerCount * 60_000
+  const minutesPerPlayer = cap * factor
+  return minutesPerPlayer * playerCount * 60_000
 }
 
 export function loadCycleShapeOptions() {
