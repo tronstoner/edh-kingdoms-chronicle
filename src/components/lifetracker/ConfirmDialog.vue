@@ -5,6 +5,7 @@ defineProps({
   confirmLabel: { type: String, default: 'Confirm' },
   cancelLabel: { type: String, default: 'Cancel' },
   danger: { type: Boolean, default: false },
+  rotated: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['confirm', 'cancel'])
@@ -12,7 +13,7 @@ const emit = defineEmits(['confirm', 'cancel'])
 
 <template>
   <div class="confirm-overlay" @click.self="emit('cancel')">
-    <div class="confirm-dialog">
+    <div class="confirm-dialog" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }">
       <h3 class="confirm-title font-beleren">{{ title }}</h3>
       <p class="confirm-message">{{ message }}</p>
       <div class="confirm-actions">

@@ -405,6 +405,7 @@ function handleClearCycleGames() {
         :current-player="state.seats[editingSeatInGame]?.player"
         :current-deck="state.seats[editingSeatInGame]?.deck"
         :used-players="usedPlayers"
+        :rotated="LAYOUTS[state.layoutId].rows[0].seats.includes(editingSeatInGame)"
         @select="handleGameSeatSelect"
         @close="editingSeatInGame = null"
       />
@@ -445,6 +446,7 @@ function handleClearCycleGames() {
           :message="`Remove ${state.seats[clearUndeadSeat]?.roleNotes} status from ${state.seats[clearUndeadSeat]?.player}?`"
           confirm-label="Clear"
           :danger="true"
+          :rotated="LAYOUTS[state.layoutId].rows[0].seats.includes(clearUndeadSeat)"
           @confirm="confirmClearUndead"
           @cancel="cancelClearUndead"
         />

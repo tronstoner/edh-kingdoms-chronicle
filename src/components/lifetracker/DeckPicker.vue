@@ -9,6 +9,7 @@ const props = defineProps({
   currentPlayer: String,
   currentDeck: Object,
   usedPlayers: Array,
+  rotated: Boolean,
 })
 
 const emit = defineEmits(['select', 'close'])
@@ -127,7 +128,7 @@ function dismissAndSave() {
 
 <template>
   <div class="deck-picker" @click.self="dismissAndSave">
-    <div class="picker-content">
+    <div class="picker-content" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }">
       <h3 class="font-beleren text-mtg-gold mb-4">Seat {{ seatIndex + 1 }}</h3>
 
       <!-- Player selection -->
