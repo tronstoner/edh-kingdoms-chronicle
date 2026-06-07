@@ -673,14 +673,13 @@ function pickerCycleLines(arrangement) {
 }
 
 /* Default cards (2×2 layout): rel rows are centred below the house
-   name as one compact "FEUD  Lion" block. The horizontal compact-
-   landscape card layout overrides this back to left-aligned. */
+   name as one compact "FEUD  Lion" block. */
 .rel-row {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-family: 'EB Garamond', serif;
-  font-size: 0.8rem;
+  font-size: clamp(0.8rem, 2.2cqi, 1.15rem);
 }
 
 .rel-label {
@@ -690,7 +689,7 @@ function pickerCycleLines(arrangement) {
   color: var(--lt-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.65rem;
+  font-size: clamp(0.8rem, 2.2cqi, 1.15rem);
 }
 
 .rel-value { color: var(--lt-text); }
@@ -779,7 +778,7 @@ function pickerCycleLines(arrangement) {
   .card-front {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
       "shield name"
       "shield rels";
@@ -791,11 +790,12 @@ function pickerCycleLines(arrangement) {
   }
   .card-house-img {
     grid-area: shield;
-    align-self: center;
+    align-self: stretch;
+    justify-self: center;
     flex: none;
     width: auto;
     height: 100%;
-    max-width: 45%;
+    aspect-ratio: 1;
     max-height: 100%;
   }
   .card-house-name {
@@ -803,6 +803,8 @@ function pickerCycleLines(arrangement) {
     align-self: end;
     text-align: left;
     font-size: clamp(0.85rem, 4.5cqi, 1.1rem);
+    line-height: 1.05;
+    padding-top: 1lh;
   }
   .card-house-relations {
     grid-area: rels;
@@ -814,6 +816,13 @@ function pickerCycleLines(arrangement) {
   .rel-row { font-size: 0.7rem; gap: 4px; }
   .rel-label { font-size: 0.6rem; gap: 3px; }
   .card-player { font-size: 0.78rem; }
+}
+
+/* ===== Narrow compact landscape (iPhone SE ~568px wide) ===== */
+@media (orientation: landscape) and (max-height: 700px) and (max-width: 690px) {
+  .card-house-img {
+    max-height: 65%;
+  }
 }
 
 /* ===== Portrait ===== */
