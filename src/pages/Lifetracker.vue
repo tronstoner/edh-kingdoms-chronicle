@@ -44,9 +44,12 @@ const showSettings = ref(false)
 // Turn-nudge: glow the cycle button once the round has been running
 // longer than the per-round threshold (1 + 0.5*(R-1) min × players,
 // capped at settings.turnNudgeMaxMinutesPerPlayer × players).
+// Round 0 (pre-first-tap) always pulses — there's no timer to elapse
+// and the whole point is to remind the table to actually start.
 const turnNudgeActive = computed(() => {
   if (state.phase !== 'playing') return false
   if (!settings.turnNudgeEnabled) return false
+  if (state.turnCount === 0) return true
   if (!state.lastTurnAdvanceAt) return false
   const threshold = turnNudgeThresholdMs(state.turnCount, state.playerCount, settings)
   if (!isFinite(threshold)) return false
