@@ -38,11 +38,22 @@ export function saveSettings(settings) {
 // ms before the turn-cycle button should start nudging, given the
 // current round, player count, and the user's max-minutes cap.
 // Returns Infinity if disabled.
+//
+// Curve (minutes per player):
+//   R1 = 0.5  (quick "open the hand and play a land")
+//   R2 = 1
+//   R3 = 2
+//   R4 = 3
+//   R5 = 4
+//   R6+ = 5 (cap)
+// Designed so the curve matches how Commander pacing actually feels —
+// turn 1 should be fast, the meat of the game lives in rounds 3–4, and
+// by round 6 the table has hit the per-round budget cap.
 export function turnNudgeThresholdMs(turnCount, playerCount, settings) {
   if (!settings || !settings.turnNudgeEnabled) return Infinity
   // turnCount=0 → about to start round 1; otherwise we're inside round `turnCount`.
   const round = Math.max(1, turnCount || 1)
-  const baseMinutes = 1 + 0.5 * (round - 1)
+  const baseMinutes = Math.max(0.5, round - 1)
   const cap = Math.max(1, Number(settings.turnNudgeMaxMinutesPerPlayer) || 5)
   const clampedMinutes = Math.min(baseMinutes, cap)
   return clampedMinutes * playerCount * 60_000

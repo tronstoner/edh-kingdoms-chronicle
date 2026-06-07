@@ -20,10 +20,12 @@ function update(key, value) {
         <header class="settings-section-header">
           <h4 class="settings-section-title">Turn nudge</h4>
           <p class="settings-section-help">
-            Pulse the turn-cycle button after a round has been running
-            longer than expected. The threshold grows each round
-            (1 min × players, then 1.5, 2, 2.5… minutes per player),
-            clamped at the cap below.
+            Pulse the turn-cycle button after a round has run longer
+            than expected. The budget grows with the round: round 1 is
+            a quick 0.5 min/player, then rounds 2&nbsp;→&nbsp;6 climb by
+            1 min/player each, capped at the value below. Total time
+            scales with the table — e.g. round 4 at 3 min/player is
+            12 min for 4 players, 15 min for 5.
           </p>
         </header>
 
@@ -38,7 +40,7 @@ function update(key, value) {
         </label>
 
         <label class="settings-row" :class="{ 'settings-row-disabled': !settings.turnNudgeEnabled }">
-          <span class="settings-row-label">Cap (min / player)</span>
+          <span class="settings-row-label">Cap (min&nbsp;/&nbsp;player)</span>
           <input
             type="number"
             min="1"
