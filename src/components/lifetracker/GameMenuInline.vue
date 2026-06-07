@@ -43,6 +43,7 @@ function onTurnPointerLeave() {
     <!-- Turn cycle indicator / button -->
     <button
       class="menu-icon turn-btn"
+      :class="{ 'turn-btn--prompt': turnCount === 0 }"
       @pointerdown.prevent="onTurnPointerDown"
       @pointerup="onTurnPointerUp"
       @pointerleave="onTurnPointerLeave"
@@ -155,6 +156,33 @@ function onTurnPointerLeave() {
   gap: 6px;
   color: #c9a54e;
   border-color: #c9a54e44;
+}
+
+/* Round 0 nudge — when the counter hasn't been advanced yet, pulse
+   the button so the table remembers to tap it on the first turn. The
+   pulse alternates border / glow strength and dims back to the resting
+   look so it's noticeable without strobing in peripheral vision. */
+.turn-btn--prompt {
+  animation: turn-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes turn-pulse {
+  0%,
+  100% {
+    border-color: #c9a54e44;
+    box-shadow: 0 0 0 0 rgba(201, 165, 78, 0);
+  }
+  50% {
+    border-color: #c9a54e;
+    box-shadow: 0 0 12px 2px rgba(201, 165, 78, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-btn--prompt {
+    animation: none;
+    border-color: #c9a54e;
+  }
 }
 
 .turn-icon {

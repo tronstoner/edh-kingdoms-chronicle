@@ -37,6 +37,7 @@ mkdirSync(OUT, { recursive: true })
 
 const VIEWPORTS = [
   { label: 'ipad-landscape', width: 1180, height: 820 },
+  { label: 'ipad-landscape-turn0', width: 1180, height: 820, turnZero: true },
   { label: 'ipad-mini-portrait', width: 768, height: 1024 },
   { label: 'short-landscape-800x480', width: 800, height: 480, players: 6, cloneLord: true },
   { label: 'short-landscape-800x480-partners', width: 800, height: 480, players: 6, partnersOn: true },
@@ -120,7 +121,7 @@ function buildState(playerCount = 5, opts = {}) {
     phase: 'playing',
     playerCount,
     layoutId: playerCount === 6 ? '6-3t3b' : '5-3t2b',
-    turnCount: 4,
+    turnCount: opts.turnZero ? 0 : 4,
     startTime: new Date(0).toISOString(),
     startingSeatIndex: 0,
     seats,
@@ -189,6 +190,7 @@ async function capture(browser, viewport) {
     : buildState(viewport.players || 5, {
         partnersOn: !!viewport.partnersOn,
         cloneLord: !!viewport.cloneLord,
+        turnZero: !!viewport.turnZero,
       })
   await page.addInitScript((s) => {
     localStorage.setItem('edhlog-lt-current', JSON.stringify(s))
