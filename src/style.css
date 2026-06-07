@@ -128,6 +128,38 @@ body {
   --lt-role-clone-lord: #5ba3d9;
 }
 
+/* Shared corner X used by every lifetracker modal. Lives in global CSS
+   so each modal can drop it in without duplicating the styling. Panels
+   that host this button need position: relative. */
+.lt-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--lt-border);
+  border-radius: 3px;
+  background: none;
+  color: var(--lt-text-dim);
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 10;
+}
+
+.lt-modal-close:hover,
+.lt-modal-close:focus-visible {
+  color: var(--lt-text);
+  border-color: var(--lt-text-dim);
+  outline: none;
+}
+
 body.lt-theme-bright {
   --lt-text: #ffffff;
   --lt-text-dim: #c4c4cc;

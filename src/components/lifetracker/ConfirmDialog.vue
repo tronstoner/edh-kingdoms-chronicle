@@ -14,6 +14,7 @@ const emit = defineEmits(['confirm', 'cancel'])
 <template>
   <div class="confirm-overlay" @click.self="emit('cancel')">
     <div class="confirm-dialog" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }">
+      <button class="lt-modal-close" @click="emit('cancel')" aria-label="Close">×</button>
       <h3 class="confirm-title font-beleren">{{ title }}</h3>
       <p class="confirm-message">{{ message }}</p>
       <div class="confirm-actions">
@@ -40,6 +41,7 @@ const emit = defineEmits(['confirm', 'cancel'])
 }
 
 .confirm-dialog {
+  position: relative;
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;

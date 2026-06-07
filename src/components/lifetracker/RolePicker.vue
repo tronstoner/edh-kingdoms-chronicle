@@ -1,6 +1,17 @@
 <script setup>
 import { computed } from 'vue'
-import { ROLE_COLORS, rolePortraitUrl, lifetrackerRoleLabel } from '../../roles.js'
+import { rolePortraitUrl, lifetrackerRoleLabel } from '../../roles.js'
+
+// Themed role colours — picks up the brighter palette in bright theme.
+// See :root in style.css.
+const LT_ROLE_COLORS = {
+  King: 'var(--lt-role-king)',
+  Knight: 'var(--lt-role-knight)',
+  Goblin: 'var(--lt-role-goblin)',
+  Lord: 'var(--lt-role-lord)',
+  'Zombie Lord': 'var(--lt-role-lord)',
+  'Clone Lord': 'var(--lt-role-clone-lord)',
+}
 
 const props = defineProps({
   seat: Object,
@@ -34,6 +45,7 @@ function select(role) {
 <template>
   <div class="role-overlay" @click.self="emit('close')">
     <div class="role-panel" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }">
+      <button class="lt-modal-close" @click="emit('close')" aria-label="Close">×</button>
       <div class="role-title font-beleren">{{ seat.player }}</div>
       <div class="role-subtitle">Reveal role</div>
       <div class="role-grid">
@@ -41,11 +53,11 @@ function select(role) {
           v-for="role in availableRoles"
           :key="role"
           class="role-option"
-          :style="{ borderColor: ROLE_COLORS[role] + '66' }"
+          :style="{ borderColor: LT_ROLE_COLORS[role] }"
           @click="select(role)"
         >
           <img class="role-portrait" :src="rolePortraitUrl(role)" :alt="role" />
-          <span class="role-name" :style="{ color: ROLE_COLORS[role] }">{{ lifetrackerRoleLabel(role) }}</span>
+          <span class="role-name" :style="{ color: LT_ROLE_COLORS[role] }">{{ lifetrackerRoleLabel(role) }}</span>
         </button>
       </div>
       <button
@@ -70,6 +82,7 @@ function select(role) {
 }
 
 .role-panel {
+  position: relative;
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;
@@ -111,7 +124,7 @@ function select(role) {
   gap: 12px;
   padding: 16px 14px 18px;
   border-radius: 6px;
-  border: 2px solid var(--lt-border);
+  border: 3px solid var(--lt-border);
   background: var(--lt-bg);
   cursor: pointer;
   transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;

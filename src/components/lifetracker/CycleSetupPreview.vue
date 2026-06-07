@@ -193,189 +193,133 @@ function pickerCycleLines(arrangement) {
 
 <template>
   <div class="cycle-preview">
-    <div class="preview-header">
-      <h2 class="preview-title font-beleren">The Cycle</h2>
-      <p class="preview-subtitle">Dealing the Houses…</p>
-    </div>
+    <aside class="sidebar">
+      <header class="sb-header">
+        <h2 class="sb-title font-beleren">The Cycle</h2>
+        <p class="sb-subtitle">Dealing the Houses…</p>
+      </header>
 
-    <div class="preview-body">
-      <!-- Left rail: shape filter -->
-      <aside class="shape-panel">
-        <h3 class="shape-panel-title">Cycle shape</h3>
-        <p class="shape-panel-hint">Limit how the houses can sit on the table.</p>
-        <div class="shape-list">
-          <div
-            v-for="shape in CYCLE_SHAPES"
-            :key="shape.id"
-            class="shape-card"
-            :class="{ disabled: !shapeOptions[shape.id].enabled }"
+      <div class="sb-shape" role="group" aria-label="Cycle shape filter">
+        <div
+          v-for="shape in CYCLE_SHAPES"
+          :key="shape.id"
+          class="shape-pill"
+          :class="{ off: !shapeOptions[shape.id].enabled }"
+        >
+          <button
+            class="shape-icon-btn"
+            type="button"
+            :aria-pressed="shapeOptions[shape.id].enabled"
+            :title="shapeOptions[shape.id].enabled ? `Disable ${shape.label}` : `Enable ${shape.label}`"
+            @click="setShapeEnabled(shape.id, !shapeOptions[shape.id].enabled)"
           >
-            <button
-              class="shape-icon-btn"
-              type="button"
-              :aria-pressed="shapeOptions[shape.id].enabled"
-              :title="shapeOptions[shape.id].enabled ? `Disable ${shape.label}` : `Enable ${shape.label}`"
-              @click="setShapeEnabled(shape.id, !shapeOptions[shape.id].enabled)"
-            >
-              <svg viewBox="0 0 80 70" class="shape-icon">
-                <defs>
-                  <marker
-                    :id="`pickerArrow-${shape.id}`"
-                    viewBox="0 0 10 10"
-                    refX="9" refY="5"
-                    markerWidth="5" markerHeight="5"
-                    orient="auto"
-                  >
-                    <path d="M 0 0 L 10 5 L 0 10 z" :fill="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : 'var(--lt-border)'" />
-                  </marker>
-                </defs>
-                <line
-                  v-for="(ln, i) in pickerCycleLines(shapeIconArrangement(shape.id))"
-                  :key="i"
-                  :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
-                  :stroke="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : 'var(--lt-border)'"
-                  stroke-width="1.6"
-                  :marker-end="`url(#pickerArrow-${shape.id})`"
-                  opacity="0.9"
+            <svg viewBox="0 0 80 70" class="shape-icon">
+              <defs>
+                <marker
+                  :id="`pickerArrow-${shape.id}`"
+                  viewBox="0 0 10 10"
+                  refX="9" refY="5"
+                  markerWidth="5" markerHeight="5"
+                  orient="auto"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" :fill="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : 'var(--lt-border)'" />
+                </marker>
+              </defs>
+              <line
+                v-for="(ln, i) in pickerCycleLines(shapeIconArrangement(shape.id))"
+                :key="i"
+                :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+                :stroke="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : 'var(--lt-border)'"
+                stroke-width="1.6"
+                :marker-end="`url(#pickerArrow-${shape.id})`"
+                opacity="0.9"
+              />
+              <g v-for="(node, i) in PICKER_NODES" :key="`n${i}`">
+                <circle
+                  :cx="node.x" :cy="node.y" r="7"
+                  fill="var(--lt-bg)"
+                  :stroke="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : '#5a4f3d'"
+                  stroke-width="1.4"
                 />
-                <g v-for="(node, i) in PICKER_NODES" :key="`n${i}`">
-                  <circle
-                    :cx="node.x" :cy="node.y" r="7"
-                    fill="var(--lt-bg)"
-                    :stroke="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : '#5a4f3d'"
-                    stroke-width="1.4"
-                  />
-                  <text
-                    :x="node.x" :y="node.y + 3"
-                    text-anchor="middle"
-                    font-family="Cinzel, serif"
-                    font-size="8"
-                    font-weight="700"
-                    :fill="shapeOptions[shape.id].enabled ? 'var(--lt-text)' : '#5a4f3d'"
-                  >{{ shapeIconArrangement(shape.id)[i] }}</text>
-                </g>
-              </svg>
-            </button>
-            <div class="shape-meta">
-              <label class="shape-toggle">
-                <input
-                  type="checkbox"
-                  :checked="shapeOptions[shape.id].enabled"
-                  @change="setShapeEnabled(shape.id, $event.target.checked)"
-                />
-                <span class="shape-label">{{ shape.label }}</span>
-              </label>
-              <label class="shape-mirror" :class="{ off: !shapeOptions[shape.id].enabled }">
-                <input
-                  type="checkbox"
-                  :checked="shapeOptions[shape.id].mirror"
-                  :disabled="!shapeOptions[shape.id].enabled"
-                  @change="setShapeMirror(shape.id, $event.target.checked)"
-                />
-                <span>Allow mirror</span>
-              </label>
+                <text
+                  :x="node.x" :y="node.y + 3"
+                  text-anchor="middle"
+                  font-family="Cinzel, serif"
+                  font-size="8"
+                  font-weight="700"
+                  :fill="shapeOptions[shape.id].enabled ? 'var(--lt-text)' : '#5a4f3d'"
+                >{{ shapeIconArrangement(shape.id)[i] }}</text>
+              </g>
+            </svg>
+          </button>
+          <label class="shape-toggle">
+            <input
+              type="checkbox"
+              :checked="shapeOptions[shape.id].enabled"
+              @change="setShapeEnabled(shape.id, $event.target.checked)"
+            />
+            <span>{{ shape.label }}</span>
+          </label>
+          <label class="shape-mirror" :class="{ off: !shapeOptions[shape.id].enabled }">
+            <input
+              type="checkbox"
+              :checked="shapeOptions[shape.id].mirror"
+              :disabled="!shapeOptions[shape.id].enabled"
+              @change="setShapeMirror(shape.id, $event.target.checked)"
+            />
+            <span>mirror</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sb-actions" :class="{ visible: showStart }">
+        <button class="btn btn-secondary" @click="emit('back')">Back</button>
+        <button class="btn btn-secondary" @click="handleRedeal">Re-deal</button>
+        <button class="btn btn-primary" @click="emit('begin')">Begin Game</button>
+      </div>
+    </aside>
+
+    <div class="cards" :class="{ shuffling: dealing }">
+      <div v-for="seatIndex in [0, 1, 2, 3]" :key="seatIndex" class="card-cell">
+        <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
+        <div
+          class="card"
+          :class="{ revealed: revealed[seatIndex], dealing }"
+          :style="{
+            ...shuffleStyle(seatIndex),
+            ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
+          }"
+        >
+          <div class="card-face card-back">
+            <div class="card-back-pattern"></div>
+          </div>
+          <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
+            <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
+            <img
+              v-if="displayedHouse(seatIndex)"
+              class="card-house-img"
+              :class="{ clickable: revealed[seatIndex] }"
+              :src="houseImageUrl(displayedHouse(seatIndex))"
+              :alt="displayedHouse(seatIndex)"
+              :title="revealed[seatIndex] ? 'Show kill list map' : ''"
+              @click="revealed[seatIndex] && (mapOpen = true)"
+            />
+            <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
+              House {{ displayedHouse(seatIndex) }}
+            </div>
+            <div class="card-house-relations">
+              <div class="rel-row">
+                <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
+                <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
+              </div>
+              <div class="rel-row">
+                <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
+                <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
+              </div>
             </div>
           </div>
         </div>
-      </aside>
-
-      <!-- Center: the dealt cards -->
-      <div class="cards-grid" :class="{ shuffling: dealing }">
-        <div class="cards-row">
-          <template v-for="seatIndex in [0, 1]" :key="seatIndex">
-            <div class="card-cell">
-              <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
-              <div
-                class="card"
-                :class="{ revealed: revealed[seatIndex], dealing }"
-                :style="{
-                  ...shuffleStyle(seatIndex),
-                  ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
-                }"
-              >
-                <div class="card-face card-back">
-                  <div class="card-back-pattern"></div>
-                </div>
-                <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
-                  <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
-                  <img
-                    v-if="displayedHouse(seatIndex)"
-                    class="card-house-img"
-                    :class="{ clickable: revealed[seatIndex] }"
-                    :src="houseImageUrl(displayedHouse(seatIndex))"
-                    :alt="displayedHouse(seatIndex)"
-                    :title="revealed[seatIndex] ? 'Show kill list map' : ''"
-                    @click="revealed[seatIndex] && (mapOpen = true)"
-                  />
-                  <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
-                    House {{ displayedHouse(seatIndex) }}
-                  </div>
-                  <div class="card-house-relations">
-                    <div class="rel-row">
-                      <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
-                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
-                    </div>
-                    <div class="rel-row">
-                      <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
-                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </template>
-        </div>
-        <div class="cards-row">
-          <template v-for="seatIndex in [2, 3]" :key="seatIndex">
-            <div class="card-cell">
-              <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
-              <div
-                class="card"
-                :class="{ revealed: revealed[seatIndex], dealing }"
-                :style="{
-                  ...shuffleStyle(seatIndex),
-                  ...(revealed[seatIndex] ? { '--house-color': houseColor(seats[seatIndex]?.house) } : {}),
-                }"
-              >
-                <div class="card-face card-back">
-                  <div class="card-back-pattern"></div>
-                </div>
-                <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
-                  <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
-                  <img
-                    v-if="displayedHouse(seatIndex)"
-                    class="card-house-img"
-                    :class="{ clickable: revealed[seatIndex] }"
-                    :src="houseImageUrl(displayedHouse(seatIndex))"
-                    :alt="displayedHouse(seatIndex)"
-                    :title="revealed[seatIndex] ? 'Show kill list map' : ''"
-                    @click="revealed[seatIndex] && (mapOpen = true)"
-                  />
-                  <div class="card-house-name" :style="{ color: houseColor(displayedHouse(seatIndex)) }">
-                    House {{ displayedHouse(seatIndex) }}
-                  </div>
-                  <div class="card-house-relations">
-                    <div class="rel-row">
-                      <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
-                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
-                    </div>
-                    <div class="rel-row">
-                      <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
-                      <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </template>
-        </div>
       </div>
-    </div>
-
-    <div class="preview-actions" :class="{ visible: showStart }">
-      <button class="btn btn-secondary" @click="emit('back')">Back</button>
-      <button class="btn btn-secondary" @click="handleRedeal">Re-deal</button>
-      <button class="btn btn-primary" @click="emit('begin')">Begin Game</button>
     </div>
 
     <CycleDirectionsMap
@@ -387,181 +331,226 @@ function pickerCycleLines(arrangement) {
 </template>
 
 <style scoped>
+/*
+ * One layout, ported from public/cycle-proto.html. Two orientations:
+ *
+ *  - Landscape (default): single sidebar on the LEFT holding title +
+ *    shape filter + action buttons (stacked top → down), cards 2×2
+ *    filling the rest of the viewport.
+ *  - Portrait: sidebar at the TOP as a horizontal strip — title row,
+ *    shape pills row (each pill flex: 1 to spread equally), actions
+ *    row (each button flex: 1) — cards 2×2 below.
+ *
+ * Compact landscape (≤ 700px viewport height — phone landscape):
+ *   - shape pills collapse to a single row (icon + 2 checkboxes inline,
+ *     labels hidden behind a half-moon glyph for the mirror) so each
+ *     pill is ~44px tall;
+ *   - action buttons lay out HORIZONTALLY across the sidebar bottom
+ *     (Begin Game wraps to 2 lines as needed) so all three fit without
+ *     pushing the third off-screen;
+ *   - sidebar widens enough for the horizontal button row to breathe.
+ *
+ * Phone portrait (≤ 540px wide):
+ *   - shape labels hidden (they'd wrap to two lines on a 390px phone);
+ *     icon + 2 checkboxes + mirror glyph stay accessible.
+ *
+ * Cards: ALWAYS 2×2 — the grid is the table arrangement. No 5:7 aspect
+ * constraint; cards fill the cell completely so there's no inner-cell
+ * slack. Container queries on `.cards` let the children scale to the
+ * available space.
+ */
 .cycle-preview {
   position: absolute;
   inset: 0;
   background: var(--lt-bg);
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  overflow: hidden;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "sidebar cards";
+}
+
+.sidebar {
+  grid-area: sidebar;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 18px;
-  gap: 14px;
-  overflow-y: auto;
+  gap: 18px;
+  min-height: 0;
 }
 
-.preview-header {
-  text-align: center;
-  flex-shrink: 0;
-}
+.sb-header { flex-shrink: 0; }
 
-.preview-title {
-  font-size: 1.6rem;
+.sb-title {
+  margin: 0;
+  font-size: 1.4rem;
   color: var(--lt-gold);
   letter-spacing: 0.05em;
-  margin: 0;
   line-height: 1.1;
 }
 
-.preview-subtitle {
-  font-family: 'EB Garamond', serif;
-  font-style: italic;
-  color: var(--lt-text-dim);
+.sb-subtitle {
   margin: 2px 0 0;
-  font-size: 0.85rem;
-}
-
-.preview-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  flex-shrink: 0;
-}
-
-/* Float the shape picker absolutely along the left edge so the cards
-   stay centred in the viewport regardless of the panel's width. Mirrors
-   how the action buttons float to the right in landscape mode. */
-.shape-panel {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 200px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.shape-panel-title {
-  font-family: 'Cinzel', serif;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--lt-gold);
-  margin: 0;
-}
-
-.shape-panel-hint {
   font-family: 'EB Garamond', serif;
   font-style: italic;
   color: var(--lt-text-dim);
-  font-size: 0.75rem;
-  margin: 0 0 4px;
-  line-height: 1.3;
+  font-size: 0.85rem;
 }
 
-.shape-list {
+.sb-shape {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.shape-card {
-  display: flex;
-  gap: 10px;
+.shape-pill {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 4px;
   align-items: center;
-  padding: 8px;
+  padding: 10px 14px;
+  min-height: 56px;
   border: 1px solid var(--lt-panel-bg-alt);
   background: var(--lt-panel-bg);
   border-radius: 4px;
   transition: opacity 0.2s, border-color 0.2s;
 }
 
-.shape-card.disabled {
+.shape-pill.off {
   opacity: 0.55;
-  border-color: #1f1b16;
+  border-color: var(--lt-border);
 }
 
 .shape-icon-btn {
+  grid-row: 1 / span 2;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
-  flex-shrink: 0;
   border-radius: 3px;
   transition: transform 0.15s;
+  flex-shrink: 0;
 }
 
 .shape-icon-btn:hover { transform: scale(1.05); }
 
 .shape-icon {
-  width: 56px;
-  height: 50px;
+  width: 44px;
+  height: 38px;
   display: block;
 }
 
-.shape-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+/* First option: checkbox + shape name as its label.
+   Second option: checkbox + "mirror" as its label. */
+.shape-toggle {
+  grid-column: 2;
+  align-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--lt-text);
+  letter-spacing: 0.03em;
 }
 
-.shape-toggle, .shape-mirror {
+.shape-mirror {
+  grid-column: 2;
+  align-self: start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
   font-family: 'EB Garamond', serif;
-  color: var(--lt-text);
   font-size: 0.78rem;
+  color: var(--lt-text-dim);
+  font-style: italic;
 }
 
-.shape-toggle input, .shape-mirror input {
+.shape-mirror.off { opacity: 0.6; cursor: default; }
+
+.shape-toggle input,
+.shape-mirror input {
+  width: 18px;
+  height: 18px;
   accent-color: var(--lt-gold);
   cursor: pointer;
 }
 
-.shape-label {
-  font-family: 'Cinzel', serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-}
-
-.shape-mirror {
-  color: var(--lt-text-dim);
-  font-size: 0.7rem;
-  font-style: italic;
-}
-
-.shape-mirror.off {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.cards-grid {
+.sb-actions {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  flex: 1;
-  max-width: 760px;
-  min-width: 0;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s, transform 0.4s;
 }
 
-.cards-row {
-  display: flex;
-  gap: 18px;
-  justify-content: center;
+.sb-actions.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn {
+  font-family: 'Cinzel', serif;
+  font-size: 1.05rem;
+  padding: 14px 20px;
+  min-height: 52px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  color: var(--lt-gold);
+  border: 2px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  border-color: var(--lt-gold);
+}
+
+.btn-secondary {
+  color: var(--lt-text-dim);
+  border: 1px solid var(--lt-border);
+  background: none;
+}
+
+.btn-secondary:hover {
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
+}
+
+/* ===== Cards ===== */
+.cards {
+  grid-area: cards;
+  container-type: size;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
 }
 
 .card-cell {
-  flex: 1;
-  max-width: 200px;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 4px;
 }
 
 .card-player {
@@ -573,13 +562,15 @@ function pickerCycleLines(arrangement) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
+  max-width: 100%;
+  flex-shrink: 0;
 }
 
 .card {
   position: relative;
   width: 100%;
-  aspect-ratio: 5 / 7;
+  flex: 1 1 0;
+  min-height: 0;
   perspective: 900px;
   transform-style: preserve-3d;
 }
@@ -587,7 +578,7 @@ function pickerCycleLines(arrangement) {
 .card-face {
   position: absolute;
   inset: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   backface-visibility: hidden;
   display: flex;
   flex-direction: column;
@@ -617,8 +608,8 @@ function pickerCycleLines(arrangement) {
   border: 2px solid var(--lt-border);
   transform: rotateY(180deg);
   transition: transform 0.6s cubic-bezier(0.3, 0.7, 0.4, 1), box-shadow 0.4s;
-  padding: 10px;
-  gap: 4px;
+  padding: 14px;
+  gap: 8px;
 }
 
 .card.revealed .card-back { transform: rotateY(-180deg); }
@@ -638,17 +629,17 @@ function pickerCycleLines(arrangement) {
 }
 
 .card-house-img {
-  width: 85%;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: auto;
+  max-width: 85%;
   max-height: 70%;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
   transition: transform 0.15s, filter 0.15s;
 }
 
-.card-house-img.clickable {
-  cursor: pointer;
-}
-
+.card-house-img.clickable { cursor: pointer; }
 .card-house-img.clickable:hover {
   transform: scale(1.04);
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) brightness(1.1);
@@ -656,8 +647,9 @@ function pickerCycleLines(arrangement) {
 
 .card-house-name {
   font-family: 'Cinzel', serif;
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 3.5cqi, 1.2rem);
   letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
 .card-house-relations {
@@ -666,6 +658,7 @@ function pickerCycleLines(arrangement) {
   gap: 2px;
   width: 100%;
   padding: 0 8px;
+  flex-shrink: 0;
 }
 
 .rel-row {
@@ -686,9 +679,7 @@ function pickerCycleLines(arrangement) {
   font-size: 0.65rem;
 }
 
-.rel-value {
-  color: var(--lt-text);
-}
+.rel-value { color: var(--lt-text); }
 
 .start-badge {
   position: absolute;
@@ -715,108 +706,126 @@ function pickerCycleLines(arrangement) {
   100% { transform: translateX(-50%) scale(1); }
 }
 
-.preview-actions {
-  display: flex;
-  gap: 12px;
-  flex-shrink: 0;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.4s, transform 0.4s;
-}
-
-.preview-actions.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.btn {
-  font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  padding: 10px 22px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-/* Landscape with limited height (iPad mini / 11" landscape, ~768-834px):
-   keep header + cards in the centred column flow (so the cards stay
-   aligned under the title) and float the buttons absolutely to the
-   right side of the screen so they don't push the cards off-centre. */
-@media (orientation: landscape) and (max-height: 900px) {
+/* ===== Compact landscape (phone landscape & wide-short windows) ===== */
+@media (orientation: landscape) and (max-height: 700px) {
   .cycle-preview {
-    padding: 14px 18px;
     gap: 10px;
+    padding: 10px;
+    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
   }
-
-  .cards-grid { gap: 12px; }
-
-  .preview-title { font-size: 1.4rem; }
-  .preview-subtitle { font-size: 0.8rem; }
-
-  .shape-panel { width: 180px; }
-  .shape-icon { width: 50px; height: 44px; }
-
-  .preview-actions {
-    position: absolute;
-    right: 24px;
-    top: 50%;
-    flex-direction: column;
-    width: 150px;
-    transform: translateY(calc(-50% + 8px));
+  .sidebar { gap: 12px; }
+  .sb-header {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
   }
-
-  .preview-actions.visible {
-    transform: translateY(-50%);
+  .sb-title { font-size: 1.1rem; }
+  .sb-subtitle { font-size: 0.75rem; }
+  .sb-shape { gap: 6px; }
+  .shape-pill {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 4px 10px;
   }
-
+  .shape-icon { width: 30px; height: 26px; }
+  .shape-toggle span,
+  .shape-mirror span { display: none; }
+  .shape-toggle input,
+  .shape-mirror input { width: 18px; height: 18px; }
+  .shape-mirror::after {
+    content: '◐';
+    font-size: 1rem;
+    color: var(--lt-text-dim);
+    margin-left: 2px;
+  }
+  .sb-actions {
+    flex-direction: row;
+    gap: 6px;
+  }
   .btn {
-    width: 100%;
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.15;
+    padding: 8px 6px;
+    font-size: 0.85rem;
+    min-height: 44px;
   }
 }
 
-/* Portrait / narrow viewports: stack the shape panel above the cards so
-   it doesn't overlap them. Un-absolute it from the left edge. */
-@media (max-width: 720px) {
-  .preview-body {
+/* ===== Portrait ===== */
+@media (orientation: portrait) {
+  .cycle-preview {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "sidebar"
+      "cards";
+    padding: 14px;
+    gap: 14px;
+  }
+  .sidebar {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+  }
+  .sb-header {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
     gap: 12px;
   }
-  .shape-panel {
-    position: static;
-    transform: none;
-    width: 100%;
-  }
-  .shape-list {
+  .sb-title { font-size: 1.35rem; }
+  .sb-subtitle { font-size: 0.85rem; }
+  .sb-shape {
     flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    align-items: stretch;
   }
-  .shape-card {
-    flex: 1 1 200px;
-    max-width: 260px;
+  .shape-pill {
+    flex: 1 1 0;
+    min-width: 0;
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 8px 10px;
+    min-height: 52px;
+  }
+  .shape-icon { width: 36px; height: 30px; }
+  .sb-actions {
+    flex-direction: row;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 52px;
+    padding: 14px 12px;
+    font-size: 1rem;
   }
 }
 
-.btn-primary {
-  color: var(--lt-gold);
-  border: 2px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
-  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
-}
-
-.btn-primary:hover {
-  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
-  border-color: var(--lt-gold);
-}
-
-.btn-secondary {
-  color: var(--lt-text-dim);
-  border: 1px solid var(--lt-border);
-  background: none;
-}
-
-.btn-secondary:hover {
-  border-color: var(--lt-text-dim);
-  color: var(--lt-text);
+/* ===== Phone portrait ===== */
+@media (orientation: portrait) and (max-width: 540px) {
+  .cycle-preview { padding: 10px; gap: 10px; }
+  .sb-title { font-size: 1.2rem; }
+  .sb-subtitle { font-size: 0.8rem; }
+  .shape-pill { padding: 6px; }
+  .shape-icon { width: 30px; height: 26px; }
+  .shape-toggle span,
+  .shape-mirror span { display: none; }
+  .shape-mirror::after {
+    content: '◐';
+    font-size: 1rem;
+    color: var(--lt-text-dim);
+    margin-left: 2px;
+  }
+  .btn { padding: 12px 8px; font-size: 0.9rem; }
 }
 </style>

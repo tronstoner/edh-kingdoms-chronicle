@@ -129,6 +129,7 @@ function dismissAndSave() {
 <template>
   <div class="deck-picker" @click.self="dismissAndSave">
     <div class="picker-content" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }">
+      <button class="lt-modal-close" @click="emit('close')" aria-label="Close">×</button>
       <h3 class="font-beleren text-mtg-gold mb-4">Seat {{ seatIndex + 1 }}</h3>
 
       <!-- Player selection -->
@@ -228,6 +229,7 @@ function dismissAndSave() {
 }
 
 .picker-content {
+  position: relative;
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;

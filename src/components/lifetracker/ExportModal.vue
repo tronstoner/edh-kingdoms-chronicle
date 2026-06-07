@@ -128,6 +128,7 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 <template>
   <div class="export-overlay" @click.self="emit('close')">
     <div class="export-panel">
+      <button class="lt-modal-close" @click="emit('close')" aria-label="Close">×</button>
       <h3 class="font-beleren text-mtg-gold mb-4">Export Session ({{ games.length + cycleGames.length }} games)</h3>
 
       <div v-if="!games.length && !cycleGames.length" class="no-games">
@@ -325,6 +326,7 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 }
 
 .export-panel {
+  position: relative;
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;

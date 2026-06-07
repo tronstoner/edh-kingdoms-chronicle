@@ -13,6 +13,7 @@ function update(key, value) {
 <template>
   <div class="settings-overlay" @click.self="emit('close')">
     <div class="settings-panel" @click.stop>
+      <button class="lt-modal-close" @click="emit('close')" aria-label="Close">×</button>
       <h3 class="settings-title font-beleren">Session Settings</h3>
 
       <!-- Display group -->
@@ -99,6 +100,7 @@ function update(key, value) {
 }
 
 .settings-panel {
+  position: relative;
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;

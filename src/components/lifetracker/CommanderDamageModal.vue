@@ -146,6 +146,7 @@ onUnmounted(() => {
 <template>
   <div class="cmd-overlay" :class="{ closing }" @click.self="!closing && handleClose()">
     <div class="cmd-panel" :class="{ closing }" :style="{ transform: rotated ? 'rotate(180deg)' : undefined }" @click.stop>
+      <button class="lt-modal-close" @click="!closing && handleClose()" aria-label="Close">×</button>
       <!-- Counters row -->
       <div class="counters-row">
         <!-- Identity: role (Kingdoms, interactive) or House (Cycle, static) -->
@@ -384,6 +385,7 @@ onUnmounted(() => {
 }
 
 .cmd-panel {
+  position: relative;
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;

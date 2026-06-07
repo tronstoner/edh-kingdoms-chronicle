@@ -71,6 +71,7 @@ function handleSaveAndExport() {
 <template>
   <div class="conclude-overlay" @click.self="emit('close')">
     <div class="conclude-panel">
+      <button class="lt-modal-close" @click="emit('close')" aria-label="Close">×</button>
       <h3 class="font-beleren text-mtg-gold mb-4">End Game</h3>
 
       <div class="conclude-rows">
@@ -138,6 +139,7 @@ function handleSaveAndExport() {
 }
 
 .conclude-panel {
+  position: relative;
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;
