@@ -140,3 +140,7 @@ There is currently no unified button design system for the lifetracker. Primary 
 2. **Rotation is the player's concern, not the data's.** Data flows normally (seat indices, damage values). Only the *presentation* rotates.
 3. **Use flex/grid for layout, not absolute percentage positioning.** Related elements should use flex or grid so they reflow naturally across screen sizes.
 4. **Test both sides.** When modifying any component that appears on both rows, verify it looks correct from both orientations.
+5. **Avoid expensive CSS operations.** The lifetracker runs on low-end tablets with weak GPUs. Three operations have proven to cause real lag:
+   - **`transition: all`** — forces the browser to snapshot every CSS property on every matched element during any state change. Always use explicit properties: `transition: background-color 0.2s, border-color 0.2s, color 0.2s`.
+   - **`backdrop-filter`** — each instance creates a separate GPU compositing layer and runs a pixel shader over the area behind it. With 4–6 player panels on screen simultaneously, even a small `blur(2px)` on each causes continuous compositing cost. Use a solid or semi-opaque background instead.
+   - **Infinite CSS animations on multiple elements** — `animation: foo infinite` running on several panels at once keeps the GPU busy every frame. Use sparingly and only on single elements.
