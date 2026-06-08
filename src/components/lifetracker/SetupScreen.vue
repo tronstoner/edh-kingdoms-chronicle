@@ -120,7 +120,7 @@ function handleCountChange(count) {
   background: var(--lt-panel-bg);
   color: var(--lt-text);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   text-align: left;
 }
 
@@ -166,7 +166,7 @@ function handleCountChange(count) {
   background: var(--lt-panel-bg);
   color: var(--lt-text);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .count-btn:hover {
@@ -195,7 +195,7 @@ function handleCountChange(count) {
   background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
   color: var(--lt-gold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .start-btn:hover {

@@ -502,9 +502,7 @@ const panelClasses = computed(() => {
   border: 1px solid color-mix(in srgb, var(--lt-text) 67%, transparent);
   border-radius: 4px;
   color: var(--lt-text);
-  background: rgba(26, 22, 18, 0.55);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(26, 22, 18, 0.85);
 }
 
 .role-tag-img {

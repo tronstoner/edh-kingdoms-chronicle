@@ -197,7 +197,7 @@ function update(key, value) {
   background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
   color: var(--lt-gold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   align-self: center;
 }
 

@@ -56,7 +56,7 @@ const layouts = computed(() => layoutsForCount(props.playerCount))
   border: 2px solid var(--lt-border);
   background: var(--lt-panel-bg);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .layout-option:hover {

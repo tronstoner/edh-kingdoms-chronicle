@@ -161,7 +161,7 @@ function select(role) {
   background: none;
   color: color-mix(in srgb, var(--lt-text-dim) 53%, transparent);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .role-clear-btn:hover {
@@ -178,7 +178,7 @@ function select(role) {
   background: none;
   color: var(--lt-text-dim);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .role-close-btn:hover {

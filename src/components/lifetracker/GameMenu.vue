@@ -74,7 +74,7 @@ const showConfirmNew = ref(false)
   background: var(--lt-bg);
   color: var(--lt-text-dim);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   white-space: nowrap;
 }
 
@@ -118,7 +118,7 @@ const showConfirmNew = ref(false)
   color: var(--lt-text-dim);
   cursor: pointer;
   border-radius: 3px;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   font-size: 1.3rem;
 }
 

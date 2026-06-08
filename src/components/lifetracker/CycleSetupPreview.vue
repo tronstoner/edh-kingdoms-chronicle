@@ -515,7 +515,7 @@ function pickerCycleLines(arrangement) {
   min-height: 52px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   white-space: nowrap;
 }
 

@@ -166,7 +166,7 @@ function onTurnPointerLeave() {
   border-radius: 3px;
   color: var(--lt-text-dim);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   /* Sized to the container (menu gap / column) so the icons scale with
      the gap width — iPad gap 64px → ~1.3rem, phone gap 40px → ~0.9rem. */
   font-size: clamp(0.9rem, 32cqmin, 1.3rem);
@@ -345,7 +345,7 @@ function onTurnPointerLeave() {
   background: var(--lt-bg);
   color: var(--lt-text-dim);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   white-space: nowrap;
   text-align: left;
 }

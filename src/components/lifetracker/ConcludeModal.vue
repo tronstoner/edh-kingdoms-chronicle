@@ -219,7 +219,7 @@ function handleSaveAndExport() {
   background: none;
   color: color-mix(in srgb, var(--lt-text-dim) 40%, transparent);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .result-win {
@@ -263,7 +263,7 @@ function handleSaveAndExport() {
   font-family: 'Cinzel', serif;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .role-chip:hover {
@@ -340,7 +340,7 @@ function handleSaveAndExport() {
   border-radius: 3px;
   border: 1px solid;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .conclude-btn-save {

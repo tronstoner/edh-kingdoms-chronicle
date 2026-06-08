@@ -517,7 +517,7 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   border-radius: 3px;
   border: 1px solid;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .result-win {
@@ -580,7 +580,7 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   border-radius: 3px;
   border: 1px solid;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .export-btn-copy {
