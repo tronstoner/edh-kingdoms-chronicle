@@ -611,13 +611,13 @@ function handleClearCycleGames() {
 }
 
 .lt-btn-primary {
-  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
-  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
-  color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 10%, #0d0a07);
+  border-color: color-mix(in srgb, var(--lt-gold) 75%, #888);
+  color: color-mix(in srgb, var(--lt-gold) 75%, #888);
 }
 
 .lt-btn-primary:hover {
-  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 16%, #0d0a07);
   border-color: var(--lt-gold);
 }
 

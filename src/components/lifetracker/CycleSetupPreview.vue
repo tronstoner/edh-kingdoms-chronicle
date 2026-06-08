@@ -520,13 +520,13 @@ function pickerCycleLines(arrangement) {
 }
 
 .btn-primary {
-  color: var(--lt-gold);
-  border: 2px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
-  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: color-mix(in srgb, var(--lt-gold) 75%, #888);
+  border: 2px solid color-mix(in srgb, var(--lt-gold) 75%, #888);
+  background: color-mix(in srgb, var(--lt-gold) 10%, #0d0a07);
 }
 
 .btn-primary:hover {
-  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 16%, #0d0a07);
   border-color: var(--lt-gold);
 }
 

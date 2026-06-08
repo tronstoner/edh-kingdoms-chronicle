@@ -128,6 +128,12 @@ Toggling between dual and single mode never zeros `cmd2` — the value is preser
 
 Lethality is per-commander (each `cmd1` or `cmd2 >= 21` is lethal alone), not summed. The minimap on `PlayerPanel` shows `cmd1/cmd2` when the dealer has partners and a single value otherwise.
 
+## Button Design System (TODO)
+
+There is currently no unified button design system for the lifetracker. Primary button styles (dark solid gold background, muted gold text/border) are duplicated across at least four components — `DeathBanner.vue`, `ConfirmDialog.vue`, `Lifetracker.vue`, and `CycleSetupPreview.vue` — each defining their own class (`.death-btn-primary`, `.confirm-btn-primary`, `.lt-btn-primary`, `.btn-primary`). Many other action buttons that should visually read as primary are unstyled or use ad-hoc gold tints.
+
+**Needs:** extract a shared button token/class (e.g. a `lifetracker-buttons.css` or a `LtButton.vue` wrapper) so that primary, secondary, danger, and ghost variants are defined once and used consistently everywhere.
+
 ## General Rules
 
 1. **Every visual element has a viewer.** Always ask: who is looking at this element, and from which side of the table?

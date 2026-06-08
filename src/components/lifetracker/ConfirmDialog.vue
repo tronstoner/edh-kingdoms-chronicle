@@ -82,13 +82,13 @@ const emit = defineEmits(['confirm', 'cancel'])
 }
 
 .confirm-btn-primary {
-  color: var(--lt-gold);
-  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
-  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: color-mix(in srgb, var(--lt-gold) 75%, #888);
+  border-color: color-mix(in srgb, var(--lt-gold) 75%, #888);
+  background: color-mix(in srgb, var(--lt-gold) 10%, #0d0a07);
 }
 
 .confirm-btn-primary:hover {
-  background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
+  background: color-mix(in srgb, var(--lt-gold) 16%, #0d0a07);
   border-color: var(--lt-gold);
 }
 

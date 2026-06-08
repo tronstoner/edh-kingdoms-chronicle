@@ -30,7 +30,7 @@ const emit = defineEmits([
       <template v-if="!isCycle">
         <button
           v-if="!roleRevealed"
-          class="death-btn"
+          class="death-btn death-btn-primary"
           @click="emit('revealRole')"
         >
           Reveal role
@@ -116,6 +116,16 @@ const emit = defineEmits([
 .death-btn:hover {
   border-color: var(--lt-gold);
   color: var(--lt-gold);
+}
+
+.death-btn-primary {
+  color: color-mix(in srgb, var(--lt-gold) 75%, #888);
+  border-color: color-mix(in srgb, var(--lt-gold) 75%, #888);
+  background: color-mix(in srgb, var(--lt-gold) 10%, #0d0a07);
+}
+
+.death-btn-primary:hover {
+  background: color-mix(in srgb, var(--lt-gold) 16%, #0d0a07);
 }
 
 .death-btn-zombie {
