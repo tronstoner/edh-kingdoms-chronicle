@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ROLE_COLORS, roleIconUrl, lifetrackerRoleLabel } from '../../roles.js'
 import { HOUSE_COLORS, houseImageUrl, cycleRelations } from '../../lifetracker/cycle.js'
+import { applyKingdomsCascades } from '../../lifetracker/kingdoms.js'
 
 const ROLES = ['King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
 const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
@@ -33,6 +34,12 @@ const rows = ref(props.seats.map((s, i) => ({
   house: s.house || '',
   result: s.isWinner ? 'Win' : (isCycle.value && defaultCycleWinner(i) ? 'Win' : (s.isDead ? 'Loss' : '')),
   roleNotes: s.roleNotes || '',
+  // Tracks what the Kingdoms cascade last wrote into `result` so a
+  // subsequent pass can revert its own effect and re-derive cleanly.
+  cascadeResult: '',
+  // Same idea for the last-role auto-reveal — once the user empties
+  // a role, don't let the utility put it back on the next sync.
+  roleClearedByUser: false,
 })))
 
 const firstKO = ref((() => {
@@ -48,8 +55,66 @@ function toggleResult(i) {
 }
 
 function selectRole(i, role) {
-  rows.value[i].role = rows.value[i].role === role ? '' : role
+  const next = rows.value[i].role === role ? '' : role
+  rows.value[i].role = next
+  rows.value[i].roleClearedByUser = !next
 }
+
+// Re-run the Kingdoms automation against the user's current edits.
+// Fully state-driven: any row.result the cascade owned last time is
+// reverted before re-deriving, so undoing a trigger (e.g. clearing
+// the Lord's "Loss") correctly drops the consequences it caused
+// (Knight death, King/Knight win, Zombie deaths). A row the user has
+// since manually overridden stays as the user set it.
+let syncingCascades = false
+function syncKingdomsCascades() {
+  if (isCycle.value) return
+  // Step 1 — revert any prior cascade effect on the result column.
+  for (const r of rows.value) {
+    if (r.cascadeResult && r.result === r.cascadeResult) {
+      r.result = ''
+    }
+    r.cascadeResult = ''
+  }
+  // Step 2 — build work seats from the user-set base state.
+  const work = rows.value.map(r => ({
+    role: r.role || null,
+    roleNotes: r.roleNotes || null,
+    isDead: r.result === 'Loss',
+    deathOverridden: false,
+    isWinner: r.result === 'Win',
+    deathTurn: null,
+    roleClearedByUser: !!r.roleClearedByUser,
+  }))
+  // Step 3 — apply cascades; the utility tags newly cascade-set work
+  // seats via cascadeKilled / cascadeWonBy.
+  applyKingdomsCascades(work, props.turnCount || 0)
+  // Step 4 — write back; remember which rows the cascade owns now so
+  // the next sync can revert them.
+  syncingCascades = true
+  for (let i = 0; i < rows.value.length; i++) {
+    const w = work[i]
+    if (w.role && !rows.value[i].role) rows.value[i].role = w.role
+    if (w.cascadeWonBy) {
+      rows.value[i].result = 'Win'
+      rows.value[i].cascadeResult = 'Win'
+    } else if (w.cascadeKilled && rows.value[i].result !== 'Win') {
+      rows.value[i].result = 'Loss'
+      rows.value[i].cascadeResult = 'Loss'
+    }
+  }
+  syncingCascades = false
+}
+
+watch(rows, () => {
+  if (syncingCascades) return
+  syncKingdomsCascades()
+}, { deep: true })
+
+// Run once on mount in case the seats came in pre-edited but the
+// cascade is owed a follow-up (e.g. an unrevealed role got picked
+// elsewhere before the modal opened).
+syncKingdomsCascades()
 
 function getData() {
   return {

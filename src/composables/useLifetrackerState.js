@@ -1,5 +1,6 @@
 import { reactive, watch } from 'vue'
 import { assignHousesForShapes, randomStart, DEFAULT_SHAPE_OPTIONS } from '../lifetracker/cycle.js'
+import { applyKingdomsCascades } from '../lifetracker/kingdoms.js'
 
 const LS_CURRENT = 'edhlog-lt-current'
 const LS_COMPLETED = 'edhlog-lt-completed'
@@ -136,6 +137,15 @@ function createSeat(index, playerCount) {
     isWinner: false,
     roleNotes: null,
     history: [],
+    // Cascade bookkeeping — set by applyKingdomsCascades so it can
+    // revert its own past effects on the next pass. Cleared whenever
+    // the user takes ownership (manual setDead toggle, life-tap into
+    // lethal, manual winner toggle, etc.).
+    cascadeKilled: false,
+    cascadeWonBy: false,
+    // Set when the user explicitly empties this seat's role so the
+    // last-role auto-reveal doesn't immediately put it back.
+    roleClearedByUser: false,
   }
 }
 
@@ -314,32 +324,22 @@ export function useLifetrackerState() {
     }
     if (shouldDie && !seat.isDead) {
       seat.isDead = true
+      // User-driven death — cascade no longer owns this seat.
+      seat.cascadeKilled = false
       if (seat.deathTurn === null) {
         seat.deathTurn = state.turnCount
       }
-      cascadeLordDeath(seat)
+      runKingdomsCascades()
     }
   }
 
-  // Kingdoms rule: when a Lord dies, all of their minions die with them.
-  // Zombie Lord kills every Zombie; Clone Lord kills every Clone. The
-  // picker stores the Zombie Lord as plain 'Lord' but 'Zombie Lord' is
-  // accepted too for safety.
-  function cascadeLordDeath(seat) {
+  // Apply every Kingdoms rule across the whole table. Idempotent —
+  // safe to call after any state change (death, role reveal, etc.).
+  // The actual rule logic lives in the kingdoms utility so both this
+  // composable and the End Game modal share the same behavior.
+  function runKingdomsCascades() {
     if (state.mode !== 'kingdoms') return
-    if (!seat.isDead) return
-    let minionNote = null
-    if (seat.role === 'Lord' || seat.role === 'Zombie Lord') minionNote = 'Zombie'
-    else if (seat.role === 'Clone Lord') minionNote = 'Clone'
-    else return
-    for (const other of state.seats) {
-      if (other === seat) continue
-      if (other.roleNotes !== minionNote) continue
-      if (other.isDead) continue
-      other.isDead = true
-      other.deathOverridden = false
-      if (other.deathTurn === null) other.deathTurn = state.turnCount
-    }
+    applyKingdomsCascades(state.seats, state.turnCount)
   }
 
   const lifeBatch = {}
@@ -410,24 +410,35 @@ export function useLifetrackerState() {
   function toggleDeathOverride(seatIndex) {
     const seat = state.seats[seatIndex]
     seat.deathOverridden = !seat.deathOverridden
+    // User explicitly took control of this seat's life state — drop
+    // any cascade-owned death so we don't fight them on the next pass.
+    seat.cascadeKilled = false
     if (seat.deathOverridden) {
       seat.isDead = false
+      seat.deathTurn = null
     } else {
       checkDeath(seat)
     }
+    // Re-run cascades — a Lord coming back to life should revert any
+    // King/Knight wins it triggered, drag back-alive minions get clean
+    // state too, etc.
+    runKingdomsCascades()
   }
 
   function setWinner(seatIndex) {
-    state.seats[seatIndex].isWinner = !state.seats[seatIndex].isWinner
+    const seat = state.seats[seatIndex]
+    seat.isWinner = !seat.isWinner
+    seat.cascadeWonBy = false
   }
 
   function setDead(seatIndex) {
     const seat = state.seats[seatIndex]
     seat.isDead = !seat.isDead
+    seat.cascadeKilled = false
     if (seat.isDead && seat.deathTurn === null) {
       seat.deathTurn = state.turnCount
     }
-    if (seat.isDead) cascadeLordDeath(seat)
+    runKingdomsCascades()
   }
 
   function advanceTurn(delta = 1) {
@@ -509,6 +520,6 @@ export function useLifetrackerState() {
     resumeOrNew,
     discardSaved,
     checkDeath,
-    cascadeLordDeath,
+    runKingdomsCascades,
   }
 }

@@ -31,7 +31,7 @@ const {
   changePoison,
   changeCommanderDamage,
   toggleDeathOverride,
-  cascadeLordDeath,
+  runKingdomsCascades,
   advanceTurn,
   saveGame,
   persistSetup,
@@ -333,13 +333,17 @@ function handleRoleSelect(role) {
   const seat = state.seats[rolePickerSeat.value]
   seat.role = role
   seat.roleRevealed = !!role
+  // Track explicit clears so the elimination auto-reveal doesn't
+  // immediately put the role back on a misclick.
+  seat.roleClearedByUser = !role
   // King gets 50 life
   if (role === 'King' && seat.life === 40) {
     seat.life = 50
   }
-  // If a Lord reveals their role only after dying, the minion cascade
-  // wouldn't have fired in checkDeath/setDead — trigger it now.
-  if (seat.isDead) cascadeLordDeath(seat)
+  // Roles can be revealed long after the death that triggered a
+  // cascade. Re-evaluate every Kingdoms cascade — the utility reverts
+  // its own past effects and re-derives from the new user-set state.
+  runKingdomsCascades()
   rolePickerSeat.value = null
   cmdDamageTarget.value = null
 }
