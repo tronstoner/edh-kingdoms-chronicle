@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import {
   HOUSES,
   HOUSE_COLORS,
@@ -12,6 +12,8 @@ import {
 import {
   loadCycleShapeOptions,
   saveCycleShapeOptions,
+  loadCycleManualMode,
+  saveCycleManualMode,
 } from '../../composables/useLifetrackerState.js'
 import CycleRelationIcon from './CycleRelationIcon.vue'
 import CycleDirectionsMap from './CycleDirectionsMap.vue'
@@ -21,7 +23,7 @@ const props = defineProps({
   startingSeatIndex: Number,
 })
 
-const emit = defineEmits(['redeal', 'begin', 'back'])
+const emit = defineEmits(['redeal', 'swap-seats', 'roll-start', 'begin', 'back'])
 
 // Animation state — cards flip in sequence after the shuffle pass.
 const revealed = ref([false, false, false, false])
@@ -39,6 +41,58 @@ const shapeOptions = ref(loadCycleShapeOptions())
 
 // Whether the kill-list map is open.
 const mapOpen = ref(false)
+
+// Manual assignment mode. When on, the deal animation is skipped, all
+// cards are immediately revealed, and the user can drag any card onto
+// another to swap their House (and starting-seat marker if applicable).
+const manualMode = ref(loadCycleManualMode())
+const dragSource = ref(null)
+const dragTarget = ref(null)
+const dragMoved = ref(false)
+const pointerX = ref(0)
+const pointerY = ref(0)
+const ghostSize = ref(80)
+let dragOrigin = null
+let onDocMove = null
+let onDocUp = null
+
+// Sword that spins in the centre when the starting seat is re-rolled,
+// then decelerates to point at the chosen seat. Pivot is the SVG centre
+// — at rotation 0deg the tip is up (12 o'clock), so each seat maps to
+// a clockwise angle from north.
+const swordSpinning = ref(false)
+const swordFinalAngle = ref(0)
+const swordDx = ref('0px')
+const swordDy = ref('0px')
+const SWORD_PATH = 'M12 1 L13.75 2.75 L13.75 15 L17 15 L17 17 L13.5 17 L13.5 21 L14.25 21.5 L14.25 23 L9.75 23 L9.75 21.5 L10.5 21 L10.5 17 L7 17 L7 15 L10.25 15 L10.25 2.75 Z'
+let swordTimeout = null
+const SWORD_ANIM_MS = 1700
+
+function seatAngle(seatIndex) {
+  // 2x2 layout: 0=TL, 1=TR, 2=BL, 3=BR. Clockwise from up.
+  switch (seatIndex) {
+    case 0: return 315
+    case 1: return 45
+    case 2: return 225
+    case 3: return 135
+    default: return 0
+  }
+}
+
+function seatOffset(seatIndex) {
+  // Direction the sword stabs after settling. The card centre sits at
+  // ±25cq from the cards-area centre; back off by roughly half the
+  // sword's length (the tip extends ~14cq past the sword's centre at the
+  // 32cqi clamp range) so the *tip* lands on the card centre rather
+  // than the sword overshooting it.
+  switch (seatIndex) {
+    case 0: return { x: '-16cqw', y: '-16cqh' }
+    case 1: return { x:  '16cqw', y: '-16cqh' }
+    case 2: return { x: '-16cqw', y:  '16cqh' }
+    case 3: return { x:  '16cqw', y:  '16cqh' }
+    default: return { x: '0px', y: '0px' }
+  }
+}
 
 function randomHouse(exclude) {
   const opts = HOUSES.filter(h => h !== exclude)
@@ -100,7 +154,115 @@ function runAnimation() {
 
 onUnmounted(() => {
   if (shuffleInterval) clearInterval(shuffleInterval)
+  if (swordTimeout) clearTimeout(swordTimeout)
+  if (onDocMove) document.removeEventListener('pointermove', onDocMove)
+  if (onDocUp) {
+    document.removeEventListener('pointerup', onDocUp)
+    document.removeEventListener('pointercancel', onDocUp)
+  }
 })
+
+function enterManualMode() {
+  if (shuffleInterval) {
+    clearInterval(shuffleInterval)
+    shuffleInterval = null
+  }
+  revealed.value = [true, true, true, true]
+  dealing.value = false
+  showStart.value = true
+  shuffledHouse.value = props.seats.map(s => s?.house || null)
+}
+
+function toggleManual() {
+  manualMode.value = !manualMode.value
+  saveCycleManualMode(manualMode.value)
+  if (manualMode.value) enterManualMode()
+}
+
+function handleBegin() {
+  if (swordSpinning.value) return
+  // If no starting seat has been picked yet (e.g. after a Re-deal that
+  // cleared it), run the sword animation first so the player can see who
+  // starts before the game begins.
+  if (props.startingSeatIndex == null) {
+    handleRollStart()
+    setTimeout(() => emit('begin'), SWORD_ANIM_MS + 150)
+  } else {
+    emit('begin')
+  }
+}
+
+async function handleRollStart() {
+  if (swordSpinning.value) return
+  emit('roll-start')
+  await nextTick()
+  const idx = props.startingSeatIndex
+  if (idx == null) return
+  // 5 full rotations + the final settle angle, so the deceleration easing
+  // has plenty of motion to absorb before resting on the picked seat.
+  swordFinalAngle.value = 5 * 360 + seatAngle(idx)
+  const offset = seatOffset(idx)
+  swordDx.value = offset.x
+  swordDy.value = offset.y
+  swordSpinning.value = true
+  if (swordTimeout) clearTimeout(swordTimeout)
+  swordTimeout = setTimeout(() => {
+    swordSpinning.value = false
+    swordTimeout = null
+  }, SWORD_ANIM_MS)
+}
+
+function onCardPointerDown(seatIndex, ev) {
+  if (!manualMode.value) return
+  // Only react to primary pointer presses (left mouse / touch).
+  if (ev.button !== undefined && ev.button !== 0) return
+  dragOrigin = { x: ev.clientX, y: ev.clientY }
+  pointerX.value = ev.clientX
+  pointerY.value = ev.clientY
+  dragSource.value = seatIndex
+  dragMoved.value = false
+  // Measure the source's house image so the ghost matches its size exactly.
+  const cell = ev.currentTarget?.closest('[data-cycle-seat]')
+  const img = cell?.querySelector('.card-house-img')
+  if (img) {
+    const rect = img.getBoundingClientRect()
+    ghostSize.value = Math.max(rect.width, rect.height)
+  }
+  onDocMove = (mv) => {
+    if (dragSource.value === null) return
+    pointerX.value = mv.clientX
+    pointerY.value = mv.clientY
+    const dx = mv.clientX - dragOrigin.x
+    const dy = mv.clientY - dragOrigin.y
+    if (!dragMoved.value && Math.hypot(dx, dy) > 8) dragMoved.value = true
+    if (!dragMoved.value) return
+    const el = document.elementFromPoint(mv.clientX, mv.clientY)
+    const cell = el?.closest('[data-cycle-seat]')
+    if (cell) {
+      const idx = parseInt(cell.dataset.cycleSeat, 10)
+      dragTarget.value = idx === dragSource.value ? null : idx
+    } else {
+      dragTarget.value = null
+    }
+  }
+  onDocUp = () => {
+    if (dragMoved.value && dragSource.value !== null && dragTarget.value !== null) {
+      emit('swap-seats', dragSource.value, dragTarget.value)
+    }
+    dragSource.value = null
+    dragTarget.value = null
+    dragOrigin = null
+    dragMoved.value = false
+    document.removeEventListener('pointermove', onDocMove)
+    document.removeEventListener('pointerup', onDocUp)
+    document.removeEventListener('pointercancel', onDocUp)
+    onDocMove = null
+    onDocUp = null
+  }
+  document.addEventListener('pointermove', onDocMove)
+  document.addEventListener('pointerup', onDocUp)
+  document.addEventListener('pointercancel', onDocUp)
+}
 
 function shuffleStyle(i) {
   return {
@@ -109,9 +271,14 @@ function shuffleStyle(i) {
   }
 }
 
-onMounted(runAnimation)
+onMounted(() => {
+  if (manualMode.value) enterManualMode()
+  else runAnimation()
+})
 
 function handleRedeal() {
+  manualMode.value = false
+  saveCycleManualMode(false)
   emit('redeal', JSON.parse(JSON.stringify(shapeOptions.value)))
   // Allow parent to re-deal then trigger animation again on next tick.
   setTimeout(runAnimation, 50)
@@ -272,15 +439,36 @@ function pickerCycleLines(arrangement) {
         </div>
       </div>
 
+      <button
+        class="btn-manual"
+        :class="{ active: manualMode }"
+        @click="toggleManual"
+      >
+        {{ manualMode ? '✓ Manual mode' : 'Manual mode' }}
+      </button>
+
       <div class="sb-actions" :class="{ visible: showStart }">
-        <button class="btn btn-secondary" @click="emit('back')">Back</button>
-        <button class="btn btn-secondary" @click="handleRedeal">Re-deal</button>
-        <button class="btn btn-primary" @click="emit('begin')">Begin Game</button>
+        <button v-if="!manualMode" class="btn btn-secondary" @click="handleRedeal">Re-deal</button>
+        <button class="btn btn-secondary" @click="handleRollStart">Roll Start</button>
+        <button class="btn btn-primary" :disabled="swordSpinning" @click="handleBegin">Begin Game</button>
       </div>
+
+      <button class="btn btn-secondary sb-back" :class="{ visible: showStart }" @click="emit('back')">Back</button>
     </aside>
 
-    <div class="cards" :class="{ shuffling: dealing }">
-      <div v-for="seatIndex in [0, 1, 2, 3]" :key="seatIndex" class="card-cell">
+    <div class="cards" :class="{ shuffling: dealing, manual: manualMode }">
+      <div
+        v-for="seatIndex in [0, 1, 2, 3]"
+        :key="seatIndex"
+        class="card-cell"
+        :class="{
+          'drag-source': dragSource === seatIndex && dragMoved,
+          'drag-target': dragTarget === seatIndex,
+          'manual-grabbable': manualMode,
+        }"
+        :data-cycle-seat="seatIndex"
+        @pointerdown="onCardPointerDown(seatIndex, $event)"
+      >
         <div class="card-player">{{ seats[seatIndex]?.player || `Seat ${seatIndex + 1}` }}</div>
         <div
           class="card"
@@ -294,7 +482,7 @@ function pickerCycleLines(arrangement) {
             <div class="card-back-pattern"></div>
           </div>
           <div class="card-face card-front" :style="{ borderColor: houseColor(displayedHouse(seatIndex)) }">
-            <span v-if="showStart && turnPos(seatIndex) === 1" class="start-badge">Starts</span>
+            <span v-if="showStart && turnPos(seatIndex) === 1 && !swordSpinning" class="start-badge">Starts</span>
             <img
               v-if="displayedHouse(seatIndex)"
               class="card-house-img"
@@ -320,6 +508,22 @@ function pickerCycleLines(arrangement) {
           </div>
         </div>
       </div>
+
+      <!-- Sword that spins in the centre of the grid when re-rolling
+           the starting seat. Decelerates onto the chosen seat. -->
+      <svg
+        v-if="swordSpinning"
+        class="roll-sword"
+        viewBox="0 0 24 24"
+        :style="{
+          '--sword-final-angle': swordFinalAngle + 'deg',
+          '--sword-dx': swordDx,
+          '--sword-dy': swordDy,
+        }"
+        aria-hidden="true"
+      >
+        <path fill="currentColor" :d="SWORD_PATH" />
+      </svg>
     </div>
 
     <CycleDirectionsMap
@@ -327,6 +531,22 @@ function pickerCycleLines(arrangement) {
       :seats="seats"
       @close="mapOpen = false"
     />
+
+    <!-- Floating drag ghost that follows the pointer in manual mode -->
+    <Teleport to="body">
+      <img
+        v-if="dragSource !== null && dragMoved && seats[dragSource]?.house"
+        class="drag-ghost"
+        :style="{
+          left: pointerX + 'px',
+          top: pointerY + 'px',
+          width: ghostSize + 'px',
+          height: ghostSize + 'px',
+        }"
+        :src="houseImageUrl(seats[dragSource].house)"
+        :alt="seats[dragSource].house"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -508,6 +728,32 @@ function pickerCycleLines(arrangement) {
   transform: translateY(0);
 }
 
+/* Back lives below the main actions, separated and pushed to the bottom
+   of the sidebar with margin-top:auto so it sits at the floor without
+   crowding the primary flow. Compound selector .btn.sb-back wins over
+   the responsive `.btn { flex: 1 1 0 }` rule (which would otherwise make
+   it stretch to fill the sidebar's remaining vertical space). */
+.btn.sb-back {
+  margin-top: auto;
+  flex: 0 0 auto;
+  font-size: 0.9rem;
+  min-height: 44px;
+  padding: 10px 16px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+.btn.sb-back.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .btn {
   font-family: 'Cinzel', serif;
   font-size: 1.05rem;
@@ -541,6 +787,38 @@ function pickerCycleLines(arrangement) {
   color: var(--lt-text);
 }
 
+.btn-manual {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  padding: 10px 16px;
+  min-height: 40px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--lt-text-dim);
+  border: 1px dashed var(--lt-border);
+  background: none;
+  flex: 0 0 auto;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  letter-spacing: 0.04em;
+}
+
+.btn-manual:hover:not(:disabled) {
+  border-color: var(--lt-text-dim);
+  color: var(--lt-text);
+}
+
+.btn-manual.active {
+  color: var(--lt-gold);
+  border-color: var(--lt-gold);
+  border-style: solid;
+  background: color-mix(in srgb, var(--lt-gold) 10%, transparent);
+}
+
+.btn-manual:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ===== Cards ===== */
 .cards {
   grid-area: cards;
@@ -551,6 +829,59 @@ function pickerCycleLines(arrangement) {
   gap: 12px;
   min-width: 0;
   min-height: 0;
+  position: relative;
+}
+
+.roll-sword {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(120px, 32cqi, 320px);
+  height: clamp(120px, 32cqi, 320px);
+  color: var(--lt-gold);
+  pointer-events: none;
+  z-index: 50;
+  filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.75));
+  transform-origin: 50% 50%;
+  animation: sword-roll 1.7s cubic-bezier(0.1, 0.85, 0.25, 1) forwards;
+}
+
+@keyframes sword-roll {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  8% {
+    transform: translate(-50%, -50%) rotate(180deg) scale(1);
+    opacity: 1;
+  }
+  62% {
+    transform: translate(-50%, -50%) rotate(var(--sword-final-angle, 1800deg)) scale(1);
+    opacity: 1;
+  }
+  /* Tiny windup: brief overshoot in scale before the thrust. */
+  68% {
+    transform: translate(-50%, -50%) rotate(var(--sword-final-angle, 1800deg)) scale(1.12);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+  /* Stab — a fast thrust outward past the card centre. */
+  76% {
+    transform:
+      translate(calc(-50% + var(--sword-dx, 0px)), calc(-50% + var(--sword-dy, 0px)))
+      rotate(var(--sword-final-angle, 1800deg))
+      scale(0.95);
+    opacity: 0.9;
+    animation-timing-function: linear;
+  }
+  /* Held at the stabbed position, fading out. */
+  100% {
+    transform:
+      translate(calc(-50% + var(--sword-dx, 0px)), calc(-50% + var(--sword-dy, 0px)))
+      rotate(var(--sword-final-angle, 1800deg))
+      scale(0.9);
+    opacity: 0;
+  }
 }
 
 .card-cell {
@@ -561,6 +892,62 @@ function pickerCycleLines(arrangement) {
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+
+.card-cell.manual-grabbable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.card-cell.manual-grabbable .card { transition: opacity 0.18s, transform 0.22s cubic-bezier(0.3, 0.7, 0.4, 1); }
+.card-cell.manual-grabbable .card-player { transition: opacity 0.18s; }
+
+/* Source: clearly the origin, faded in place — the floating ghost
+   shows where the cursor is and what's being moved. */
+.card-cell.drag-source {
+  cursor: grabbing;
+}
+.card-cell.drag-source .card { opacity: 0.18; }
+.card-cell.drag-source .card-player { opacity: 0.3; }
+
+/* Target: strong, animated highlight so the drop zone reads immediately. */
+.card-cell.drag-target .card-front {
+  box-shadow:
+    0 0 0 3px var(--lt-gold),
+    0 0 36px color-mix(in srgb, var(--lt-gold) 55%, transparent);
+}
+.card-cell.drag-target .card {
+  transform: scale(1.04);
+}
+
+/* The floating ghost is teleported to body and follows the pointer in
+   manual mode. Sits above everything via fixed positioning + high z-index;
+   `pointer-events: none` ensures elementFromPoint resolves to the card
+   beneath it, not the ghost itself. Dimensions match the source card's
+   house icon, measured at drag start. */
+.drag-ghost {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1000;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.65));
+  animation: ghost-appear 0.16s cubic-bezier(0.18, 0.85, 0.32, 1.2);
+  will-change: left, top;
+}
+
+@keyframes ghost-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .card-player {

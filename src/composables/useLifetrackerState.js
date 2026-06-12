@@ -6,6 +6,7 @@ const LS_COMPLETED = 'edhlog-lt-completed'
 const LS_COMPLETED_CYCLE = 'edhlog-lt-completed-cycle'
 const LS_LAST_SETUP = 'edhlog-lt-last-setup'
 const LS_CYCLE_SHAPES = 'edhlog-lt-cycle-shapes'
+const SS_CYCLE_MANUAL = 'edhlog-lt-cycle-manual'
 const LS_SETTINGS = 'edhlog-lt-settings'
 
 // Session settings — persisted across games, separate from the game state.
@@ -89,6 +90,23 @@ export function loadCycleShapeOptions() {
 export function saveCycleShapeOptions(opts) {
   try {
     localStorage.setItem(LS_CYCLE_SHAPES, JSON.stringify(opts))
+  } catch {
+    // ignore quota errors
+  }
+}
+
+export function loadCycleManualMode() {
+  try {
+    return sessionStorage.getItem(SS_CYCLE_MANUAL) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function saveCycleManualMode(on) {
+  try {
+    if (on) sessionStorage.setItem(SS_CYCLE_MANUAL, '1')
+    else sessionStorage.removeItem(SS_CYCLE_MANUAL)
   } catch {
     // ignore quota errors
   }
@@ -256,6 +274,23 @@ export function useLifetrackerState() {
     state.seats.forEach((seat, i) => {
       seat.house = houses[i]
     })
+    // Houses only — the starting seat is rolled separately (on initial
+    // setup → cycle-preview transition, or via Roll Start). Re-deal must
+    // not change who goes first.
+  }
+
+  function swapCycleHouses(a, b) {
+    if (state.mode !== 'cycle') return
+    if (a === b || !state.seats[a] || !state.seats[b]) return
+    const tmp = state.seats[a].house
+    state.seats[a].house = state.seats[b].house
+    state.seats[b].house = tmp
+    if (state.startingSeatIndex === a) state.startingSeatIndex = b
+    else if (state.startingSeatIndex === b) state.startingSeatIndex = a
+  }
+
+  function rollStartingSeat() {
+    if (state.mode !== 'cycle') return
     state.startingSeatIndex = randomStart(state.seats.length)
   }
 
@@ -434,6 +469,8 @@ export function useLifetrackerState() {
     newGame,
     startGame,
     dealCycle,
+    swapCycleHouses,
+    rollStartingSeat,
     changeLife,
     changePoison,
     changeCommanderDamage,

@@ -25,6 +25,8 @@ const {
   newGame,
   startGame,
   dealCycle,
+  swapCycleHouses,
+  rollStartingSeat,
   changeLife,
   changePoison,
   changeCommanderDamage,
@@ -163,6 +165,7 @@ function handleSetLayout(layoutId) {
 function handleStart() {
   if (state.mode === 'cycle') {
     dealCycle()
+    rollStartingSeat()
     state.phase = 'cycle-preview'
   } else {
     startGame()
@@ -171,6 +174,10 @@ function handleStart() {
 
 function handleCycleRedeal(shapeOptions) {
   dealCycle(shapeOptions)
+  // Re-dealing only changes Houses — Roll Start is the explicit way to
+  // pick who goes first. Clear the previous starting seat so the badge
+  // doesn't carry over and mislead.
+  state.startingSeatIndex = null
 }
 
 function handleCycleBegin() {
@@ -431,6 +438,8 @@ function handleClearCycleGames() {
       :seats="state.seats"
       :starting-seat-index="state.startingSeatIndex"
       @redeal="handleCycleRedeal"
+      @swap-seats="swapCycleHouses"
+      @roll-start="rollStartingSeat"
       @begin="handleCycleBegin"
       @back="handleCycleBack"
     />

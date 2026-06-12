@@ -351,8 +351,8 @@ function onTurnPointerLeave() {
 
 :global(.menu-modal-panel .menu-btn) {
   font-family: 'Cinzel', serif;
-  font-size: 0.9rem;
-  padding: 10px 24px;
+  font-size: 1.15rem;
+  padding: 14px 28px;
   border-radius: 3px;
   border: 1px solid var(--lt-border);
   background: var(--lt-bg);
