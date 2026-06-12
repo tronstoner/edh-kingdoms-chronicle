@@ -102,14 +102,14 @@ onUnmounted(() => {
 .zone-label {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.1rem, 10cqmin, 2.5rem);
-  color: color-mix(in srgb, var(--lt-text-dim) 20%, transparent);
+  color: var(--lt-text);
   transition: color 0.15s;
   pointer-events: none;
 }
 
 .zone:active .zone-label,
 .flash .zone-label {
-  color: color-mix(in srgb, var(--lt-text-dim) 40%, transparent);
+  color: var(--lt-text);
 }
 
 .flash.zone-minus {

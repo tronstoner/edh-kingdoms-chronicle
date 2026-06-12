@@ -500,7 +500,7 @@ onUnmounted(() => {
   bottom: 30%;
   font-family: 'Cinzel', serif;
   font-size: clamp(0.7rem, 14cqh, 1.3rem);
-  color: color-mix(in srgb, var(--lt-text-dim) 20%, transparent);
+  color: var(--lt-text);
   pointer-events: none;
   z-index: 2;
 }
@@ -710,13 +710,13 @@ onUnmounted(() => {
 .zone-hint {
   font-family: 'Cinzel', serif;
   font-size: clamp(0.8rem, 15.5cqh, 2rem);
-  color: color-mix(in srgb, var(--lt-text-dim) 20%, transparent);
+  color: var(--lt-text);
   pointer-events: none;
 }
 
 .cmd-flash-half:active .zone-hint,
 .cmd-flash-half.flash .zone-hint {
-  color: color-mix(in srgb, var(--lt-text-dim) 40%, transparent);
+  color: var(--lt-text);
 }
 
 .cmd-seat-content {
