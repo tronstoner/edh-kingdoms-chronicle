@@ -78,9 +78,9 @@ export function loadCycleShapeOptions() {
     const parsed = raw ? JSON.parse(raw) : null
     if (!parsed) return JSON.parse(JSON.stringify(DEFAULT_SHAPE_OPTIONS))
     return {
-      diagonal:   { ...DEFAULT_SHAPE_OPTIONS.diagonal,   ...(parsed.diagonal   || {}) },
-      vertical:   { ...DEFAULT_SHAPE_OPTIONS.vertical,   ...(parsed.vertical   || {}) },
-      horizontal: { ...DEFAULT_SHAPE_OPTIONS.horizontal, ...(parsed.horizontal || {}) },
+      diagonal:   { enabled: parsed.diagonal?.enabled   ?? true },
+      vertical:   { enabled: parsed.vertical?.enabled   ?? true },
+      horizontal: { enabled: parsed.horizontal?.enabled ?? true },
     }
   } catch {
     return JSON.parse(JSON.stringify(DEFAULT_SHAPE_OPTIONS))

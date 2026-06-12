@@ -295,14 +295,6 @@ function setShapeEnabled(shapeId, value) {
   saveCycleShapeOptions(shapeOptions.value)
 }
 
-function setShapeMirror(shapeId, value) {
-  shapeOptions.value = {
-    ...shapeOptions.value,
-    [shapeId]: { ...shapeOptions.value[shapeId], mirror: value },
-  }
-  saveCycleShapeOptions(shapeOptions.value)
-}
-
 function houseColor(house) {
   return HOUSE_COLORS[house] || 'var(--lt-text-dim)'
 }
@@ -316,11 +308,10 @@ function turnPos(seatIndex) {
   return turnPositionFor(seatIndex, props.startingSeatIndex, props.seats.length)
 }
 
-// Tiny illustrative SVG for each shape card in the picker.
-// Mirrors HTML/research/the-cycle.html Appendix figures but at small scale,
-// drawn from the canonical (non-mirrored) representative arrangement.
+// Tiny illustrative SVG for each shape card in the picker — drawn from
+// a representative arrangement for the given shape.
 function shapeIconArrangement(shapeId) {
-  return representativeArrangement(shapeId, false) || ['A', 'B', 'C', 'D']
+  return representativeArrangement(shapeId) || ['A', 'B', 'C', 'D']
 }
 
 // Seat coords inside the small picker SVG (viewBox 80x70).
@@ -353,6 +344,28 @@ function pickerCycleLines(arrangement) {
     })
   }
   return lines
+}
+
+// The two mutual nemesis pairs (A↔C and B↔D) — endpoints trimmed back
+// to the node radius so the dash line stops at the circle edge.
+function pickerNemesisLines(arrangement) {
+  const seatOf = {}
+  arrangement.forEach((h, i) => { seatOf[h] = i })
+  const pairs = [['A', 'C'], ['B', 'D']]
+  return pairs.map(([h1, h2]) => {
+    const from = PICKER_NODES[seatOf[h1]]
+    const to = PICKER_NODES[seatOf[h2]]
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const len = Math.hypot(dx, dy) || 1
+    const r = 7
+    return {
+      x1: from.x + (dx / len) * r,
+      y1: from.y + (dy / len) * r,
+      x2: to.x - (dx / len) * r,
+      y2: to.y - (dy / len) * r,
+    }
+  })
 }
 </script>
 
@@ -395,7 +408,28 @@ function pickerCycleLines(arrangement) {
                 >
                   <path d="M 0 0 L 10 5 L 0 10 z" :fill="shapeOptions[shape.id].enabled ? 'var(--lt-gold)' : 'var(--lt-border)'" />
                 </marker>
+                <marker
+                  :id="`pickerNemesisArrow-${shape.id}`"
+                  viewBox="0 0 10 10"
+                  refX="9" refY="5"
+                  markerWidth="5" markerHeight="5"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" :fill="shapeOptions[shape.id].enabled ? '#ff4d4d' : 'var(--lt-border)'" />
+                </marker>
               </defs>
+              <!-- Nemesis pairs (A↔C and B↔D) drawn first so the gold
+                   rival arrows sit on top at any crossing. -->
+              <line
+                v-for="(ln, i) in pickerNemesisLines(shapeIconArrangement(shape.id))"
+                :key="`n${i}`"
+                :x1="ln.x1" :y1="ln.y1" :x2="ln.x2" :y2="ln.y2"
+                :stroke="shapeOptions[shape.id].enabled ? '#ff4d4d' : 'var(--lt-border)'"
+                stroke-width="1.6"
+                opacity="1"
+                :marker-start="`url(#pickerNemesisArrow-${shape.id})`"
+                :marker-end="`url(#pickerNemesisArrow-${shape.id})`"
+              />
               <line
                 v-for="(ln, i) in pickerCycleLines(shapeIconArrangement(shape.id))"
                 :key="i"
@@ -430,15 +464,6 @@ function pickerCycleLines(arrangement) {
               @change="setShapeEnabled(shape.id, $event.target.checked)"
             />
             <span>{{ shape.label }}</span>
-          </label>
-          <label class="shape-mirror" :class="{ off: !shapeOptions[shape.id].enabled }">
-            <input
-              type="checkbox"
-              :checked="shapeOptions[shape.id].mirror"
-              :disabled="!shapeOptions[shape.id].enabled"
-              @change="setShapeMirror(shape.id, $event.target.checked)"
-            />
-            <span>mirror</span>
           </label>
         </div>
       </div>
@@ -671,9 +696,7 @@ function pickerCycleLines(arrangement) {
 .shape-pill {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
   column-gap: 12px;
-  row-gap: 4px;
   align-items: center;
   padding: 10px 14px;
   min-height: 56px;
@@ -689,7 +712,6 @@ function pickerCycleLines(arrangement) {
 }
 
 .shape-icon-btn {
-  grid-row: 1 / span 2;
   background: none;
   border: none;
   padding: 0;
@@ -707,13 +729,9 @@ function pickerCycleLines(arrangement) {
   display: block;
 }
 
-/* First option: checkbox + shape name as its label.
-   Second option: checkbox + "mirror" as its label. */
 .shape-toggle {
-  grid-column: 2;
-  align-self: end;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
   cursor: pointer;
   font-family: 'Cinzel', serif;
@@ -724,32 +742,11 @@ function pickerCycleLines(arrangement) {
   line-height: 1.15;
 }
 
-.shape-mirror {
-  grid-column: 2;
-  align-self: start;
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 6px;
-  cursor: pointer;
-  font-family: 'EB Garamond', serif;
-  font-size: 0.78rem;
-  color: var(--lt-text-dim);
-  font-style: italic;
-  line-height: 1.15;
-}
-
 /* Nudge the checkbox a touch so its visual centre aligns with the
    cap-height of the first label line (rather than the line's vertical
    centre) when the label wraps to two lines. */
-.shape-toggle input,
-.shape-mirror input {
+.shape-toggle input {
   margin-top: 1px;
-}
-
-.shape-mirror.off { opacity: 0.6; cursor: default; }
-
-.shape-toggle input,
-.shape-mirror input {
   width: 18px;
   height: 18px;
   accent-color: var(--lt-gold);
@@ -1216,9 +1213,7 @@ function pickerCycleLines(arrangement) {
   }
   .shape-icon { width: 30px; height: 26px; }
   .shape-toggle { font-size: 0.85rem; gap: 5px; }
-  .shape-mirror { font-size: 0.78rem; gap: 5px; }
-  .shape-toggle input,
-  .shape-mirror input { width: 16px; height: 16px; }
+  .shape-toggle input { width: 16px; height: 16px; }
 
   .sb-actions {
     flex-direction: row;
@@ -1347,14 +1342,7 @@ function pickerCycleLines(arrangement) {
   .sb-subtitle { font-size: 0.8rem; }
   .shape-pill { padding: 6px; }
   .shape-icon { width: 30px; height: 26px; }
-  .shape-toggle span,
-  .shape-mirror span { display: none; }
-  .shape-mirror::after {
-    content: '◐';
-    font-size: 1rem;
-    color: var(--lt-text-dim);
-    margin-left: 2px;
-  }
+  .shape-toggle span { display: none; }
   .btn { padding: 12px 8px; font-size: 0.9rem; }
 }
 </style>

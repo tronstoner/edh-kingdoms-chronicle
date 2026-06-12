@@ -71,20 +71,8 @@ export const CYCLE_SHAPES = [
 const SEAT_X = [-1, 1, -1, 1]
 const SEAT_Y = [-1, -1, 1, 1]
 
-// Classify a seat→house assignment by its shape and which side of the
-// table the A↔C nemesis pair sits on (the "mirror" axis).
-//
-// The mirror flag is POSITIONAL so the user-facing toggle behaves
-// intuitively: turning mirror off for "vertical nemeses" should restrict
-// the deal to *either* the left column or the right column, not allow
-// both. Same for horizontal (top vs bottom row) and diagonal (the \
-// or / diagonal). A previous implementation used chirality (cycle
-// rotation direction) which still let both visual orientations through.
-//
-// Primary (mirror=false) positions:
-//   - Vertical:   A↔C on the left column (SEAT_X[A] < 0)
-//   - Horizontal: A↔C on the top row     (SEAT_Y[A] < 0)
-//   - Diagonal:   A↔C on the \ diagonal  (SEAT_X[A] * SEAT_Y[A] > 0)
+// Classify a seat→house assignment by its shape: which axis the A↔C
+// nemesis pair lies along on the table grid.
 //
 // `houses` is an array of 4 House names (or letters) indexed by seat.
 export function classifyArrangement(houses) {
@@ -101,11 +89,7 @@ export function classifyArrangement(houses) {
   if (sameCol) shape = 'vertical'
   else if (sameRow) shape = 'horizontal'
   else shape = 'diagonal'
-  let mirror
-  if (shape === 'vertical')      mirror = SEAT_X[pos.A] > 0
-  else if (shape === 'horizontal') mirror = SEAT_Y[pos.A] > 0
-  else                              mirror = SEAT_X[pos.A] * SEAT_Y[pos.A] < 0
-  return { shape, mirror }
+  return { shape }
 }
 
 function permutations(arr) {
@@ -126,33 +110,29 @@ const ALL_ARRANGEMENTS = permutations(HOUSES).map(perm => ({
 }))
 
 export const DEFAULT_SHAPE_OPTIONS = {
-  diagonal:   { enabled: true, mirror: true },
-  vertical:   { enabled: true, mirror: true },
-  horizontal: { enabled: true, mirror: true },
+  diagonal:   { enabled: true },
+  vertical:   { enabled: true },
+  horizontal: { enabled: true },
 }
 
 // Pick a random House assignment that satisfies the user's shape filter.
-// `opts` shape: { diagonal: {enabled, mirror}, vertical: {...}, horizontal: {...} }.
+// `opts` shape: { diagonal: {enabled}, vertical: {...}, horizontal: {...} }.
 // Falls back to the full pool if the filter excludes everything.
 export function assignHousesForShapes(opts) {
   const o = opts || DEFAULT_SHAPE_OPTIONS
-  let pool = ALL_ARRANGEMENTS.filter(({ shape, mirror }) => {
+  let pool = ALL_ARRANGEMENTS.filter(({ shape }) => {
     const so = o[shape]
-    if (!so || !so.enabled) return false
-    if (mirror && !so.mirror) return false
-    return true
+    return !!(so && so.enabled)
   })
   if (pool.length === 0) pool = ALL_ARRANGEMENTS
   return pool[Math.floor(Math.random() * pool.length)].perm.slice()
 }
 
-// Return a representative seat→house arrangement for a given shape +
-// mirror flag, used to render preview icons in the shape picker.
-// House letters returned (A/B/C/D), not display names.
-export function representativeArrangement(shape, mirror) {
-  const match = ALL_ARRANGEMENTS.find(
-    a => a.shape === shape && a.mirror === !!mirror
-  )
+// Return a representative seat→house arrangement for a given shape,
+// used to render preview icons in the shape picker. House letters
+// returned (A/B/C/D), not display names.
+export function representativeArrangement(shape) {
+  const match = ALL_ARRANGEMENTS.find(a => a.shape === shape)
   return match ? match.perm.map(h => HOUSE_TO_ID[h]) : null
 }
 
