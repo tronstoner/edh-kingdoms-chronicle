@@ -3,13 +3,29 @@ import { computed } from 'vue'
 
 const props = defineProps({
   playerCount: Number,
+  role: String,
   roleRevealed: Boolean,
   roleNotes: String,
+  allSeats: { type: Array, default: () => [] },
   mode: { type: String, default: 'kingdoms' },
 });
 
 const isCycle = computed(() => props.mode === 'cycle')
 const deathLabel = computed(() => isCycle.value ? 'ELIMINATED' : 'DEAD')
+// Lords can't be raised as their own minion (you can't zombify the
+// Zombie Lord; you can't clone the Clone Lord). Hide the matching
+// option when the role is set.
+const isZombieLord = computed(() => props.role === 'Lord' || props.role === 'Zombie Lord')
+const isCloneLord = computed(() => props.role === 'Clone Lord')
+// Once a Lord has fallen, their minion line is closed — no further
+// zombifying / cloning anywhere at the table.
+const seatIsDead = (s) => s && s.isDead && !s.deathOverridden
+const zombieLordDown = computed(() => props.allSeats.some(
+  s => seatIsDead(s) && (s.role === 'Lord' || s.role === 'Zombie Lord')
+))
+const cloneLordDown = computed(() => props.allSeats.some(
+  s => seatIsDead(s) && s.role === 'Clone Lord'
+))
 
 const emit = defineEmits([
   "override",
@@ -36,14 +52,14 @@ const emit = defineEmits([
           Reveal role
         </button>
         <button
-          v-if="!roleNotes"
+          v-if="!roleNotes && !isZombieLord && !zombieLordDown"
           class="death-btn death-btn-zombie"
           @click="emit('zombify')"
         >
           &#x1F9DF; Zombified
         </button>
         <button
-          v-if="!roleNotes && playerCount === 6"
+          v-if="!roleNotes && playerCount === 6 && !isCloneLord && !cloneLordDown"
           class="death-btn death-btn-clone"
           @click="emit('clone')"
         >

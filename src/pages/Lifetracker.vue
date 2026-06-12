@@ -31,6 +31,7 @@ const {
   changePoison,
   changeCommanderDamage,
   toggleDeathOverride,
+  cascadeLordDeath,
   advanceTurn,
   saveGame,
   persistSetup,
@@ -336,6 +337,9 @@ function handleRoleSelect(role) {
   if (role === 'King' && seat.life === 40) {
     seat.life = 50
   }
+  // If a Lord reveals their role only after dying, the minion cascade
+  // wouldn't have fired in checkDeath/setDead — trigger it now.
+  if (seat.isDead) cascadeLordDeath(seat)
   rolePickerSeat.value = null
   cmdDamageTarget.value = null
 }

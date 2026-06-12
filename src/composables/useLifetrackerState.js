@@ -317,6 +317,28 @@ export function useLifetrackerState() {
       if (seat.deathTurn === null) {
         seat.deathTurn = state.turnCount
       }
+      cascadeLordDeath(seat)
+    }
+  }
+
+  // Kingdoms rule: when a Lord dies, all of their minions die with them.
+  // Zombie Lord kills every Zombie; Clone Lord kills every Clone. The
+  // picker stores the Zombie Lord as plain 'Lord' but 'Zombie Lord' is
+  // accepted too for safety.
+  function cascadeLordDeath(seat) {
+    if (state.mode !== 'kingdoms') return
+    if (!seat.isDead) return
+    let minionNote = null
+    if (seat.role === 'Lord' || seat.role === 'Zombie Lord') minionNote = 'Zombie'
+    else if (seat.role === 'Clone Lord') minionNote = 'Clone'
+    else return
+    for (const other of state.seats) {
+      if (other === seat) continue
+      if (other.roleNotes !== minionNote) continue
+      if (other.isDead) continue
+      other.isDead = true
+      other.deathOverridden = false
+      if (other.deathTurn === null) other.deathTurn = state.turnCount
     }
   }
 
@@ -405,6 +427,7 @@ export function useLifetrackerState() {
     if (seat.isDead && seat.deathTurn === null) {
       seat.deathTurn = state.turnCount
     }
+    if (seat.isDead) cascadeLordDeath(seat)
   }
 
   function advanceTurn(delta = 1) {
@@ -486,5 +509,6 @@ export function useLifetrackerState() {
     resumeOrNew,
     discardSaved,
     checkDeath,
+    cascadeLordDeath,
   }
 }

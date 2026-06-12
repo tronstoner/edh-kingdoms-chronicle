@@ -369,8 +369,10 @@ const panelClasses = computed(() => {
     <DeathBanner
       v-if="seat.isDead && !seat.deathOverridden"
       :player-count="allSeats.length"
+      :role="seat.role"
       :role-revealed="seat.roleRevealed"
       :role-notes="seat.roleNotes"
+      :all-seats="allSeats"
       :mode="mode"
       @override="emit('override')"
       @reveal-role="emit('revealRole')"
