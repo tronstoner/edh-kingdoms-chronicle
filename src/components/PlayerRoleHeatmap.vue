@@ -10,6 +10,23 @@ const props = defineProps({ players: Array, games: { type: Array, default: () =>
 const roles = ['King', 'Knight', 'Goblin', 'Lord']
 const mode = ref('winRate')
 
+const PLAYER_COLORS = {
+  Ralf: '#a47be0',
+  Markus: '#5ba3d9',
+  Hannes: '#6ab86a',
+  Ivan: '#e2b84a',
+  David: '#d95555',
+  Leo: '#d98ec8',
+  Mariusz: '#52bfbf',
+}
+
+const sortedPlayers = computed(() =>
+  [...props.players].sort((a, b) =>
+    (b.wins ?? 0) - (a.wins ?? 0) ||
+    (b.winRate ?? 0) - (a.winRate ?? 0)
+  )
+)
+
 const SPARK_W = 100
 const SPARK_H = 36
 const SPARK_PAD = 1 // half of the thickest stroke — keeps the line fully visible at the edges
@@ -155,9 +172,13 @@ function closeDetail() { detailRole.value = null }
           </tr>
         </thead>
         <tbody>
-          <tr v-for="p in players" :key="p.name" class="border-b border-mtg-border/40">
+          <tr v-for="p in sortedPlayers" :key="p.name" class="border-b border-mtg-border/40">
             <td class="py-3 pr-6 font-beleren text-lg">
-              <router-link :to="'/player/' + p.name" class="text-mtg-text no-underline hover:text-mtg-gold transition-colors">{{ p.name }}</router-link>
+              <router-link
+                :to="'/player/' + p.name"
+                class="no-underline hover:underline transition-colors"
+                :style="{ color: PLAYER_COLORS[p.name] }"
+              >{{ p.name }}</router-link>
             </td>
 
             <!-- Win Rate mode -->
