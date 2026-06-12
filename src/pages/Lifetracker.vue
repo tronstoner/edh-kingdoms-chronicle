@@ -162,9 +162,20 @@ function handleSetLayout(layoutId) {
   state.layoutId = layoutId
 }
 
+// Default House layout for a fresh 4-player cycle game: Lion + Oak on
+// the top row, Ash + Dragon on the bottom. Used only when no Houses
+// have been assigned yet — once anything is set we preserve the last
+// arrangement across setup ↔ preview transitions.
+const DEFAULT_CYCLE_HOUSES = ['Lion', 'Oak', 'Ash', 'Dragon']
+
 function handleStart() {
   if (state.mode === 'cycle') {
-    dealCycle()
+    const housesSet = state.seats.every(s => s.house)
+    if (!housesSet) {
+      state.seats.forEach((seat, i) => {
+        seat.house = DEFAULT_CYCLE_HOUSES[i] || null
+      })
+    }
     // Always enter the preview without a starting seat — Roll Start or
     // Begin Game will pick one (with the sword animation) so the user
     // sees the ceremony every time, including on a fresh game.
