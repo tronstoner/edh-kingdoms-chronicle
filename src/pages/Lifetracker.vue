@@ -165,7 +165,10 @@ function handleSetLayout(layoutId) {
 function handleStart() {
   if (state.mode === 'cycle') {
     dealCycle()
-    rollStartingSeat()
+    // Always enter the preview without a starting seat — Roll Start or
+    // Begin Game will pick one (with the sword animation) so the user
+    // sees the ceremony every time, including on a fresh game.
+    state.startingSeatIndex = null
     state.phase = 'cycle-preview'
   } else {
     startGame()

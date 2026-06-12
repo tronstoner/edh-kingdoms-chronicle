@@ -284,16 +284,15 @@ function handleRedeal() {
   setTimeout(runAnimation, 50)
 }
 
-// Toggling a shape option saves to localStorage and re-deals so the new
-// constraint takes effect immediately. If all shapes get disabled the
-// deal function falls back to the full pool — we don't lock the user out.
+// Toggling a shape option just persists the new preference; the next
+// Re-deal will pick from the active pool. We deliberately don't trigger
+// a deal here — changing settings shouldn't disturb the current view.
 function setShapeEnabled(shapeId, value) {
   shapeOptions.value = {
     ...shapeOptions.value,
     [shapeId]: { ...shapeOptions.value[shapeId], enabled: value },
   }
   saveCycleShapeOptions(shapeOptions.value)
-  handleRedeal()
 }
 
 function setShapeMirror(shapeId, value) {
@@ -302,7 +301,6 @@ function setShapeMirror(shapeId, value) {
     [shapeId]: { ...shapeOptions.value[shapeId], mirror: value },
   }
   saveCycleShapeOptions(shapeOptions.value)
-  handleRedeal()
 }
 
 function houseColor(house) {
@@ -366,7 +364,13 @@ function pickerCycleLines(arrangement) {
         <p class="sb-subtitle">Dealing the Houses…</p>
       </header>
 
-      <div class="sb-shape" role="group" aria-label="Cycle shape filter">
+      <div
+        class="sb-shape"
+        :class="{ 'manual-disabled': manualMode }"
+        role="group"
+        aria-label="Cycle shape filter"
+        :aria-disabled="manualMode"
+      >
         <div
           v-for="shape in CYCLE_SHAPES"
           :key="shape.id"
@@ -623,6 +627,16 @@ function pickerCycleLines(arrangement) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+/* In manual mode the shape (random arrangement) filter is irrelevant —
+   fade it out and lock interaction so the user can't toggle settings
+   that won't take effect until a future random Re-deal. */
+.sb-shape.manual-disabled {
+  opacity: 0.35;
+  filter: grayscale(0.7);
+  pointer-events: none;
 }
 
 .shape-pill {
