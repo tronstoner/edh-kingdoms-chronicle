@@ -59,7 +59,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
           @zombify="emit('zombify', seatIndex)"
           @clone="emit('clone', seatIndex)"
           @clear-undead="emit('clearUndead', seatIndex)"
-          @open-cycle-map="emit('openCycleMap')"
+          @open-cycle-map="(h) => emit('openCycleMap', h)"
         />
       </div>
     </template>

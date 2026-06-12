@@ -203,6 +203,20 @@ function handleCycleBack() {
 }
 
 const cycleMapOpen = ref(false)
+const cycleMapSourceHouse = ref(null)
+
+function handleOpenCycleMap(sourceHouse) {
+  // sourceHouse is the house whose badge was clicked, used by
+  // CycleDirectionsMap to highlight that house's outgoing relations.
+  // null means "show everything equally" (e.g. opened from elsewhere).
+  cycleMapSourceHouse.value = sourceHouse || null
+  cycleMapOpen.value = true
+}
+
+function handleCloseCycleMap() {
+  cycleMapOpen.value = false
+  cycleMapSourceHouse.value = null
+}
 
 function handleSetSeat(index, player, deck) {
   state.seats[index].player = player
@@ -483,7 +497,7 @@ function handleClearCycleGames() {
         @new-game="discardSaved"
         @clear-seats="clearSeats"
         @back="handleBack"
-        @open-cycle-map="cycleMapOpen = true"
+        @open-cycle-map="handleOpenCycleMap"
         @open-settings="showSettings = true"
       />
 
@@ -491,7 +505,8 @@ function handleClearCycleGames() {
       <CycleDirectionsMap
         v-if="cycleMapOpen && state.mode === 'cycle'"
         :seats="state.seats"
-        @close="cycleMapOpen = false"
+        :source-house="cycleMapSourceHouse"
+        @close="handleCloseCycleMap"
       />
 
       <!-- Turn announcement -->

@@ -273,7 +273,7 @@ const panelClasses = computed(() => {
           :house="seat.house"
           :dead-houses="deadHouses"
           :target-arrows="houseTargetArrows"
-          @open-map="emit('openCycleMap')"
+          @open-map="(h) => emit('openCycleMap', h)"
         />
       </template>
     </div>

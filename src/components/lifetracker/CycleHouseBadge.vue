@@ -29,7 +29,7 @@ function isDead(houseName) {
     class="house-badge clickable"
     title="Show kill list map"
     @pointerdown.stop
-    @click.stop="emit('open-map')"
+    @click.stop="emit('open-map', house)"
   >
     <img
       class="house-img"

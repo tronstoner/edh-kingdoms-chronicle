@@ -1,12 +1,27 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { HOUSE_COLORS, houseImageUrl, cycleRelations } from '../../lifetracker/cycle.js'
 
 const props = defineProps({
   seats: { type: Array, required: true },
+  // Initial house to highlight on open (its outgoing nemesis, rival,
+  // and protect edges + its node). Null means start with no selection
+  // and all edges shown equally. After mount the selection is owned by
+  // this component — clicking a node in the diagram toggles it.
+  sourceHouse: { type: String, default: null },
 })
 
 const emit = defineEmits(['close'])
+
+// Internal selection — seeded from the sourceHouse prop and then driven
+// by clicks on the diagram's house nodes.
+const activeHouse = ref(props.sourceHouse)
+watch(() => props.sourceHouse, (h) => { activeHouse.value = h })
+
+function toggleHouse(house) {
+  if (!house) return
+  activeHouse.value = activeHouse.value === house ? null : house
+}
 
 // Reactive orientation — swaps the SVG viewBox + node coords so the
 // 2x2 diagram fills the available space whether the viewport is wide
@@ -198,6 +213,22 @@ function isTopRow(seatIndex) {
 function houseColor(name) {
   return HOUSE_COLORS[name] || 'var(--lt-gold)'
 }
+
+// Returns true if this edge involves the currently active house.
+// Nemesis is mutual so either endpoint matching counts; rival and
+// protect are directed and we highlight only outgoing edges (the
+// active house's own attack / protection vectors).
+function isEdgeHighlighted(edge, kind) {
+  if (!activeHouse.value) return true
+  if (kind === 'nemesis') {
+    return edge.house === activeHouse.value || edge.otherHouse === activeHouse.value
+  }
+  return edge.fromHouse === activeHouse.value
+}
+
+function isSourceNode(seatIndex) {
+  return !!(activeHouse.value && props.seats[seatIndex]?.house === activeHouse.value)
+}
 </script>
 
 <template>
@@ -254,12 +285,17 @@ function houseColor(name) {
              the lines. -->
         <g class="nodes">
           <template v-for="(seat, i) in seats" :key="i">
-            <g v-if="seat" :transform="`translate(${nodeFor(i).x}, ${nodeFor(i).y})`">
+            <g
+              v-if="seat"
+              :transform="`translate(${nodeFor(i).x}, ${nodeFor(i).y})`"
+              :class="['node-group', { 'source-node': isSourceNode(i) }]"
+              @click.stop="toggleHouse(seat.house)"
+            >
               <circle
                 :r="NODE_R"
                 fill="var(--lt-bg)"
-                stroke="#5a5040"
-                stroke-width="3"
+                :stroke="isSourceNode(i) ? 'var(--lt-text)' : '#5a5040'"
+                :stroke-width="isSourceNode(i) ? 4 : 3"
               />
               <image
                 v-if="seat.house"
@@ -316,25 +352,27 @@ function houseColor(name) {
              after the nodes so arrowheads land on top of the circles. -->
         <g class="nemesis-lines">
           <template v-for="pair in nemesisPairs" :key="pair.key">
-            <line
-              :x1="lineGeom(pair.from, pair.to).start.x"
-              :y1="lineGeom(pair.from, pair.to).start.y"
-              :x2="lineGeom(pair.from, pair.to).end.x"
-              :y2="lineGeom(pair.from, pair.to).end.y"
-              stroke="#d95555"
-              stroke-width="2.5"
-              opacity="0.9"
-              marker-start="url(#nemesisArrow)"
-              marker-end="url(#nemesisArrow)"
-            />
-            <g :transform="iconTransform(pair.from, pair.to, 28)">
-              <circle cx="14" cy="14" r="13" fill="var(--lt-bg)" stroke="#d95555" stroke-width="1.5" />
-              <svg x="3" y="3" width="22" height="22" viewBox="0 0 24 24">
-                <g fill="#d95555">
-                  <path :transform="`rotate(45 12 9)`" :d="SWORD" />
-                  <path :transform="`rotate(-45 12 9)`" :d="SWORD" />
-                </g>
-              </svg>
+            <g :class="{ dimmed: !isEdgeHighlighted(pair, 'nemesis') }">
+              <line
+                :x1="lineGeom(pair.from, pair.to).start.x"
+                :y1="lineGeom(pair.from, pair.to).start.y"
+                :x2="lineGeom(pair.from, pair.to).end.x"
+                :y2="lineGeom(pair.from, pair.to).end.y"
+                stroke="#d95555"
+                stroke-width="2.5"
+                opacity="0.9"
+                marker-start="url(#nemesisArrow)"
+                marker-end="url(#nemesisArrow)"
+              />
+              <g :transform="iconTransform(pair.from, pair.to, 28)">
+                <circle cx="14" cy="14" r="13" fill="var(--lt-bg)" stroke="#d95555" stroke-width="1.5" />
+                <svg x="3" y="3" width="22" height="22" viewBox="0 0 24 24">
+                  <g fill="#d95555">
+                    <path :transform="`rotate(45 12 9)`" :d="SWORD" />
+                    <path :transform="`rotate(-45 12 9)`" :d="SWORD" />
+                  </g>
+                </svg>
+              </g>
             </g>
           </template>
         </g>
@@ -346,23 +384,25 @@ function houseColor(name) {
              opposite sides of the underlying edge. -->
         <g class="protect-arrows">
           <template v-for="edge in protectEdges" :key="edge.key">
-            <line
-              :x1="offsetLineGeom(edge.from, edge.to, 10).start.x"
-              :y1="offsetLineGeom(edge.from, edge.to, 10).start.y"
-              :x2="offsetLineGeom(edge.from, edge.to, 10).end.x"
-              :y2="offsetLineGeom(edge.from, edge.to, 10).end.y"
-              stroke="#6ab86a"
-              stroke-width="1.6"
-              stroke-linecap="round"
-              stroke-dasharray="0.1 3"
-              opacity="0.85"
-              marker-end="url(#protectArrow)"
-            />
-            <g :transform="iconTransform(edge.from, edge.to, 16, 10, -0.1)">
-              <circle cx="8" cy="8" r="8" fill="var(--lt-bg)" stroke="#6ab86a" stroke-width="1.2" />
-              <svg x="2" y="2" width="12" height="12" viewBox="0 0 24 24">
-                <path fill="#6ab86a" :d="SHIELD" />
-              </svg>
+            <g :class="{ dimmed: !isEdgeHighlighted(edge, 'protect') }">
+              <line
+                :x1="offsetLineGeom(edge.from, edge.to, 10).start.x"
+                :y1="offsetLineGeom(edge.from, edge.to, 10).start.y"
+                :x2="offsetLineGeom(edge.from, edge.to, 10).end.x"
+                :y2="offsetLineGeom(edge.from, edge.to, 10).end.y"
+                stroke="#6ab86a"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-dasharray="0.1 3"
+                opacity="0.85"
+                marker-end="url(#protectArrow)"
+              />
+              <g :transform="iconTransform(edge.from, edge.to, 16, 10, -0.1)">
+                <circle cx="8" cy="8" r="8" fill="var(--lt-bg)" stroke="#6ab86a" stroke-width="1.2" />
+                <svg x="2" y="2" width="12" height="12" viewBox="0 0 24 24">
+                  <path fill="#6ab86a" :d="SHIELD" />
+                </svg>
+              </g>
             </g>
           </template>
         </g>
@@ -370,21 +410,23 @@ function houseColor(name) {
         <!-- Rival arrows -->
         <g class="rival-arrows">
           <template v-for="edge in rivalEdges" :key="edge.key">
-            <line
-              :x1="offsetLineGeom(edge.from, edge.to, 10).start.x"
-              :y1="offsetLineGeom(edge.from, edge.to, 10).start.y"
-              :x2="offsetLineGeom(edge.from, edge.to, 10).end.x"
-              :y2="offsetLineGeom(edge.from, edge.to, 10).end.y"
-              stroke="var(--lt-gold)"
-              stroke-width="2.5"
-              marker-end="url(#rivalArrow)"
-              opacity="0.9"
-            />
-            <g :transform="iconTransform(edge.from, edge.to, 22, 10)">
-              <circle cx="11" cy="11" r="11" fill="var(--lt-bg)" stroke="var(--lt-gold)" stroke-width="1.5" />
-              <svg x="2" y="2" width="18" height="18" viewBox="0 0 24 24">
-                <path fill="var(--lt-gold)" :transform="`rotate(45 12 12)`" :d="SWORD" />
-              </svg>
+            <g :class="{ dimmed: !isEdgeHighlighted(edge, 'rival') }">
+              <line
+                :x1="offsetLineGeom(edge.from, edge.to, 10).start.x"
+                :y1="offsetLineGeom(edge.from, edge.to, 10).start.y"
+                :x2="offsetLineGeom(edge.from, edge.to, 10).end.x"
+                :y2="offsetLineGeom(edge.from, edge.to, 10).end.y"
+                stroke="var(--lt-gold)"
+                stroke-width="2.5"
+                marker-end="url(#rivalArrow)"
+                opacity="0.9"
+              />
+              <g :transform="iconTransform(edge.from, edge.to, 22, 10)">
+                <circle cx="11" cy="11" r="11" fill="var(--lt-bg)" stroke="var(--lt-gold)" stroke-width="1.5" />
+                <svg x="2" y="2" width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="var(--lt-gold)" :transform="`rotate(45 12 12)`" :d="SWORD" />
+                </svg>
+              </g>
             </g>
           </template>
         </g>
@@ -395,6 +437,22 @@ function houseColor(name) {
 </template>
 
 <style scoped>
+/* When a house in the diagram is active, edges not involving it fade
+   back so the active house's three vectors (nemesis, rival, protect)
+   read instantly. */
+.dimmed {
+  opacity: 0.15;
+  transition: opacity 0.25s;
+}
+
+.node-group {
+  cursor: pointer;
+}
+
+.source-node {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--lt-text) 50%, transparent));
+}
+
 .map-overlay {
   position: fixed;
   inset: 0;
