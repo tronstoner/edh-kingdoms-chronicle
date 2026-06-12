@@ -1083,8 +1083,8 @@ function pickerCycleLines(arrangement) {
   flex: 1 1 auto;
   min-height: 0;
   width: auto;
-  max-width: 85%;
-  max-height: 70%;
+  max-width: 90%;
+  max-height: 78%;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
   transition: transform 0.15s, filter 0.15s;
@@ -1098,42 +1098,63 @@ function pickerCycleLines(arrangement) {
 
 .card-house-name {
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.85rem, 3.5cqi, 1.2rem);
+  font-size: clamp(0.85rem, 3.3cqi, 1.2rem);
   letter-spacing: 0.04em;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
+/* Two-column grid: labels (with icons) right-aligned in the left column,
+   house-name values left-aligned in the right column. Each .rel-row uses
+   display: contents so its label + value become direct grid items, which
+   lets the alignment apply across all three rows uniformly. Rows share
+   one line-height so the small label and large value sit in equally
+   tall cells and centre naturally. */
 .card-house-relations {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  width: 100%;
-  padding: 0 8px;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 8px;
+  row-gap: 2px;
+  width: 80%;
+  padding: 4px 8px 0;
+  margin-top: -4px;
+  border-top: 1px solid color-mix(in srgb, var(--lt-text-dim) 35%, transparent);
   flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  font-family: 'EB Garamond', serif;
+  font-size: clamp(0.78rem, 2.2cqi, 1.1rem);
+  line-height: 1.2;
 }
 
-/* Default cards (2×2 layout): rel rows are centred below the house
-   name as one compact "NEMESIS  Lion" block. */
 .rel-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'EB Garamond', serif;
-  font-size: clamp(0.8rem, 2.2cqi, 1.15rem);
+  display: contents;
 }
 
 .rel-label {
+  justify-self: end;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   color: var(--lt-text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: clamp(0.8rem, 2.2cqi, 1.15rem);
+  font-size: clamp(0.55rem, 1.5cqi, 0.85rem);
+  line-height: 1.2;
 }
 
-.rel-value { color: var(--lt-text); }
+.rel-label .rel-glyph {
+  flex: 0 0 auto;
+}
+
+.rel-value {
+  justify-self: start;
+  color: var(--lt-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  line-height: 1.2;
+}
 
 .start-badge {
   position: absolute;
