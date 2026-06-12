@@ -452,9 +452,34 @@ function pickerCycleLines(arrangement) {
       </button>
 
       <div class="sb-actions" :class="{ visible: showStart }">
-        <button v-if="!manualMode" class="btn btn-secondary" @click="handleRedeal">Re-deal</button>
-        <button class="btn btn-secondary" @click="handleRollStart">Roll Start</button>
-        <button class="btn btn-primary" :disabled="swordSpinning" @click="handleBegin">Begin Game</button>
+        <button v-if="!manualMode" class="btn btn-secondary" @click="handleRedeal">
+          <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M17.65 6.35A8 8 0 0 0 4.06 11h2.02A6 6 0 0 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35zM6.35 17.65A8 8 0 0 0 19.94 13h-2.02A6 6 0 0 1 12 18c-1.66 0-3.14-.69-4.22-1.78L11 13H4v7l2.35-2.35z"
+            />
+          </svg>
+          <span>Re-deal</span>
+        </button>
+        <button class="btn btn-secondary" @click="handleRollStart">
+          <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true">
+            <path
+              fill="currentColor"
+              :transform="`rotate(45 12 12)`"
+              :d="SWORD_PATH"
+            />
+          </svg>
+          <span>Roll Start</span>
+        </button>
+        <button class="btn btn-primary" :disabled="swordSpinning" @click="handleBegin">
+          <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true">
+            <g fill="currentColor">
+              <path :transform="`rotate(45 12 9)`" :d="SWORD_PATH" />
+              <path :transform="`rotate(-45 12 9)`" :d="SWORD_PATH" />
+            </g>
+          </svg>
+          <span>Begin Game</span>
+        </button>
       </div>
 
       <button class="btn btn-secondary sb-back" :class="{ visible: showStart }" @click="emit('back')">Back</button>
@@ -777,6 +802,17 @@ function pickerCycleLines(arrangement) {
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  width: 1.4em;
+  height: 1.4em;
+  flex: 0 0 auto;
+  display: block;
 }
 
 .btn-primary {
