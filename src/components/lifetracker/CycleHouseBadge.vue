@@ -6,6 +6,10 @@ import CycleRelationIcon from './CycleRelationIcon.vue'
 const props = defineProps({
   house: String,
   deadHouses: { type: Array, default: () => [] },
+  // { nemesis: angleDeg, rival: angleDeg } — bearings from this seat to
+  // each target's seat. 0° points right (east), 90° down, 180° left, etc.
+  // — standard CSS rotate convention. Null/undefined skips the arrow.
+  targetArrows: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['open-map'])
@@ -41,7 +45,18 @@ function isDead(houseName) {
             class="rel-value"
             :class="{ 'rel-dead': isDead(rel.nemesis) }"
             :style="{ color: HOUSE_COLORS[rel.nemesis] }"
-          >{{ rel.nemesis }}</span>
+          >
+            {{ rel.nemesis }}
+            <svg
+              v-if="targetArrows.nemesis != null"
+              class="rel-arrow"
+              :style="{ transform: `rotate(${targetArrows.nemesis}deg)` }"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M 4 12 L 18 12 M 13 7 L 18 12 L 13 17" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </div>
         <div class="rel">
           <span class="rel-icon" :class="{ 'rel-dead': isDead(rel.rival) }"><CycleRelationIcon kind="rival" /></span>
@@ -49,7 +64,18 @@ function isDead(houseName) {
             class="rel-value"
             :class="{ 'rel-dead': isDead(rel.rival) }"
             :style="{ color: HOUSE_COLORS[rel.rival] }"
-          >{{ rel.rival }}</span>
+          >
+            {{ rel.rival }}
+            <svg
+              v-if="targetArrows.rival != null"
+              class="rel-arrow"
+              :style="{ transform: `rotate(${targetArrows.rival}deg)` }"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M 4 12 L 18 12 M 13 7 L 18 12 L 13 17" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
         </div>
       </div>
     </div>
@@ -92,8 +118,8 @@ function isDead(houseName) {
   /* Narrower sign-shaped plate: with the word labels gone (icon + house
      name only) the rows fit comfortably so the plate can pull in from
      the badge edges and let more of the heraldry show. */
-  left: 18%;
-  right: 18%;
+  left: 14%;
+  right: 14%;
   bottom: 4%;
   height: 44%;
   background: rgba(20, 16, 12, 0.9);
@@ -149,13 +175,13 @@ function isDead(houseName) {
   display: inline-flex;
   align-items: center;
   color: var(--lt-text-dim);
-  font-size: clamp(0.55rem, 9.5cqmin, 0.9rem);
+  font-size: clamp(0.5rem, 8.2cqmin, 0.78rem);
   line-height: 1;
   /* The sword/shield paths fill the viewBox bottom-heavy (pommel near
      y=23), so the bounding box centre sits below the icon's visual
      mass. Nudge upward by feel so the glyph reads centred against the
      house-name text it sits next to. */
-  transform: translateY(-0.08em);
+  transform: translateY(0.04em);
 }
 
 
@@ -172,5 +198,18 @@ function isDead(houseName) {
   text-decoration: line-through;
   text-decoration-thickness: 1px;
   opacity: 0.3;
+}
+
+/* Compass arrow pointing toward the target seat. The bearing comes from
+   the parent (PlayerPanel) computed against the grid layout, so it
+   automatically picks up the 8 compass directions a 2×2 table allows.
+   Rendered inline-after the house name so they read as one unit. */
+.rel-arrow {
+  display: inline-block;
+  vertical-align: -0.15em;
+  width: 1em;
+  height: 1em;
+  color: var(--lt-text-dim);
+  margin-left: -2px;
 }
 </style>

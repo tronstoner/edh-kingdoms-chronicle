@@ -158,6 +158,34 @@ function isOtherSide(seatIndex) {
   return myRow !== theirRow
 }
 
+// Bearing (degrees, CSS-rotate convention with 0° pointing right and
+// growing clockwise) from this seat to another house's seat. Because the
+// top-row panels are rotated 180° at the panel level, drawing an arrow
+// using the raw screen-space vector "just works" — the parent rotation
+// cancels with the rotated player's POV.
+const houseTargetArrows = computed(() => {
+  if (!isCycle.value || !props.seat.house) return {}
+  const rel = cycleRelations(props.seat.house) || {}
+  const housePos = new Map()
+  props.layoutRows?.forEach((row, rowIdx) => {
+    row.seats.forEach((seatIdx, colIdx) => {
+      const s = props.allSeats?.[seatIdx]
+      if (s?.house) housePos.set(s.house, { col: colIdx, row: rowIdx })
+    })
+  })
+  const my = housePos.get(props.seat.house)
+  if (!my) return {}
+  function angleTo(targetHouse) {
+    const t = housePos.get(targetHouse)
+    if (!t) return null
+    return Math.atan2(t.row - my.row, t.col - my.col) * 180 / Math.PI
+  }
+  return {
+    nemesis: angleTo(rel.nemesis),
+    rival: angleTo(rel.rival),
+  }
+})
+
 function seatGradientStyle(seatIndex) {
   const s = props.allSeats?.[seatIndex]
   const grad = manaGradient(s?.deck?.colors || '')
@@ -244,6 +272,7 @@ const panelClasses = computed(() => {
         <CycleHouseBadge
           :house="seat.house"
           :dead-houses="deadHouses"
+          :target-arrows="houseTargetArrows"
           @open-map="emit('openCycleMap')"
         />
       </template>
