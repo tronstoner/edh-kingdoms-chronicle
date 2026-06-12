@@ -1,8 +1,9 @@
 <script setup>
 import { inject, computed } from 'vue'
-import { Bar, Doughnut } from 'vue-chartjs'
+import { Bar, Doughnut, Line } from 'vue-chartjs'
 import {
-  Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement,
+  PointElement, LineElement, Tooltip, Legend, Filler,
 } from 'chart.js'
 import ChartCard from '../components/ChartCard.vue'
 import { colorIcons } from '../mana.js'
@@ -14,9 +15,12 @@ import {
   computeStreaks,
   computeZombieStats,
   computePlayerGames,
+  computeWinLossCurve,
+  computePlayerRoleOverTime,
 } from '../analysis.js'
+import WinRateCurve from '../components/WinRateCurve.vue'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler)
 
 const props = defineProps({ name: String })
 const data = inject('data')
@@ -141,6 +145,193 @@ const ROLE_STYLE = {
 const recentGames = computed(() =>
   [...playerGames.value].reverse().slice(0, 15)
 )
+
+const winRateCurve = computed(() =>
+  computeWinLossCurve(data.value.games, { playerName: props.name })
+)
+
+const EXPECTED_RATE = { King: 0.20, Knight: 0.20, Goblin: 0.40, Lord: 0.20 }
+
+const roleStats = computed(() =>
+  roleDist.value.map(r => {
+    const key = r.role.toLowerCase()
+    const winRate = player.value?.[key + 'WinRate'] ?? null
+    const deviation = r.pct - (EXPECTED_RATE[r.role] ?? 0)
+    return { ...r, winRate, deviation }
+  })
+)
+
+function deviationClass(dev) {
+  const d = dev * 100
+  if (Math.abs(d) < 3) return 'text-mtg-text-dim'
+  if (d > 10) return 'text-red-400'
+  if (d > 0) return 'text-orange-400'
+  if (d < -10) return 'text-blue-400'
+  return 'text-blue-300/70'
+}
+
+// One entry per session date the player was present, in game order
+const sessionRoles = computed(() => {
+  const normalize = r => r === 'Clone Lord' ? 'Lord' : r
+  const dateMap = {}
+  const dates = []
+  for (const game of playerGames.value) {
+    if (!dates.includes(game.date)) dates.push(game.date)
+    if (!dateMap[game.date]) dateMap[game.date] = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+    const entry = game.players.find(p => p.player === props.name)
+    if (entry?.role) {
+      const role = normalize(entry.role)
+      if (role in dateMap[game.date]) dateMap[game.date][role]++
+    }
+  }
+  return dates.map(date => ({ date, counts: dateMap[date] }))
+})
+
+function sessionPct(counts) {
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+  if (!total) return { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+  return Object.fromEntries(
+    Object.entries(counts).map(([r, c]) => [r, parseFloat(((c / total) * 100).toFixed(1))])
+  )
+}
+
+const roleHistoryChartData = computed(() => ({
+  labels: sessionRoles.value.map(s => s.date),
+  datasets: ['Lord', 'Goblin', 'Knight', 'King'].map(role => ({
+    label: role,
+    data: sessionRoles.value.map(s => sessionPct(s.counts)[role]),
+    backgroundColor: ROLE_COLORS[role],
+    borderWidth: 0,
+  })),
+}))
+
+// Per-game rolling window for role bias line chart
+const roleTimeline = computed(() =>
+  computePlayerRoleOverTime(data.value.games, props.name)
+)
+
+// Expected cumulative thresholds (Lord bottom → King top): 20 / 60 / 80
+// Used as dashed reference lines inside the stacked area chart
+const IDEAL_LINES = [
+  { label: '_lord_ref',   value: 20,  color: '#3d1f7a' },
+  { label: '_goblin_ref', value: 60,  color: '#6b1a1a' },
+  { label: '_knight_ref', value: 80,  color: '#1f5c1f' },
+]
+
+const roleTimelineChartData = computed(() => {
+  const n = roleTimeline.value.length
+  return {
+    labels: roleTimeline.value.map(p => p.x),
+    datasets: [
+      // Stacked area layers — Lord at bottom, King on top
+      ...['Lord', 'Goblin', 'Knight', 'King'].map(role => ({
+        label: role,
+        data: roleTimeline.value.map(p => p[role]),
+        backgroundColor: ROLE_COLORS[role],
+        borderColor: ROLE_COLORS[role],
+        borderWidth: 1,
+        fill: true,
+        tension: 0,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        order: 1,
+      })),
+      // Ideal reference lines — drawn on top of the areas
+      ...IDEAL_LINES.map(({ label, value, color }) => ({
+        label,
+        data: Array(n).fill(value),
+        borderColor: color,
+        borderDash: [5, 4],
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+        yAxisID: 'yRef',
+        order: 0,
+      })),
+    ],
+  }
+})
+
+const roleTimelineChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
+  plugins: {
+    legend: {
+      labels: {
+        color: '#d4c8a8',
+        font: { family: 'Cinzel', size: 11 },
+        padding: 12,
+        filter: item => !item.text.startsWith('_'),
+        reverse: true,
+      },
+    },
+    tooltip: {
+      titleFont: { family: 'Cinzel', size: 13 },
+      bodyFont: { family: 'EB Garamond', size: 13 },
+      filter: item => !item.dataset.label.startsWith('_'),
+      callbacks: {
+        title: (items) => roleTimeline.value[items[0]?.dataIndex]?.date || `Game ${items[0]?.dataIndex + 1}`,
+        label: (item) => ` ${item.dataset.label}: ${item.raw.toFixed(0)}%`,
+      },
+    },
+  },
+  scales: {
+    x: {
+      stacked: true,
+      ticks: { color: '#8a7e66', font: { family: 'EB Garamond', size: 11 }, maxTicksLimit: 12 },
+      grid: { color: '#3d352922' },
+      title: { display: true, text: 'Game #', color: '#8a7e66', font: { family: 'EB Garamond', size: 11 } },
+    },
+    y: {
+      stacked: true,
+      min: 0,
+      max: 100,
+      ticks: { color: '#8a7e66', font: { family: 'EB Garamond', size: 11 }, callback: v => v + '%' },
+      grid: { color: '#3d352933' },
+    },
+    yRef: {
+      display: false,
+      min: 0,
+      max: 100,
+      stacked: false,
+    },
+  },
+}
+
+const roleHistoryChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { color: '#d4c8a8', font: { family: 'Cinzel', size: 11 }, padding: 12, reverse: true } },
+    tooltip: {
+      titleFont: { family: 'Cinzel', size: 13 },
+      bodyFont: { family: 'EB Garamond', size: 13 },
+      callbacks: {
+        title: (items) => sessionRoles.value[items[0]?.dataIndex]?.date,
+        label: (item) => {
+          const count = sessionRoles.value[item.dataIndex]?.counts[item.dataset.label] ?? 0
+          return count > 0 ? ` ${item.dataset.label}: ${count}×` : null
+        },
+      },
+    },
+  },
+  scales: {
+    x: {
+      stacked: true,
+      ticks: { color: '#8a7e66', font: { family: 'EB Garamond', size: 11 }, maxRotation: 45 },
+      grid: { color: '#3d352922' },
+    },
+    y: {
+      stacked: true,
+      min: 0,
+      max: 100,
+      ticks: { color: '#8a7e66', font: { family: 'EB Garamond', size: 11 }, callback: v => v + '%' },
+      grid: { color: '#3d352933' },
+    },
+  },
+}
 </script>
 
 <template>
@@ -211,21 +402,51 @@ const recentGames = computed(() =>
             <div class="h-48 flex items-center justify-center">
               <Doughnut :data="roleChartData" :options="{ ...roleChartOptions, maintainAspectRatio: false }" />
             </div>
-            <div class="space-y-3">
-              <div v-for="r in roleDist" :key="r.role" class="flex items-center gap-3">
-                <span class="w-3 h-3 rounded-sm" :style="{ backgroundColor: ROLE_COLORS[r.role] }"></span>
-                <span class="font-beleren text-base flex-1" :style="{ color: ROLE_COLORS[r.role] }">{{ r.role }}</span>
-                <span class="text-mtg-text font-body text-base">{{ r.count }}</span>
-                <span class="text-mtg-text-dim font-body text-base w-12 text-right">{{ (r.pct * 100).toFixed(0) }}%</span>
+            <div class="space-y-2.5">
+              <div v-for="r in roleStats" :key="r.role" class="flex items-center gap-2 text-sm">
+                <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" :style="{ backgroundColor: ROLE_COLORS[r.role] }"></span>
+                <span class="font-beleren flex-1" :style="{ color: ROLE_COLORS[r.role] }">{{ r.role }}</span>
+                <span class="text-mtg-text-dim font-body w-6 text-right">{{ r.count }}</span>
+                <span class="font-body w-8 text-right text-mtg-text">{{ (r.pct * 100).toFixed(0) }}%</span>
+                <span class="font-body w-10 text-right tabular-nums" :class="deviationClass(r.deviation)">
+                  {{ r.deviation >= 0 ? '+' : '' }}{{ (r.deviation * 100).toFixed(0) }}%
+                </span>
+                <span class="font-beleren w-9 text-right" :class="r.winRate != null && r.winRate >= 0.5 ? 'text-mtg-gold' : 'text-mtg-text-dim'">
+                  {{ r.winRate != null ? (r.winRate * 100).toFixed(0) + '%' : '—' }}
+                </span>
               </div>
-              <p class="text-sm text-mtg-text-dim italic font-body mt-3 pt-3 border-t border-mtg-border/50">
-                Expected ~20% King, ~20% Knight, ~40% Goblin, ~20% Lord.
-              </p>
+              <div class="flex items-center justify-end gap-2 text-xs text-mtg-text-dim/50 font-body pt-2 border-t border-mtg-border/30">
+                <span class="w-10 text-right">drawn</span>
+                <span class="w-10 text-right">vs exp</span>
+                <span class="w-9 text-right">WR</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Win Rate History -->
+    <ChartCard class="mb-8">
+      <template #title>Win Rate Over Time</template>
+      <WinRateCurve :curve-data="winRateCurve" />
+    </ChartCard>
+
+    <!-- Role History -->
+    <ChartCard v-if="playerGames.length >= 3" class="mb-8">
+      <template #title>Roles per Game Night</template>
+      <div class="h-44">
+        <Bar :data="roleHistoryChartData" :options="{ ...roleHistoryChartOptions, maintainAspectRatio: false }" />
+      </div>
+
+      <div class="mt-6 border-t border-mtg-border/50 pt-5">
+        <h3 class="font-beleren text-base text-mtg-gold-light mb-1">Role Bias</h3>
+        <p class="text-sm text-mtg-text-dim font-body mb-4">Rolling 10-game window. Dashed lines show the expected draw rate for each role.</p>
+        <div class="h-52">
+          <Line :data="roleTimelineChartData" :options="{ ...roleTimelineChartOptions, maintainAspectRatio: false }" />
+        </div>
+      </div>
+    </ChartCard>
 
     <div class="space-y-8 mb-8">
       <!-- Matchups -->
@@ -354,8 +575,7 @@ const recentGames = computed(() =>
           <tbody>
             <tr v-for="d in deckDiv.decks" :key="d.name" class="border-b border-mtg-border/40 hover:bg-mtg-gold/5">
               <td class="py-2 pr-3 font-beleren">
-                <a v-if="(data.decks.find(dd => dd.name === d.name) || {}).url" :href="data.decks.find(dd => dd.name === d.name).url" target="_blank" rel="noopener noreferrer" class="text-mtg-text hover:text-mtg-gold transition-colors no-underline hover:underline">{{ d.name }}</a>
-                <span v-else class="text-mtg-text">{{ d.name }}</span>
+                <router-link :to="'/deck/' + d.name" class="text-mtg-text hover:text-mtg-gold transition-colors no-underline hover:underline">{{ d.name }}</router-link>
               </td>
               <td class="py-2 px-2 text-center">
                 <span class="inline-flex gap-0.5">
@@ -401,9 +621,11 @@ const recentGames = computed(() =>
               class="font-beleren text-sm"
               :class="game.players.find(p => p.player === name)?.result === 'Win' ? 'text-mtg-gold' : 'text-mtg-text-dim'"
             >{{ game.players.find(p => p.player === name)?.result }}</span>
-            <span v-if="game.players.find(p => p.player === name)?.deck" class="text-sm text-mtg-text-dim/60 font-body ml-auto truncate max-w-xs">
-              {{ game.players.find(p => p.player === name)?.deck }}
-            </span>
+            <router-link
+              v-if="game.players.find(p => p.player === name)?.deck"
+              :to="'/deck/' + game.players.find(p => p.player === name).deck"
+              class="text-sm text-mtg-text-dim/60 font-body ml-auto truncate max-w-xs no-underline hover:text-mtg-gold transition-colors"
+            >{{ game.players.find(p => p.player === name)?.deck }}</router-link>
           </div>
           <div class="flex flex-wrap gap-1.5">
             <span

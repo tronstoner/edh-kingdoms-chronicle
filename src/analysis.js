@@ -209,3 +209,110 @@ export function computeLordRecruitAnalysis(games) {
 export function computePlayerGames(games, playerName) {
   return games.filter(g => g.players.some(p => p.player === playerName))
 }
+
+export function computePlayerRoleOverTime(games, playerName, windowSize = 10) {
+  const normalize = r => r === 'Clone Lord' ? 'Lord' : r
+  const playerGames = games.filter(g => g.players.some(p => p.player === playerName))
+
+  return playerGames.map((game, i) => {
+    const win = playerGames.slice(Math.max(0, i - windowSize + 1), i + 1)
+    const counts = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+    for (const g of win) {
+      const entry = g.players.find(p => p.player === playerName)
+      if (entry?.role) {
+        const role = normalize(entry.role)
+        if (counts[role] !== undefined) counts[role]++
+      }
+    }
+    const total = win.length
+    return {
+      x: i + 1,
+      date: game.date,
+      King: total ? parseFloat(((counts.King / total) * 100).toFixed(1)) : 0,
+      Knight: total ? parseFloat(((counts.Knight / total) * 100).toFixed(1)) : 0,
+      Goblin: total ? parseFloat(((counts.Goblin / total) * 100).toFixed(1)) : 0,
+      Lord: total ? parseFloat(((counts.Lord / total) * 100).toFixed(1)) : 0,
+    }
+  })
+}
+
+export function computeFactionWinShareCurves(games, windowSize = 10) {
+  const normalize = r => r === 'Clone Lord' ? 'Lord' : r
+
+  return games.map((_, i) => {
+    const win = games.slice(Math.max(0, i - windowSize + 1), i + 1)
+    let kkWins = 0, goblinWins = 0, lordWins = 0
+
+    for (const game of win) {
+      const king   = game.players.find(p => p.role === 'King')
+      const goblin = game.players.find(p => p.role === 'Goblin')
+      const lord   = game.players.find(p => normalize(p.role) === 'Lord')
+      if      (king?.result   === 'Win') kkWins++
+      else if (goblin?.result === 'Win') goblinWins++
+      else if (lord?.result   === 'Win') lordWins++
+    }
+
+    const total = kkWins + goblinWins + lordWins
+    const pct = v => total > 0 ? parseFloat(((v / total) * 100).toFixed(1)) : 0
+    const kkPct = pct(kkWins)
+
+    return {
+      x: i + 1,
+      date: games[i].date,
+      Lord:   pct(lordWins),
+      Goblin: pct(goblinWins),
+      Knight: parseFloat((kkPct / 2).toFixed(1)),
+      King:   parseFloat((kkPct / 2).toFixed(1)),
+    }
+  })
+}
+
+export function computeRoleWinLossCurves(games) {
+  const roles = ['King', 'Knight', 'Goblin', 'Lord']
+  const running = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+  const wins = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+  const counts = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+  const curves = { King: [], Knight: [], Goblin: [], Lord: [] }
+  const normalize = r => r === 'Clone Lord' ? 'Lord' : r
+
+  for (let i = 0; i < games.length; i++) {
+    const game = games[i]
+    for (const role of roles) {
+      const entries = game.players.filter(p => normalize(p.role) === role)
+      if (entries.length > 0) {
+        const won = entries[0].result === 'Win'
+        counts[role]++
+        if (won) wins[role]++
+        running[role] += won ? 1 : -1
+      }
+      curves[role].push({
+        x: i + 1,
+        y: running[role],
+        rate: counts[role] > 0 ? parseFloat(((wins[role] / counts[role]) * 100).toFixed(1)) : null,
+        date: game.date,
+      })
+    }
+  }
+  return curves
+}
+
+export function computeWinLossCurve(games, { playerName, deckName } = {}) {
+  const relevant = games.filter(g =>
+    g.players.some(p =>
+      (!playerName || p.player === playerName) &&
+      (!deckName || p.deck === deckName)
+    )
+  )
+  let delta = 0
+  let wins = 0
+  return relevant.map((game, i) => {
+    const entry = game.players.find(p =>
+      (!playerName || p.player === playerName) &&
+      (!deckName || p.deck === deckName)
+    )
+    const won = entry?.result === 'Win'
+    if (won) wins++
+    delta += won ? 1 : -1
+    return { x: i + 1, y: delta, rate: parseFloat(((wins / (i + 1)) * 100).toFixed(1)), date: game.date }
+  })
+}
