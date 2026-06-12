@@ -206,7 +206,7 @@ const panelClasses = computed(() => {
     <!-- In Cycle, nudge tight to the inner panel edge so all four sigils
          cluster near the device's vertical centre line. Kingdoms keeps the
          original 8px inset. -->
-    <div class="left-badges" :style="{ [sigilSide]: isCycle ? '2px' : '8px' }">
+    <div class="left-badges" :style="{ [sigilSide]: isCycle ? '-12px' : '8px' }">
       <!-- Kingdoms: role tag (interactive reveal) -->
       <template v-if="!isCycle">
         <div

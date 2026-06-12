@@ -20,23 +20,23 @@ function isDead(houseName) {
 </script>
 
 <template>
-  <div v-if="house" class="house-badge">
+  <div
+    v-if="house"
+    class="house-badge clickable"
+    title="Show kill list map"
+    @pointerdown.stop
+    @click.stop="emit('open-map')"
+  >
     <img
-      class="house-img clickable"
+      class="house-img"
       :src="img"
       :alt="house"
-      title="Show kill list map"
-      @pointerdown.stop
-      @click.stop="emit('open-map')"
     />
     <div class="house-plate" :style="{ borderColor: color }">
       <div class="house-name" :style="{ color }">{{ house }}</div>
       <div class="house-rels">
         <div class="rel">
-          <span class="rel-label">
-            <CycleRelationIcon kind="nemesis" />
-            <span class="rel-label-text">Nemesis</span>
-          </span>
+          <span class="rel-icon" :class="{ 'rel-dead': isDead(rel.nemesis) }"><CycleRelationIcon kind="nemesis" /></span>
           <span
             class="rel-value"
             :class="{ 'rel-dead': isDead(rel.nemesis) }"
@@ -44,10 +44,7 @@ function isDead(houseName) {
           >{{ rel.nemesis }}</span>
         </div>
         <div class="rel">
-          <span class="rel-label">
-            <CycleRelationIcon kind="rival" />
-            <span class="rel-label-text">Rival</span>
-          </span>
+          <span class="rel-icon" :class="{ 'rel-dead': isDead(rel.rival) }"><CycleRelationIcon kind="rival" /></span>
           <span
             class="rel-value"
             :class="{ 'rel-dead': isDead(rel.rival) }"
@@ -80,48 +77,35 @@ function isDead(houseName) {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* Heraldry shifted up to make room for the kill-list plate below.
-     On large badges (iPad/tablet) the plate is shorter (36%) so the
-     heraldry only needs a small nudge; on narrow badges the plate is
-     taller (44%) so the heraldry has to move further up. The
-     @container rule below restores the iPad value. */
+  /* Heraldry shifted up to make room for the kill-list plate below. */
   object-position: center 16%;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
+  transform: scale(1.05);
 }
 
-.house-img.clickable {
+.house-badge.clickable {
   cursor: pointer;
-  transition: transform 0.15s, filter 0.15s;
-}
-
-.house-img.clickable:hover {
-  transform: scale(1.04);
-  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6)) brightness(1.15);
 }
 
 .house-plate {
   position: absolute;
-  /* Sign-shaped plate, narrower than the sigil so the heraldry shows
-     around it at the bottom corners. Side insets are kept tight (5%)
-     so the rival/nemesis row has room for the longest opposing-house name
-     ("Dragon") without touching the plate border on iPad. */
-  left: 5%;
-  right: 5%;
+  /* Narrower sign-shaped plate: with the word labels gone (icon + house
+     name only) the rows fit comfortably so the plate can pull in from
+     the badge edges and let more of the heraldry show. */
+  left: 18%;
+  right: 18%;
   bottom: 4%;
-  /* Default (narrow / phone-sized badges): taller plate so the icon
-     rows don't clip. Wider badges get the original shorter plate via
-     the @container rule below. */
-  height: 48%;
+  height: 44%;
   background: rgba(20, 16, 12, 0.9);
   border: 1px solid;
   border-radius: 3px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  /* Extra bottom padding so the "g" descender in "Dragon" / "Klugorn"
-     etc. doesn't touch the plate border on phone-sized badges where
-     the rel-row line-height of 1 leaves no room below the baseline. */
-  padding: 3px 6px 5px;
+  /* Extra bottom padding so the "g" descender in "Dragon" doesn't
+     touch the plate border on phone-sized badges where the rel-row
+     line-height of 1 leaves no room below the baseline. */
+  padding: 3px 6px 0;
   box-sizing: border-box;
 }
 
@@ -139,76 +123,54 @@ function isDead(houseName) {
   /* House colour set inline — bright text on the dark plate. */
 }
 
+/* Same two-column grid pattern the preview cards use: icons right-aligned
+   in the left column, values left-aligned in the right. .rel uses
+   display: contents so its children become direct grid items, which lets
+   both rows share consistent column edges. */
 .house-rels {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 3px;
+  row-gap: 2px;
+  justify-content: center;
+  align-items: center;
   width: 100%;
+  line-height: 1;
+  padding-top: 3px;
+  border-top: 1px solid color-mix(in srgb, var(--lt-text-dim) 35%, transparent);
 }
 
 .rel {
-  display: flex;
-  justify-content: space-between;
-  /* Label uses Cinzel uppercase, value uses EB Garamond serif — different
-     baselines. Lock both to the same line-height and centre them so the
-     serif descender doesn't make the value look "lower" than the label. */
-  align-items: center;
-  gap: 4px;
-  line-height: 1;
+  display: contents;
 }
 
-.rel-label,
-.rel-value {
-  line-height: 1;
+.rel-icon {
+  justify-self: end;
   display: inline-flex;
   align-items: center;
+  color: var(--lt-text-dim);
+  font-size: clamp(0.55rem, 9.5cqmin, 0.9rem);
+  line-height: 1;
+  /* The sword/shield paths fill the viewBox bottom-heavy (pommel near
+     y=23), so the bounding box centre sits below the icon's visual
+     mass. Nudge upward by feel so the glyph reads centred against the
+     house-name text it sits next to. */
+  transform: translateY(-0.08em);
 }
 
-.rel-label {
-  font-family: 'Cinzel', serif;
-  /* Badge-relative cqmin: iPad badge 150px → 7.5% = 0.7rem ceiling. */
-  font-size: clamp(0.45rem, 7.5cqmin, 0.7rem);
-  color: var(--lt-text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  gap: 2px;
-}
 
 .rel-value {
   font-family: 'Cinzel', serif;
-  /* iPad badge 150px → 9.1% = 0.85rem ceiling. */
   font-size: clamp(0.5rem, 9.1cqmin, 0.85rem);
   font-weight: 600;
   color: var(--lt-text);
   letter-spacing: 0.02em;
+  justify-self: start;
 }
 
 .rel-dead {
   text-decoration: line-through;
   text-decoration-thickness: 1px;
-  opacity: 0.55;
-}
-
-/* Hide the "Nemesis" / "Rival" word labels by default — they appear only
-   on badges wide enough to fit them comfortably alongside the opposing
-   house name (~ tablet / iPad sized panels). The crossed-sword and
-   sword icons carry the meaning on smaller screens. */
-.rel-label-text {
-  display: none;
-}
-
-@container (min-width: 115px) {
-  .rel-label-text {
-    display: inline;
-  }
-  /* Wider badge → labels are visible and the rows are slightly more
-     compact, so reclaim some heraldry by going back to the original
-     36% plate height. */
-  .house-plate {
-    height: 36%;
-  }
-  .house-img {
-    object-position: center 22%;
-  }
+  opacity: 0.3;
 }
 </style>

@@ -201,7 +201,7 @@ function houseColor(name) {
 </script>
 
 <template>
-  <div class="map-overlay" @click.self="emit('close')">
+  <div class="map-overlay" @click="emit('close')">
     <div class="map-card">
       <header class="map-header">
         <h2 class="map-title font-beleren">Kill Lists</h2>
