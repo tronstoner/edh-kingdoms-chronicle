@@ -16,6 +16,7 @@ import {
   computeZombieStats,
   computePlayerGames,
   computeWinLossCurve,
+  computePlayerRoleWinLossCurves,
   computePlayerRoleOverTime,
 } from '../analysis.js'
 import WinRateCurve from '../components/WinRateCurve.vue'
@@ -150,16 +151,102 @@ const winRateCurve = computed(() =>
   computeWinLossCurve(data.value.games, { playerName: props.name })
 )
 
+const roleCurves = computed(() =>
+  computePlayerRoleWinLossCurves(data.value.games, props.name)
+)
+
+const ROLES_FOR_CURVE = ['King', 'Knight', 'Goblin', 'Lord']
+
+const roleCurvesChartData = computed(() => {
+  const curves = roleCurves.value
+  const len = curves.King.length
+  const labels = Array.from({ length: len }, (_, i) => i + 1)
+  return {
+    labels,
+    datasets: ROLES_FOR_CURVE.map(role => ({
+      label: role,
+      data: curves[role].map(p => p.y),
+      borderColor: ROLE_COLORS[role],
+      backgroundColor: 'transparent',
+      tension: 0,
+      pointRadius: len > 30 ? 0 : 3,
+      pointHoverRadius: 5,
+      borderWidth: 2.5,
+    })),
+  }
+})
+
+const roleCurvesChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
+  plugins: {
+    legend: { labels: { color: '#d4c8a8', font: { family: 'Cinzel', size: 12 }, padding: 14 } },
+    tooltip: {
+      titleFont: { family: 'Cinzel', size: 13 },
+      bodyFont: { family: 'EB Garamond', size: 13 },
+      callbacks: {
+        title: (items) => {
+          const i = items[0]?.dataIndex
+          const date = roleCurves.value.King[i]?.date
+          return date ? `Game ${i + 1} — ${date}` : `Game ${i + 1}`
+        },
+        label: (item) => ` ${item.dataset.label}: ${item.raw > 0 ? '+' : ''}${item.raw}`,
+      },
+    },
+  },
+  scales: {
+    x: {
+      ticks: { color: '#8a7e66', font: { family: 'EB Garamond', size: 11 }, maxTicksLimit: 10 },
+      grid: { color: '#3d352922' },
+      title: { display: true, text: 'Game #', color: '#8a7e66', font: { family: 'EB Garamond', size: 11 } },
+    },
+    y: {
+      ticks: {
+        color: '#8a7e66',
+        font: { family: 'EB Garamond', size: 11 },
+        callback: v => v > 0 ? `+${v}` : `${v}`,
+      },
+      grid: { color: '#3d352933' },
+      title: { display: true, text: 'Cumulative W−L', color: '#c9a54e', font: { family: 'Cinzel', size: 12 } },
+    },
+  },
+}))
+
 const EXPECTED_RATE = { King: 0.20, Knight: 0.20, Goblin: 0.40, Lord: 0.20 }
+
+const roleResultTallies = computed(() => {
+  const normalize = r => r === 'Clone Lord' ? 'Lord' : r
+  const tally = { King: { w: 0, l: 0 }, Knight: { w: 0, l: 0 }, Goblin: { w: 0, l: 0 }, Lord: { w: 0, l: 0 } }
+  for (const game of playerGames.value) {
+    const entry = game.players.find(p => p.player === props.name)
+    if (!entry?.role) continue
+    const role = normalize(entry.role)
+    if (!tally[role]) continue
+    if (entry.result === 'Win') tally[role].w++
+    else tally[role].l++
+  }
+  return tally
+})
 
 const roleStats = computed(() =>
   roleDist.value.map(r => {
     const key = r.role.toLowerCase()
     const winRate = player.value?.[key + 'WinRate'] ?? null
     const deviation = r.pct - (EXPECTED_RATE[r.role] ?? 0)
-    return { ...r, winRate, deviation }
+    const t = roleResultTallies.value[r.role] || { w: 0, l: 0 }
+    return { ...r, winRate, deviation, wins: t.w, losses: t.l }
   })
 )
+
+function winRateBadgeClass(wr) {
+  if (wr == null) return 'text-mtg-text-dim/50'
+  if (wr >= 0.66) return 'text-mtg-dark bg-mtg-gold ring-1 ring-mtg-gold/60'
+  if (wr >= 0.50) return 'text-mtg-gold bg-mtg-gold/20 ring-1 ring-mtg-gold/40'
+  if (wr >= 0.33) return 'text-amber-200 bg-amber-900/30 ring-1 ring-amber-700/30'
+  if (wr >= 0.15) return 'text-mtg-text bg-mtg-dark/60 ring-1 ring-mtg-border/40'
+  return 'text-red-300 bg-red-900/20 ring-1 ring-red-800/30'
+}
 
 function deviationClass(dev) {
   const d = dev * 100
@@ -213,9 +300,9 @@ const roleTimeline = computed(() =>
 // Expected cumulative thresholds (Lord bottom → King top): 20 / 60 / 80
 // Used as dashed reference lines inside the stacked area chart
 const IDEAL_LINES = [
-  { label: '_lord_ref',   value: 20,  color: '#3d1f7a' },
-  { label: '_goblin_ref', value: 60,  color: '#6b1a1a' },
-  { label: '_knight_ref', value: 80,  color: '#1f5c1f' },
+  { label: '_lord_ref',   value: 20,  color: 'rgba(0, 0, 0, 0.5)' },
+  { label: '_goblin_ref', value: 60,  color: 'rgba(0, 0, 0, 0.5)' },
+  { label: '_knight_ref', value: 80,  color: 'rgba(0, 0, 0, 0.5)' },
 ]
 
 const roleTimelineChartData = computed(() => {
@@ -241,8 +328,8 @@ const roleTimelineChartData = computed(() => {
         label,
         data: Array(n).fill(value),
         borderColor: color,
-        borderDash: [5, 4],
-        borderWidth: 2,
+        borderDash: [6, 4],
+        borderWidth: 1,
         pointRadius: 0,
         fill: false,
         tension: 0,
@@ -397,28 +484,38 @@ const roleHistoryChartOptions = {
 
         <!-- Role Distribution -->
         <div>
-          <h3 class="font-beleren text-lg text-mtg-gold-light mb-4">Role Distribution</h3>
+          <h3 class="font-beleren text-lg text-mtg-gold-light mb-4">Role Performance</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
             <div class="h-48 flex items-center justify-center">
               <Doughnut :data="roleChartData" :options="{ ...roleChartOptions, maintainAspectRatio: false }" />
             </div>
-            <div class="space-y-2.5">
-              <div v-for="r in roleStats" :key="r.role" class="flex items-center gap-2 text-sm">
-                <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" :style="{ backgroundColor: ROLE_COLORS[r.role] }"></span>
-                <span class="font-beleren flex-1" :style="{ color: ROLE_COLORS[r.role] }">{{ r.role }}</span>
-                <span class="text-mtg-text-dim font-body w-6 text-right">{{ r.count }}</span>
-                <span class="font-body w-8 text-right text-mtg-text">{{ (r.pct * 100).toFixed(0) }}%</span>
-                <span class="font-body w-10 text-right tabular-nums" :class="deviationClass(r.deviation)">
-                  {{ r.deviation >= 0 ? '+' : '' }}{{ (r.deviation * 100).toFixed(0) }}%
-                </span>
-                <span class="font-beleren w-9 text-right" :class="r.winRate != null && r.winRate >= 0.5 ? 'text-mtg-gold' : 'text-mtg-text-dim'">
+            <div class="space-y-2">
+              <div
+                v-for="r in roleStats"
+                :key="r.role"
+                class="flex items-center gap-3 rounded-lg pl-2 pr-1 py-1.5 border border-mtg-border/40"
+                :style="{ background: `linear-gradient(90deg, ${ROLE_COLORS[r.role]}1a 0%, transparent 60%)` }"
+              >
+                <span class="w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: ROLE_COLORS[r.role] }"></span>
+                <div class="flex-1 min-w-0">
+                  <div class="font-beleren text-sm leading-tight" :style="{ color: ROLE_COLORS[r.role] }">{{ r.role }}</div>
+                  <div class="text-xs text-mtg-text-dim font-body leading-tight tabular-nums">
+                    <span class="text-mtg-gold">{{ r.wins }}W</span>
+                    <span class="mx-0.5">·</span>
+                    <span>{{ r.losses }}L</span>
+                    <span class="mx-1 text-mtg-text-dim/50">|</span>
+                    <span :class="deviationClass(r.deviation)">{{ r.deviation >= 0 ? '+' : '' }}{{ (r.deviation * 100).toFixed(0) }}%</span>
+                  </div>
+                </div>
+                <div
+                  class="font-beleren text-xl tabular-nums px-2.5 py-1 rounded-md min-w-[64px] text-right"
+                  :class="winRateBadgeClass(r.winRate)"
+                >
                   {{ r.winRate != null ? (r.winRate * 100).toFixed(0) + '%' : '—' }}
-                </span>
+                </div>
               </div>
-              <div class="flex items-center justify-end gap-2 text-xs text-mtg-text-dim/50 font-body pt-2 border-t border-mtg-border/30">
-                <span class="w-10 text-right">drawn</span>
-                <span class="w-10 text-right">vs exp</span>
-                <span class="w-9 text-right">WR</span>
+              <div class="text-[11px] text-mtg-text-dim/60 font-body italic text-right pt-1">
+                Win rate — ideal in a 5p game is 33%.
               </div>
             </div>
           </div>
@@ -430,6 +527,15 @@ const roleHistoryChartOptions = {
     <ChartCard class="mb-8">
       <template #title>Win Rate Over Time</template>
       <WinRateCurve :curve-data="winRateCurve" />
+    </ChartCard>
+
+    <!-- Cumulative W-L per role -->
+    <ChartCard v-if="playerGames.length >= 2" class="mb-8">
+      <template #title>Allegiance Fortunes</template>
+      <p class="text-sm text-mtg-text-dim font-body mb-3">Cumulative W−L per role across this champion's games.</p>
+      <div class="h-72">
+        <Line :data="roleCurvesChartData" :options="roleCurvesChartOptions" />
+      </div>
     </ChartCard>
 
     <!-- Role History -->

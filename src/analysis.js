@@ -296,6 +296,37 @@ export function computeRoleWinLossCurves(games) {
   return curves
 }
 
+export function computePlayerRoleWinLossCurves(games, playerName) {
+  const roles = ['King', 'Knight', 'Goblin', 'Lord']
+  const running = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+  const wins = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+  const counts = { King: 0, Knight: 0, Goblin: 0, Lord: 0 }
+  const curves = { King: [], Knight: [], Goblin: [], Lord: [] }
+  const normalize = r => r === 'Clone Lord' ? 'Lord' : r
+
+  const relevant = games.filter(g => g.players.some(p => p.player === playerName))
+  for (let i = 0; i < relevant.length; i++) {
+    const game = relevant[i]
+    const entry = game.players.find(p => p.player === playerName)
+    const role = entry?.role ? normalize(entry.role) : null
+    if (role && roles.includes(role)) {
+      counts[role]++
+      const won = entry.result === 'Win'
+      if (won) wins[role]++
+      running[role] += won ? 1 : -1
+    }
+    for (const r of roles) {
+      curves[r].push({
+        x: i + 1,
+        y: running[r],
+        rate: counts[r] > 0 ? parseFloat(((wins[r] / counts[r]) * 100).toFixed(1)) : null,
+        date: game.date,
+      })
+    }
+  }
+  return curves
+}
+
 export function computeWinLossCurve(games, { playerName, deckName } = {}) {
   const relevant = games.filter(g =>
     g.players.some(p =>
@@ -316,3 +347,4 @@ export function computeWinLossCurve(games, { playerName, deckName } = {}) {
     return { x: i + 1, y: delta, rate: parseFloat(((wins / (i + 1)) * 100).toFixed(1)), date: game.date }
   })
 }
+

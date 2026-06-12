@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend
@@ -9,9 +10,13 @@ import ChartCard from './ChartCard.vue'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const props = defineProps({ players: Array })
+const router = useRouter()
 
 const sorted = computed(() =>
-  [...props.players].sort((a, b) => (b.winRate ?? 0) - (a.winRate ?? 0))
+  [...props.players].sort((a, b) =>
+    (b.wins ?? 0) - (a.wins ?? 0) ||
+    (b.winRate ?? 0) - (a.winRate ?? 0)
+  )
 )
 
 const PLAYER_COLORS = {
@@ -42,8 +47,19 @@ const chartData = computed(() => ({
   ],
 }))
 
+function onChartClick(_evt, elements) {
+  if (!elements?.length) return
+  const name = sorted.value[elements[0].index]?.name
+  if (name) router.push('/player/' + name)
+}
+
 const chartOptions = {
   responsive: true,
+  onClick: onChartClick,
+  onHover: (evt, elements) => {
+    const target = evt?.native?.target
+    if (target) target.style.cursor = elements.length ? 'pointer' : 'default'
+  },
   plugins: {
     legend: { labels: { color: '#d4c8a8', font: { family: 'EB Garamond', size: 14 } } },
     tooltip: {

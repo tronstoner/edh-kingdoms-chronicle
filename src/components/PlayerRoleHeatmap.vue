@@ -1,13 +1,75 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import ChartCard from './ChartCard.vue'
 import RoleDetailModal from './RoleDetailModal.vue'
 import { ROLE_COLORS, rolePortraitUrl } from '../roles.js'
+import { computePlayerRoleWinLossCurves } from '../analysis.js'
 
-defineProps({ players: Array })
+const props = defineProps({ players: Array, games: { type: Array, default: () => [] } })
 
 const roles = ['King', 'Knight', 'Goblin', 'Lord']
 const mode = ref('winRate')
+
+const SPARK_W = 100
+const SPARK_H = 36
+const SPARK_PAD = 1 // half of the thickest stroke — keeps the line fully visible at the edges
+
+const playerCurves = computed(() => {
+  const map = {}
+  for (const p of props.players) {
+    map[p.name] = computePlayerRoleWinLossCurves(props.games, p.name)
+  }
+  return map
+})
+
+const playerRoleTallies = computed(() => {
+  const normalize = r => r === 'Clone Lord' ? 'Lord' : r
+  const map = {}
+  for (const p of props.players) {
+    map[p.name] = { King: { w: 0, l: 0 }, Knight: { w: 0, l: 0 }, Goblin: { w: 0, l: 0 }, Lord: { w: 0, l: 0 } }
+  }
+  for (const game of props.games) {
+    for (const entry of game.players) {
+      const t = map[entry.player]
+      if (!t || !entry.role) continue
+      const role = normalize(entry.role)
+      if (!t[role]) continue
+      if (entry.result === 'Win') t[role].w++
+      else t[role].l++
+    }
+  }
+  return map
+})
+
+function getRoleTally(player, role) {
+  return playerRoleTallies.value[player.name]?.[role] || { w: 0, l: 0 }
+}
+
+function sparkPath(player, role) {
+  const curve = playerCurves.value[player.name]?.[role]
+  if (!curve || curve.length < 2) return null
+  // Only keep points where this role was actually played
+  // (cumulative W-L only changes on those games — flat runs add no signal).
+  const points = []
+  let prevY = null
+  for (let i = 0; i < curve.length; i++) {
+    if (curve[i].y !== prevY || i === curve.length - 1) {
+      points.push({ i, y: curve[i].y })
+      prevY = curve[i].y
+    }
+  }
+  if (points.length < 2) return null
+  const ys = curve.map(p => p.y)
+  const min = Math.min(0, ...ys)
+  const max = Math.max(0, ...ys)
+  const range = max - min || 1
+  const n = curve.length - 1
+  const toX = i => (i / n) * SPARK_W
+  const toY = y => SPARK_H - SPARK_PAD - ((y - min) / range) * (SPARK_H - 2 * SPARK_PAD)
+  const d = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'}${toX(p.i).toFixed(1)},${toY(p.y).toFixed(1)}`).join(' ')
+  const zeroY = toY(0)
+  return { d, zeroY, color: ROLE_COLORS[role] }
+}
 
 const EXPECTED_DRAW = { King: 0.20, Knight: 0.20, Goblin: 0.40, Lord: 0.20 }
 
@@ -27,7 +89,7 @@ function getDrawBias(player, role) {
 function winRateCellStyle(wr) {
   if (wr == null) return { backgroundColor: '#1a161288', color: '#4a3f2f' }
   const alpha = wr * 0.5 + 0.08
-  return { backgroundColor: `rgba(201, 165, 78, ${alpha})`, color: wr >= 0.3 ? '#e2c878' : '#8a7e66' }
+  return { backgroundColor: `rgba(201, 165, 78, ${alpha})`, color: '#f5e9c8' }
 }
 
 function biasCellStyle(deviation) {
@@ -103,11 +165,40 @@ function closeDetail() { detailRole.value = null }
               <td v-for="r in roles" :key="r" class="text-center py-3 px-2">
                 <div
                   v-if="getRoleData(p, r).games"
-                  class="rounded-lg px-3 py-2 text-center border border-mtg-border/30 font-beleren"
+                  class="wr-cell rounded-lg px-3 py-2 text-center border border-mtg-border/30 font-beleren"
                   :style="winRateCellStyle(getRoleData(p, r).winRate)"
                 >
-                  <div class="text-lg">{{ pct(getRoleData(p, r).winRate) }}</div>
-                  <div class="text-xs opacity-50 font-body">{{ getRoleData(p, r).games }} games</div>
+                  <svg
+                    v-if="sparkPath(p, r)"
+                    class="wr-spark"
+                    :viewBox="`0 0 ${SPARK_W} ${SPARK_H}`"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <line
+                      x1="0" :y1="sparkPath(p, r).zeroY"
+                      x2="100" :y2="sparkPath(p, r).zeroY"
+                      stroke="#000000" stroke-width="0.7"
+                      stroke-opacity="0.5"
+                      stroke-dasharray="3 2"
+                    />
+                    <path
+                      :d="sparkPath(p, r).d"
+                      fill="none"
+                      :stroke="sparkPath(p, r).color"
+                      stroke-opacity="0.55"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <div class="wr-content">
+                    <div class="text-lg leading-tight">{{ pct(getRoleData(p, r).winRate) }}</div>
+                    <div class="text-xs font-body tabular-nums leading-tight">
+                      {{ getRoleTally(p, r).w }}W · {{ getRoleTally(p, r).l }}L
+                    </div>
+                    <div class="text-xs font-body leading-tight">{{ getRoleData(p, r).games }} games</div>
+                  </div>
                 </div>
                 <div v-else class="text-mtg-text-dim/30 text-lg">&mdash;</div>
               </td>
@@ -163,6 +254,22 @@ function closeDetail() { detailRole.value = null }
 </template>
 
 <style scoped>
+.wr-cell {
+  position: relative;
+  overflow: hidden;
+  min-width: 86px;
+}
+.wr-spark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.wr-content {
+  position: relative;
+}
+
 .role-header-btn {
   display: inline-flex;
   flex-direction: column;

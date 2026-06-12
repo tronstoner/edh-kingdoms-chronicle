@@ -72,8 +72,8 @@ const factionCurves = computed(() =>
 
 // Ideal reference boundaries: Lord at 33%, Lord+Goblin at 66%
 const FACTION_IDEAL_LINES = [
-  { label: '_lord_ref',   value: 20, color: '#2d1060' },
-  { label: '_goblin_ref', value: 60, color: '#5c1010' },
+  { label: '_lord_ref',   value: 20, color: 'rgba(0, 0, 0, 0.5)' },
+  { label: '_goblin_ref', value: 60, color: 'rgba(0, 0, 0, 0.5)' },
 ]
 
 const factionChartData = computed(() => {
@@ -91,8 +91,8 @@ const factionChartData = computed(() => {
         label,
         data: Array(n).fill(value),
         borderColor: color,
-        borderDash: [5, 4],
-        borderWidth: 2,
+        borderDash: [6, 4],
+        borderWidth: 1,
         pointRadius: 0,
         fill: false,
         tension: 0,
@@ -174,15 +174,15 @@ const fortuneChartData = computed(() => {
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 4,
-        tension: 0.1,
+        tension: 0,
         fill: false,
       })),
       {
         label: '_baseline',
         data: Array(n).fill(baseline),
-        borderColor: '#3d3529',
+        borderColor: '#8a7e66',
         borderWidth: 1,
-        borderDash: [4, 4],
+        borderDash: [6, 4],
         pointRadius: 0,
         fill: false,
         tension: 0,

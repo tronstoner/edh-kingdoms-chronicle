@@ -59,7 +59,7 @@ function buildTimeline(scoreFn) {
       data,
       borderColor: PLAYER_COLORS[name] || '#6b7280',
       backgroundColor: 'transparent',
-      tension: 0.3,
+      tension: 0,
       pointRadius: 4,
       pointHoverRadius: 6,
       pointBackgroundColor: PLAYER_COLORS[name] || '#6b7280',

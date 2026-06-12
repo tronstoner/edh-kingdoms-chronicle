@@ -11,9 +11,10 @@ const props = defineProps({
   curveData: { type: Array, required: true },
   label: { type: String, default: 'Fortune' },
   color: { type: String, default: '#c9a54e' },
+  idealRate: { type: Number, default: 100 / 3 },
 })
 
-const mode = ref('delta')
+const mode = ref('rate')
 
 const chartData = computed(() => ({
   labels: props.curveData.map(p => p.x),
@@ -24,15 +25,15 @@ const chartData = computed(() => ({
       borderColor: props.color,
       backgroundColor: props.color + '22',
       fill: true,
-      tension: 0.1,
+      tension: 0,
       pointRadius: props.curveData.length > 30 ? 0 : 3,
       pointHoverRadius: 5,
       borderWidth: 2,
     },
     {
       label: '_baseline',
-      data: props.curveData.map(() => mode.value === 'delta' ? 0 : 50),
-      borderColor: '#5a5040',
+      data: props.curveData.map(() => mode.value === 'delta' ? 0 : props.idealRate),
+      borderColor: '#8a7e66',
       borderDash: [6, 4],
       borderWidth: 1,
       pointRadius: 0,
