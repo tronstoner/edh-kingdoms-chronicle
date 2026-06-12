@@ -96,7 +96,7 @@ const myRelations = computed(() => {
 })
 
 // Houses whose seat is currently eliminated. Drives strike-through on
-// feud/rival names in every panel's sigil.
+// nemesis/rival names in every panel's sigil.
 const deadHouses = computed(() => {
   if (!isCycle.value) return []
   return props.allSeats
@@ -110,7 +110,7 @@ function cycleRelationFor(otherSeatIndex) {
   if (!rel) return null
   const otherHouse = props.allSeats?.[otherSeatIndex]?.house
   if (!otherHouse) return null
-  if (otherHouse === rel.feud) return 'feud'
+  if (otherHouse === rel.nemesis) return 'nemesis'
   if (otherHouse === rel.rival) return 'rival'
   if (otherHouse === rel.hunter) return 'hunter'
   return null
@@ -288,12 +288,12 @@ const panelClasses = computed(() => {
             :style="relIconPosition(ri, ci)"
             :title="cycleRelationFor(si)"
           >
-            <!-- Feud: two crossed swords. Same path reused but rotated
+            <!-- Nemesis: two crossed swords. Same path reused but rotated
                  around a point UP in the blade (y=9) rather than viewBox
                  centre — that pushes the crossguards out into the lower
                  corners of the icon so they don't smear together. -->
             <svg
-              v-if="cycleRelationFor(si) === 'feud'"
+              v-if="cycleRelationFor(si) === 'nemesis'"
               viewBox="0 0 24 24"
               aria-hidden="true"
             >

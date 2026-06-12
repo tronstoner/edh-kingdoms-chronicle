@@ -73,23 +73,23 @@ function midpoint(a, b, t = 0.5) {
   return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
 }
 
-// Two mutual feud pairs in the cycle (A↔C, B↔D in cycle terms).
+// Two mutual nemesis pairs in the cycle (A↔C, B↔D in cycle terms).
 // We resolve via cycleRelations so this stays correct regardless of how
 // HOUSES are labelled in the seats array.
-const feudPairs = computed(() => {
+const nemesisPairs = computed(() => {
   const seen = new Set()
   const pairs = []
   for (const seat of props.seats) {
     if (!seat || !seat.house) continue
     const rel = cycleRelations(seat.house)
     if (!rel) continue
-    const key = [seat.house, rel.feud].sort().join('-')
+    const key = [seat.house, rel.nemesis].sort().join('-')
     if (seen.has(key)) continue
     seen.add(key)
     const fromIdx = houseSeat(seat.house)
-    const toIdx = houseSeat(rel.feud)
+    const toIdx = houseSeat(rel.nemesis)
     if (fromIdx == null || toIdx == null) continue
-    pairs.push({ key, from: fromIdx, to: toIdx, house: seat.house, otherHouse: rel.feud })
+    pairs.push({ key, from: fromIdx, to: toIdx, house: seat.house, otherHouse: rel.nemesis })
   }
   return pairs
 })
@@ -109,9 +109,27 @@ const rivalEdges = computed(() => {
   return edges
 })
 
+// Directed protect edges: each house points at the one they protect
+// (= their hunter, the house that would hunt them, kept off the kill
+// list). Runs counter-clockwise to the rival cycle.
+const protectEdges = computed(() => {
+  const edges = []
+  for (const seat of props.seats) {
+    if (!seat || !seat.house) continue
+    const rel = cycleRelations(seat.house)
+    if (!rel) continue
+    const fromIdx = houseSeat(seat.house)
+    const toIdx = houseSeat(rel.hunter)
+    if (fromIdx == null || toIdx == null) continue
+    edges.push({ key: `${seat.house}~>${rel.hunter}`, from: fromIdx, to: toIdx, fromHouse: seat.house, toHouse: rel.hunter })
+  }
+  return edges
+})
+
 // Sword path used by CycleRelationIcon — reused inline so we can render
-// crossed (feud) and single (rival) glyphs straight into the SVG.
+// crossed (nemesis) and single (rival) glyphs straight into the SVG.
 const SWORD = 'M12 1 L13.75 2.75 L13.75 15 L17 15 L17 17 L13.5 17 L13.5 21 L14.25 21.5 L14.25 23 L9.75 23 L9.75 21.5 L10.5 21 L10.5 17 L7 17 L7 15 L10.25 15 L10.25 2.75 Z'
+const SHIELD = 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'
 
 function lineGeom(fromIdx, toIdx) {
   const a = nodeFor(fromIdx)
@@ -119,6 +137,27 @@ function lineGeom(fromIdx, toIdx) {
   const start = edgePoint(b, a)
   const end = edgePoint(a, b)
   return { a, b, start, end }
+}
+
+// Perpendicular offset (clockwise 90° from the from→to direction).
+// Used to slide a directed line sideways so the opposite-direction line
+// between the same two nodes (rival vs protect) doesn't overlap it.
+function perpOffset(fromIdx, toIdx, shift) {
+  const a = nodeFor(fromIdx)
+  const b = nodeFor(toIdx)
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const len = Math.hypot(dx, dy) || 1
+  return { x: (-dy / len) * shift, y: (dx / len) * shift }
+}
+
+function offsetLineGeom(fromIdx, toIdx, shift) {
+  const g = lineGeom(fromIdx, toIdx)
+  const o = perpOffset(fromIdx, toIdx, shift)
+  return {
+    start: { x: g.start.x + o.x, y: g.start.y + o.y },
+    end:   { x: g.end.x + o.x,   y: g.end.y + o.y },
+  }
 }
 
 // A line is "diagonal" if its endpoints differ in both x and y.
@@ -135,11 +174,18 @@ function isDiagonalLine(fromIdx, toIdx) {
 // the line between two nodes. Axis-aligned lines get the dead centre;
 // diagonal lines get t=0.35 (closer to the source) so a pair of crossing
 // diagonals ends up with one icon on each side of the intersection.
-function iconTransform(fromIdx, toIdx, size) {
-  const t = isDiagonalLine(fromIdx, toIdx) ? 0.35 : 0.5
+function iconTransform(fromIdx, toIdx, size, shift = 0, alongShift = 0) {
+  const diagonal = isDiagonalLine(fromIdx, toIdx)
+  // Diagonals already use t=0.35 to avoid the centre crossing — leave
+  // those alone. For non-diagonal (perimeter) edges, `alongShift` lets
+  // callers slide the icon along the line so a counter-direction icon
+  // (protect on the opposite-running line) doesn't sit at the same
+  // midpoint as the rival icon.
+  const t = diagonal ? 0.35 : 0.5 + alongShift
   const mid = midpoint(nodeFor(fromIdx), nodeFor(toIdx), t)
+  const o = shift ? perpOffset(fromIdx, toIdx, shift) : { x: 0, y: 0 }
   const half = size / 2
-  return `translate(${mid.x - half}, ${mid.y - half})`
+  return `translate(${mid.x + o.x - half}, ${mid.y + o.y - half})`
 }
 
 // Top-row seats (0=TL, 1=TR) place their player + house labels ABOVE the
@@ -160,8 +206,9 @@ function houseColor(name) {
       <header class="map-header">
         <h2 class="map-title font-beleren">Kill Lists</h2>
         <p class="map-legend">
-          <span class="legend-item"><svg class="legend-glyph" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path :transform="`rotate(45 12 9)`" :d="SWORD" /><path :transform="`rotate(-45 12 9)`" :d="SWORD" /></g></svg> Feud · mutual</span>
+          <span class="legend-item"><svg class="legend-glyph" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path :transform="`rotate(45 12 9)`" :d="SWORD" /><path :transform="`rotate(-45 12 9)`" :d="SWORD" /></g></svg> Nemesis · mutual</span>
           <span class="legend-item"><svg class="legend-glyph rival" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" :transform="`rotate(45 12 12)`" :d="SWORD" /></svg> Rival · one-way</span>
+          <span class="legend-item"><svg class="legend-glyph protect" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" :d="SHIELD" /></svg> Protect · one-way</span>
         </p>
         <button class="lt-modal-close" @click="emit('close')" aria-label="Close">×</button>
       </header>
@@ -177,63 +224,41 @@ function houseColor(name) {
           >
             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--lt-gold)" />
           </marker>
+          <!-- Nemesis arrowhead — used at BOTH ends of the line.
+               `auto-start-reverse` flips the marker at marker-start so the
+               two arrows point outward (mutual relationship: A ↔ C). -->
+          <marker
+            id="nemesisArrow"
+            viewBox="0 0 10 10"
+            refX="9" refY="5"
+            markerWidth="8" markerHeight="8"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#d95555" />
+          </marker>
+          <marker
+            id="protectArrow"
+            viewBox="0 0 10 10"
+            refX="9" refY="5"
+            markerWidth="5" markerHeight="5"
+            orient="auto"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#6ab86a" />
+          </marker>
         </defs>
 
-        <!-- Feud lines: dashed, drawn first so rival arrows sit on top -->
-        <g class="feud-lines">
-          <template v-for="pair in feudPairs" :key="pair.key">
-            <line
-              :x1="lineGeom(pair.from, pair.to).start.x"
-              :y1="lineGeom(pair.from, pair.to).start.y"
-              :x2="lineGeom(pair.from, pair.to).end.x"
-              :y2="lineGeom(pair.from, pair.to).end.y"
-              stroke="#9a93b8"
-              stroke-width="2"
-              stroke-dasharray="6 4"
-              opacity="0.75"
-            />
-            <g :transform="iconTransform(pair.from, pair.to, 28)">
-              <circle cx="14" cy="14" r="13" fill="var(--lt-bg)" stroke="#9a93b8" stroke-width="1.5" />
-              <svg x="3" y="3" width="22" height="22" viewBox="0 0 24 24">
-                <g fill="var(--lt-text)">
-                  <path :transform="`rotate(45 12 9)`" :d="SWORD" />
-                  <path :transform="`rotate(-45 12 9)`" :d="SWORD" />
-                </g>
-              </svg>
-            </g>
-          </template>
-        </g>
-
-        <!-- Rival arrows -->
-        <g class="rival-arrows">
-          <template v-for="edge in rivalEdges" :key="edge.key">
-            <line
-              :x1="lineGeom(edge.from, edge.to).start.x"
-              :y1="lineGeom(edge.from, edge.to).start.y"
-              :x2="lineGeom(edge.from, edge.to).end.x"
-              :y2="lineGeom(edge.from, edge.to).end.y"
-              stroke="var(--lt-gold)"
-              stroke-width="2.5"
-              marker-end="url(#rivalArrow)"
-              opacity="0.9"
-            />
-            <g :transform="iconTransform(edge.from, edge.to, 22)">
-              <circle cx="11" cy="11" r="11" fill="var(--lt-bg)" stroke="var(--lt-gold)" stroke-width="1.5" />
-              <svg x="2" y="2" width="18" height="18" viewBox="0 0 24 24">
-                <path fill="var(--lt-gold)" :transform="`rotate(45 12 12)`" :d="SWORD" />
-              </svg>
-            </g>
-          </template>
-        </g>
-
-        <!-- Player nodes -->
+        <!-- Player nodes: drawn FIRST so they sit behind the lines and
+             arrows — otherwise the arrowhead tips get clipped by the
+             house circles where they meet the node edge. The text
+             labels live outside the node circles so they never overlap
+             the lines. -->
         <g class="nodes">
           <template v-for="(seat, i) in seats" :key="i">
             <g v-if="seat" :transform="`translate(${nodeFor(i).x}, ${nodeFor(i).y})`">
               <circle
                 :r="NODE_R"
-                :fill="'var(--lt-bg)'"
-                :stroke="houseColor(seat.house)"
+                fill="var(--lt-bg)"
+                stroke="#5a5040"
                 stroke-width="3"
               />
               <image
@@ -245,9 +270,6 @@ function houseColor(name) {
                 :height="NODE_R * 1.4"
                 preserveAspectRatio="xMidYMid meet"
               />
-              <!-- Top row: labels stacked ABOVE the circle (house name
-                   closest to the sigil, player name on the outside).
-                   Bottom row: stacked BELOW with the same hierarchy. -->
               <template v-if="isTopRow(i)">
                 <text
                   :x="0" :y="-(NODE_R + 22)"
@@ -289,6 +311,84 @@ function houseColor(name) {
             </g>
           </template>
         </g>
+
+        <!-- Nemesis lines: solid red with double-headed arrows, drawn
+             after the nodes so arrowheads land on top of the circles. -->
+        <g class="nemesis-lines">
+          <template v-for="pair in nemesisPairs" :key="pair.key">
+            <line
+              :x1="lineGeom(pair.from, pair.to).start.x"
+              :y1="lineGeom(pair.from, pair.to).start.y"
+              :x2="lineGeom(pair.from, pair.to).end.x"
+              :y2="lineGeom(pair.from, pair.to).end.y"
+              stroke="#d95555"
+              stroke-width="2.5"
+              opacity="0.9"
+              marker-start="url(#nemesisArrow)"
+              marker-end="url(#nemesisArrow)"
+            />
+            <g :transform="iconTransform(pair.from, pair.to, 28)">
+              <circle cx="14" cy="14" r="13" fill="var(--lt-bg)" stroke="#d95555" stroke-width="1.5" />
+              <svg x="3" y="3" width="22" height="22" viewBox="0 0 24 24">
+                <g fill="#d95555">
+                  <path :transform="`rotate(45 12 9)`" :d="SWORD" />
+                  <path :transform="`rotate(-45 12 9)`" :d="SWORD" />
+                </g>
+              </svg>
+            </g>
+          </template>
+        </g>
+
+        <!-- Protect arrows: dashed green. Offset perpendicular to the
+             from→to direction (CW) so they sit parallel to the rival
+             arrow that runs the other way between the same two nodes —
+             both use the same perpendicular sign which lands them on
+             opposite sides of the underlying edge. -->
+        <g class="protect-arrows">
+          <template v-for="edge in protectEdges" :key="edge.key">
+            <line
+              :x1="offsetLineGeom(edge.from, edge.to, 10).start.x"
+              :y1="offsetLineGeom(edge.from, edge.to, 10).start.y"
+              :x2="offsetLineGeom(edge.from, edge.to, 10).end.x"
+              :y2="offsetLineGeom(edge.from, edge.to, 10).end.y"
+              stroke="#6ab86a"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-dasharray="0.1 3"
+              opacity="0.85"
+              marker-end="url(#protectArrow)"
+            />
+            <g :transform="iconTransform(edge.from, edge.to, 16, 10, -0.1)">
+              <circle cx="8" cy="8" r="8" fill="var(--lt-bg)" stroke="#6ab86a" stroke-width="1.2" />
+              <svg x="2" y="2" width="12" height="12" viewBox="0 0 24 24">
+                <path fill="#6ab86a" :d="SHIELD" />
+              </svg>
+            </g>
+          </template>
+        </g>
+
+        <!-- Rival arrows -->
+        <g class="rival-arrows">
+          <template v-for="edge in rivalEdges" :key="edge.key">
+            <line
+              :x1="offsetLineGeom(edge.from, edge.to, 10).start.x"
+              :y1="offsetLineGeom(edge.from, edge.to, 10).start.y"
+              :x2="offsetLineGeom(edge.from, edge.to, 10).end.x"
+              :y2="offsetLineGeom(edge.from, edge.to, 10).end.y"
+              stroke="var(--lt-gold)"
+              stroke-width="2.5"
+              marker-end="url(#rivalArrow)"
+              opacity="0.9"
+            />
+            <g :transform="iconTransform(edge.from, edge.to, 22, 10)">
+              <circle cx="11" cy="11" r="11" fill="var(--lt-bg)" stroke="var(--lt-gold)" stroke-width="1.5" />
+              <svg x="2" y="2" width="18" height="18" viewBox="0 0 24 24">
+                <path fill="var(--lt-gold)" :transform="`rotate(45 12 12)`" :d="SWORD" />
+              </svg>
+            </g>
+          </template>
+        </g>
+
       </svg>
     </div>
   </div>
@@ -362,11 +462,15 @@ function houseColor(name) {
 .legend-glyph {
   width: 1em;
   height: 1em;
-  color: #9a93b8;
+  color: #d95555;
 }
 
 .legend-glyph.rival {
   color: var(--lt-gold);
+}
+
+.legend-glyph.protect {
+  color: #6ab86a;
 }
 
 /* SVG fills all remaining vertical space; preserveAspectRatio (default

@@ -34,14 +34,14 @@ function isDead(houseName) {
       <div class="house-rels">
         <div class="rel">
           <span class="rel-label">
-            <CycleRelationIcon kind="feud" />
-            <span class="rel-label-text">Feud</span>
+            <CycleRelationIcon kind="nemesis" />
+            <span class="rel-label-text">Nemesis</span>
           </span>
           <span
             class="rel-value"
-            :class="{ 'rel-dead': isDead(rel.feud) }"
-            :style="{ color: HOUSE_COLORS[rel.feud] }"
-          >{{ rel.feud }}</span>
+            :class="{ 'rel-dead': isDead(rel.nemesis) }"
+            :style="{ color: HOUSE_COLORS[rel.nemesis] }"
+          >{{ rel.nemesis }}</span>
         </div>
         <div class="rel">
           <span class="rel-label">
@@ -68,7 +68,7 @@ function isDead(houseName) {
   width: clamp(80px, 38cqmin, 150px);
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
-  /* Container so the kill-list plate can drop the "Feud" / "Rival" word
+  /* Container so the kill-list plate can drop the "Nemesis" / "Rival" word
      labels when the badge is too narrow to fit them next to the opposing
      house name. */
   container-type: inline-size;
@@ -103,7 +103,7 @@ function isDead(houseName) {
   position: absolute;
   /* Sign-shaped plate, narrower than the sigil so the heraldry shows
      around it at the bottom corners. Side insets are kept tight (5%)
-     so the rival/feud row has room for the longest opposing-house name
+     so the rival/nemesis row has room for the longest opposing-house name
      ("Dragon") without touching the plate border on iPad. */
   left: 5%;
   right: 5%;
@@ -189,7 +189,7 @@ function isDead(houseName) {
   opacity: 0.55;
 }
 
-/* Hide the "Feud" / "Rival" word labels by default — they appear only
+/* Hide the "Nemesis" / "Rival" word labels by default — they appear only
    on badges wide enough to fit them comfortably alongside the opposing
    house name (~ tablet / iPad sized panels). The crossed-sword and
    sword icons carry the meaning on smaller screens. */

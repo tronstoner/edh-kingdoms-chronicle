@@ -526,12 +526,16 @@ function pickerCycleLines(arrangement) {
             </div>
             <div class="card-house-relations">
               <div class="rel-row">
-                <span class="rel-label"><CycleRelationIcon kind="feud" />Feud</span>
-                <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).feud) }">{{ relations(displayedHouse(seatIndex)).feud }}</span>
+                <span class="rel-label"><CycleRelationIcon kind="nemesis" />Nemesis</span>
+                <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).nemesis) }">{{ relations(displayedHouse(seatIndex)).nemesis }}</span>
               </div>
               <div class="rel-row">
                 <span class="rel-label"><CycleRelationIcon kind="rival" />Rival</span>
                 <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).rival) }">{{ relations(displayedHouse(seatIndex)).rival }}</span>
+              </div>
+              <div class="rel-row">
+                <span class="rel-label"><CycleRelationIcon kind="protect" />Protect</span>
+                <span class="rel-value" :style="{ color: houseColor(relations(displayedHouse(seatIndex)).hunter) }">{{ relations(displayedHouse(seatIndex)).hunter }}</span>
               </div>
             </div>
           </div>
@@ -1110,7 +1114,7 @@ function pickerCycleLines(arrangement) {
 }
 
 /* Default cards (2×2 layout): rel rows are centred below the house
-   name as one compact "FEUD  Lion" block. */
+   name as one compact "NEMESIS  Lion" block. */
 .rel-row {
   display: inline-flex;
   align-items: center;

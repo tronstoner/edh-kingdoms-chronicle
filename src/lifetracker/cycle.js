@@ -8,24 +8,24 @@ export const HOUSES = ['Lion', 'Oak', 'Dragon', 'Ash']
 export const HOUSE_TO_ID = { Lion: 'A', Oak: 'B', Dragon: 'C', Ash: 'D' }
 export const ID_TO_HOUSE = { A: 'Lion', B: 'Oak', C: 'Dragon', D: 'Ash' }
 
-// Cycle math: each House's feud (mutual, opposite in the cycle), rival (next CW), hunter (prev CW).
-// A→B→C→D→A: rival is +1, hunter is -1, feud is +2.
+// Cycle math: each House's nemesis (mutual, opposite in the cycle), rival (next CW), hunter (prev CW).
+// A→B→C→D→A: rival is +1, hunter is -1, nemesis is +2.
 const ORDER = ['Lion', 'Oak', 'Dragon', 'Ash']
 
 export function cycleRelations(house) {
   const i = ORDER.indexOf(house)
   if (i < 0) return null
   return {
-    feud: ORDER[(i + 2) % 4],
+    nemesis: ORDER[(i + 2) % 4],
     rival: ORDER[(i + 1) % 4],
     hunter: ORDER[(i + 3) % 4],
   }
 }
 
-// Each player's kill list (feud + rival). Used for win-condition hinting.
+// Each player's kill list (nemesis + rival). Used for win-condition hinting.
 export function killList(house) {
   const rel = cycleRelations(house)
-  return rel ? [rel.feud, rel.rival] : []
+  return rel ? [rel.nemesis, rel.rival] : []
 }
 
 // House heraldry tint — used for panel border accent and badge glow.
@@ -59,11 +59,11 @@ export function assignHouses() {
 
 // Cycle "shapes on the table" — see Appendix of research/the-cycle.html.
 // The cycle math is invariant, but the seating yields one of three shapes
-// based on where the feud pairs sit relative to the table grid.
+// based on where the nemesis pairs sit relative to the table grid.
 export const CYCLE_SHAPES = [
-  { id: 'diagonal',   label: 'Diagonal feuds' },
-  { id: 'vertical',   label: 'Vertical feuds' },
-  { id: 'horizontal', label: 'Horizontal feuds' },
+  { id: 'diagonal',   label: 'Diagonal nemeses' },
+  { id: 'vertical',   label: 'Vertical nemeses' },
+  { id: 'horizontal', label: 'Horizontal nemeses' },
 ]
 
 // Physical seat layout in the 4-2t2b table: 0=TL, 1=TR, 2=BL, 3=BR.
@@ -72,10 +72,10 @@ const SEAT_X = [-1, 1, -1, 1]
 const SEAT_Y = [-1, -1, 1, 1]
 
 // Classify a seat→house assignment by its shape and which side of the
-// table the A↔C feud pair sits on (the "mirror" axis).
+// table the A↔C nemesis pair sits on (the "mirror" axis).
 //
 // The mirror flag is POSITIONAL so the user-facing toggle behaves
-// intuitively: turning mirror off for "vertical feuds" should restrict
+// intuitively: turning mirror off for "vertical nemeses" should restrict
 // the deal to *either* the left column or the right column, not allow
 // both. Same for horizontal (top vs bottom row) and diagonal (the \
 // or / diagonal). A previous implementation used chirality (cycle
@@ -173,7 +173,7 @@ function isHouseEliminated(seats, house) {
 }
 
 // Returns the seat index of the unique Cycle winner — a player who is
-// alive and whose feud + rival houses are both eliminated — or null if
+// alive and whose nemesis + rival houses are both eliminated — or null if
 // no one currently satisfies the condition. The cycle rules guarantee
 // at most one such player at any time.
 export function findCycleWinner(seats) {
@@ -183,7 +183,7 @@ export function findCycleWinner(seats) {
     if (seat.isDead && !seat.deathOverridden) continue
     const rel = cycleRelations(seat.house)
     if (!rel) continue
-    if (isHouseEliminated(seats, rel.feud) && isHouseEliminated(seats, rel.rival)) {
+    if (isHouseEliminated(seats, rel.nemesis) && isHouseEliminated(seats, rel.rival)) {
       return i
     }
   }

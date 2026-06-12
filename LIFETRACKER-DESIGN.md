@@ -72,7 +72,7 @@ The lifetracker is tuned for an iPad-landscape table (~1180×820). To keep that 
 - **`CommanderDamageModal.vue`** is a `container-type: inline-size` context on `.cmd-panel`. Counter row uses `cqi` plus a `vh` term (`min(20cqi, 22vh)` etc.) so the modal also shrinks vertically on short viewports.
 - **Nested containers**: `.counter-box` and `.cmd-seat` are themselves `container-type: size` contexts. Their interior (`.role-box-img`, `.cmd-seat-icons`, `.cmd-split-half` etc.) sizes against the box/seat dimensions via `cqh`. This is what lets a multi-line role label like "Clone Lord" fit a short counter box and the dual-commander split keep its halves balanced even when the seat is 105px tall.
 - **Game menu (`GameMenuInline.vue`)**: the menu gap / column shrinks from 64px on iPad to a 40px floor on phones (`clamp(40px, 8vmin, 64px)` in `useTableLayouts.js`). The menu is a `container-type: size` context so the inline icons (turn button, battle menu, fullscreen) scale with the gap width.
-- **House badge (`CycleHouseBadge.vue`)** is its own container. `@container (min-width: 115px)` reveals the "Feud" / "Rival" word labels on iPad-sized badges and hides them on phones, where icons + opposing house names alone fit the plate.
+- **House badge (`CycleHouseBadge.vue`)** is its own container. `@container (min-width: 115px)` reveals the "Nemesis" / "Rival" word labels on iPad-sized badges and hides them on phones, where icons + opposing house names alone fit the plate.
 
 Tuning rule: pick the iPad reference pixel target, compute it as a percentage of the iPad container size, write that as the `clamp(min, Xcq*, ceiling)` middle term. iPad lands at the ceiling, smaller viewports interpolate, the floor catches phone extremes.
 

@@ -16,14 +16,14 @@ const emit = defineEmits(['save', 'saveAndExport', 'close'])
 
 const isCycle = computed(() => props.mode === 'cycle')
 
-// Default winner pick for Cycle: the unique alive player whose feud + rival are both dead.
+// Default winner pick for Cycle: the unique alive player whose nemesis + rival are both dead.
 function defaultCycleWinner(idx) {
   const s = props.seats[idx]
   if (!s.house || s.isDead) return false
   const rel = cycleRelations(s.house)
   if (!rel) return false
   const houseDead = (house) => props.seats.some(o => o.house === house && o.isDead && !o.deathOverridden)
-  return houseDead(rel.feud) && houseDead(rel.rival)
+  return houseDead(rel.nemesis) && houseDead(rel.rival)
 }
 
 const rows = ref(props.seats.map((s, i) => ({
