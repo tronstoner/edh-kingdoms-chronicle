@@ -12,7 +12,7 @@ const props = defineProps({
   rotated: Boolean,
 })
 
-const emit = defineEmits(['select', 'close'])
+const emit = defineEmits(['select', 'clear', 'close'])
 
 const data = inject('data')
 
@@ -117,6 +117,11 @@ function isGuest(name) {
   return !registeredPlayers.value.includes(name)
 }
 
+function clearSeat() {
+  selectedPlayer.value = null
+  emit('clear')
+}
+
 function dismissAndSave() {
   if (selectedPlayer.value && selectedPlayer.value !== props.currentPlayer) {
     emit('select', { player: selectedPlayer.value, deck: props.currentDeck || null })
@@ -148,6 +153,7 @@ function dismissAndSave() {
         <button class="player-btn player-btn-add" @click="showAddGuest = !showAddGuest">
           {{ showAddGuest ? '✕' : '+ Guest' }}
         </button>
+        <button v-if="currentPlayer" class="player-btn player-btn-clear" @click="clearSeat">Clear</button>
       </div>
 
       <!-- Add guest -->
@@ -212,7 +218,6 @@ function dismissAndSave() {
         </div>
       </template>
 
-      <button class="close-btn mt-4" @click="emit('close')">Cancel</button>
     </div>
   </div>
 </template>
@@ -234,8 +239,8 @@ function dismissAndSave() {
   border: 2px solid var(--lt-border);
   border-radius: 3px;
   padding: 24px;
-  max-width: 400px;
   width: 90%;
+  max-width: clamp(400px, 55vw, 700px);
   max-height: 80vh;
   overflow-y: auto;
 }
@@ -289,6 +294,17 @@ function dismissAndSave() {
 .player-btn-add {
   color: var(--lt-text-dim);
   border-style: dashed;
+}
+
+.player-btn-clear {
+  color: color-mix(in srgb, #d95555 70%, transparent);
+  border-color: color-mix(in srgb, #d95555 30%, transparent);
+  border-style: dashed;
+}
+
+.player-btn-clear:hover {
+  color: #d95555;
+  border-color: #d95555;
 }
 
 .add-guest {
@@ -453,21 +469,4 @@ function dismissAndSave() {
   border-color: var(--lt-gold);
 }
 
-.close-btn {
-  font-family: 'Cinzel', serif;
-  font-size: 1rem;
-  padding: 12px 24px;
-  border-radius: 3px;
-  border: 1px solid var(--lt-border);
-  background: none;
-  color: var(--lt-text-dim);
-  cursor: pointer;
-  display: block;
-  margin: 0 auto;
-}
-
-.close-btn:hover {
-  border-color: var(--lt-text-dim);
-  color: var(--lt-text);
-}
 </style>

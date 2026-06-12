@@ -18,7 +18,7 @@ const props = defineProps({
 const emit = defineEmits([
   'changeLife', 'openSeat', 'override', 'openCmdDamage',
   'revealRole', 'zombify', 'clone', 'clearUndead',
-  'advanceTurn', 'endGame', 'export', 'newGame', 'back',
+  'advanceTurn', 'endGame', 'export', 'newGame', 'clearSeats', 'back',
   'openCycleMap', 'openSettings',
 ])
 
@@ -74,6 +74,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
         @end-game="emit('endGame')"
         @export="emit('export')"
         @new-game="emit('newGame')"
+        @clear-seats="emit('clearSeats')"
         @back="emit('back')"
         @open-settings="emit('openSettings')"
       />
@@ -118,6 +119,7 @@ const layout = computed(() => LAYOUTS[props.layoutId])
             @end-game="emit('endGame')"
             @export="emit('export')"
             @new-game="emit('newGame')"
+            @clear-seats="emit('clearSeats')"
             @back="emit('back')"
             @open-settings="emit('openSettings')"
           />

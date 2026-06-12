@@ -401,6 +401,21 @@ export function useLifetrackerState() {
     saveLastSetup(state)
   }
 
+  function clearSeats() {
+    const isCycle = state.mode === 'cycle'
+    const fresh = state.seats.map((seat, i) => {
+      const s = createSeat(i, state.playerCount)
+      if (isCycle) s.house = seat.house
+      return s
+    })
+    state.seats.splice(0, state.seats.length, ...fresh)
+    state.turnCount = 0
+    state.startTime = new Date().toISOString()
+    state.lastTurnAdvanceAt = new Date().toISOString()
+    if (!isCycle) state.startingSeatIndex = null
+    delete state.concludeData
+  }
+
   function resumeOrNew() {
     return saved !== null
   }
@@ -430,6 +445,7 @@ export function useLifetrackerState() {
     getCompletedGames,
     clearCompletedGames,
     persistSetup,
+    clearSeats,
     resumeOrNew,
     discardSaved,
     checkDeath,

@@ -32,6 +32,7 @@ const {
   advanceTurn,
   saveGame,
   persistSetup,
+  clearSeats,
   getCompletedGames,
   clearCompletedGames,
   resumeOrNew,
@@ -202,6 +203,12 @@ function handleGameSeatSelect({ player, deck }) {
   state.seats[editingSeatInGame.value].player = player
   state.seats[editingSeatInGame.value].deck = deck
   editingSeatInGame.value = null
+  persistSetup()
+}
+
+function handleClearSeat() {
+  state.seats[editingSeatInGame.value].player = null
+  state.seats[editingSeatInGame.value].deck = null
   persistSetup()
 }
 
@@ -451,6 +458,7 @@ function handleClearCycleGames() {
         @end-game="showConclude = true"
         @export="handleShowExport"
         @new-game="discardSaved"
+        @clear-seats="clearSeats"
         @back="handleBack"
         @open-cycle-map="cycleMapOpen = true"
         @open-settings="showSettings = true"
@@ -479,6 +487,7 @@ function handleClearCycleGames() {
         :used-players="usedPlayers"
         :rotated="LAYOUTS[state.layoutId].rows[0].seats.includes(editingSeatInGame)"
         @select="handleGameSeatSelect"
+        @clear="handleClearSeat"
         @close="editingSeatInGame = null"
       />
 

@@ -19,7 +19,7 @@ const props = defineProps({
   fuseStartedAt: { type: String, default: null },
 })
 
-const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'back', 'openSettings'])
+const emit = defineEmits(['advanceTurn', 'endGame', 'export', 'newGame', 'clearSeats', 'back', 'openSettings'])
 
 const showFuse = computed(() => !!props.fuseStartedAt && props.fuseProgress > 0)
 const fuseStyle = computed(() => ({
@@ -28,6 +28,7 @@ const fuseStyle = computed(() => ({
 
 const showMore = ref(false)
 const showConfirmNew = ref(false)
+const showConfirmClear = ref(false)
 const { isFullscreen, canToggleFullscreen, toggleFullscreen } = useFullscreen()
 
 // Hold-to-decrement for turn counter
@@ -120,6 +121,7 @@ function onTurnPointerLeave() {
           <button class="menu-btn" @click="emit('export'); showMore = false">Export Session</button>
           <button class="menu-btn" @click="emit('openSettings'); showMore = false">Settings</button>
           <button class="menu-btn" @click="showConfirmNew = true; showMore = false">Discard Game</button>
+          <button class="menu-btn" @click="showConfirmClear = true; showMore = false">Clear Seats &amp; Reset</button>
           <button class="menu-btn" @click="emit('back'); showMore = false">Back to Dashboard</button>
           <button class="menu-btn menu-btn-cancel" @click="showMore = false">Cancel</button>
         </div>
@@ -135,6 +137,17 @@ function onTurnPointerLeave() {
       :danger="true"
       @confirm="showConfirmNew = false; emit('newGame')"
       @cancel="showConfirmNew = false"
+    /></Teleport>
+
+    <!-- Confirm clear seats -->
+    <Teleport to="body"><ConfirmDialog
+      v-if="showConfirmClear"
+      title="Clear Seats & Reset"
+      message="This will clear all seat assignments and reset life totals, roles, and counters. Are you sure?"
+      confirm-label="Clear & Reset"
+      :danger="true"
+      @confirm="showConfirmClear = false; emit('clearSeats')"
+      @cancel="showConfirmClear = false"
     /></Teleport>
   </div>
 </template>
