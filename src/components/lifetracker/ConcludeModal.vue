@@ -1,11 +1,18 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { ROLE_COLORS, roleIconUrl, lifetrackerRoleLabel } from '../../roles.js'
 import { HOUSE_COLORS, houseImageUrl, cycleRelations } from '../../lifetracker/cycle.js'
 import { applyKingdomsCascades } from '../../lifetracker/kingdoms.js'
 
 const ROLES = ['King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
 const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
+// Fixed role pools per player count — used to grey out chips that
+// would push the table past its budget. Not enforced (the user can
+// still click through to fix odd states).
+const ROLE_BUDGETS = {
+  5: { King: 1, Knight: 1, Goblin: 2, Lord: 1, 'Clone Lord': 0 },
+  6: { King: 1, Knight: 1, Goblin: 2, Lord: 1, 'Clone Lord': 1 },
+}
 
 const props = defineProps({
   seats: Array,
@@ -52,13 +59,45 @@ const gameEnd = ref(String(props.turnCount || ''))
 function toggleResult(i) {
   const cur = rows.value[i].result
   rows.value[i].result = cur === 'Win' ? 'Loss' : cur === 'Loss' ? '' : 'Win'
+  syncKingdomsCascades()
 }
 
 function selectRole(i, role) {
   const next = rows.value[i].role === role ? '' : role
   rows.value[i].role = next
   rows.value[i].roleClearedByUser = !next
+  syncKingdomsCascades()
 }
+
+function onRoleNotesChange() {
+  syncKingdomsCascades()
+}
+
+// Per-row, per-role availability based on the fixed role budget.
+// Active chips always read as available so the current pick isn't
+// shown as "exhausted" against itself.
+const roleAvailability = computed(() => {
+  const budget = ROLE_BUDGETS[rows.value.length]
+  if (!budget) return null
+  const totals = {}
+  for (const r of rows.value) {
+    if (!r.role) continue
+    const k = r.role === 'Zombie Lord' ? 'Lord' : r.role
+    totals[k] = (totals[k] || 0) + 1
+  }
+  return rows.value.map((row) => {
+    const rowKey = row.role === 'Zombie Lord' ? 'Lord' : row.role
+    const map = {}
+    for (const role of ROLES) {
+      const cap = budget[role] ?? 0
+      const used = totals[role] || 0
+      // Subtract this row's own contribution so the active chip stays available.
+      const usedByOthers = role === rowKey ? used - 1 : used
+      map[role] = usedByOthers < cap
+    }
+    return map
+  })
+})
 
 // Re-run the Kingdoms automation against the user's current edits.
 // Fully state-driven: any row.result the cascade owned last time is
@@ -66,7 +105,6 @@ function selectRole(i, role) {
 // the Lord's "Loss") correctly drops the consequences it caused
 // (Knight death, King/Knight win, Zombie deaths). A row the user has
 // since manually overridden stays as the user set it.
-let syncingCascades = false
 function syncKingdomsCascades() {
   if (isCycle.value) return
   // Step 1 — revert any prior cascade effect on the result column.
@@ -91,7 +129,6 @@ function syncKingdomsCascades() {
   applyKingdomsCascades(work, props.turnCount || 0)
   // Step 4 — write back; remember which rows the cascade owns now so
   // the next sync can revert them.
-  syncingCascades = true
   for (let i = 0; i < rows.value.length; i++) {
     const w = work[i]
     if (w.role && !rows.value[i].role) rows.value[i].role = w.role
@@ -103,13 +140,7 @@ function syncKingdomsCascades() {
       rows.value[i].cascadeResult = 'Loss'
     }
   }
-  syncingCascades = false
 }
-
-watch(rows, () => {
-  if (syncingCascades) return
-  syncKingdomsCascades()
-}, { deep: true })
 
 // Run once on mount in case the seats came in pre-edited but the
 // cascade is owed a follow-up (e.g. an unrevealed role got picked
@@ -157,7 +188,7 @@ function handleSaveAndExport() {
               :class="{ 'result-win': r.result === 'Win', 'result-loss': r.result === 'Loss' }"
               @click="toggleResult(i)"
             >{{ r.result || '—' }}</button>
-            <select v-if="!isCycle" v-model="r.roleNotes" class="row-select">
+            <select v-if="!isCycle" v-model="r.roleNotes" class="row-select" @change="onRoleNotesChange">
               <option v-for="rn in ROLE_NOTES" :key="rn" :value="rn">{{ rn || '—' }}</option>
             </select>
           </div>
@@ -166,7 +197,10 @@ function handleSaveAndExport() {
               v-for="role in ROLES"
               :key="role"
               class="role-chip"
-              :class="{ active: r.role === role }"
+              :class="{
+                active: r.role === role,
+                'role-chip-exhausted': roleAvailability && r.role !== role && !roleAvailability[i][role],
+              }"
               :style="r.role === role ? { color: ROLE_COLORS[role], borderColor: ROLE_COLORS[role] + '88' } : {}"
               @click="selectRole(i, role)"
             >
@@ -338,6 +372,17 @@ function handleSaveAndExport() {
 
 .role-chip.active {
   background: color-mix(in srgb, var(--lt-bg) 53%, transparent);
+}
+
+/* Role budget already filled by other rows — hint that this would push
+   past the legal Kingdoms role pool, but stay clickable so users can
+   still recover from a weird state. */
+.role-chip-exhausted {
+  opacity: 0.32;
+}
+
+.role-chip-exhausted .role-chip-icon {
+  filter: grayscale(100%);
 }
 
 .role-chip-icon {

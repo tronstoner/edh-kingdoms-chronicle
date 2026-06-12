@@ -353,7 +353,11 @@ function handleZombify(seatIndex) {
   const seat = state.seats[seatIndex]
   seat.life = 20
   seat.isDead = false
-  seat.deathOverridden = true
+  // Don't set deathOverridden — 20 life isn't lethal so no override is
+  // needed, and leaving it false lets the Lord cascade drop the minion
+  // when the Lord falls (deathOverridden is the user-only "I'm alive"
+  // signal that the cascade explicitly respects).
+  seat.cascadeKilled = false
   seat.roleNotes = 'Zombie'
 }
 
@@ -377,7 +381,9 @@ function handleClone(seatIndex) {
   const seat = state.seats[seatIndex]
   seat.life = 20
   seat.isDead = false
-  seat.deathOverridden = true
+  // See handleZombify — deathOverridden stays the user-only signal so
+  // the Clone Lord's death still drags this clone down with it.
+  seat.cascadeKilled = false
   seat.roleNotes = 'Clone'
 }
 
