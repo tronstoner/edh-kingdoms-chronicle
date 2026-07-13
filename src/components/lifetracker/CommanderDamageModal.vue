@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, reactive, onUnmounted } from 'vue'
 import { useLifeCounter } from '../../composables/useLifeCounter.js'
 import { manaGradient } from '../../composables/useManaGradient.js'
 import { roleIconUrl, lifetrackerRoleLabel, conversionIconUrl } from '../../roles.js'
@@ -24,19 +24,40 @@ const ROLE_COLORS = {
   'Clone Lord': 'var(--lt-role-clone-lord)',
 }
 
-const emit = defineEmits(['change', 'togglePartners', 'changePoison', 'changeTax', 'revealRole', 'toggleDead', 'close'])
+const emit = defineEmits(['commit', 'togglePartners', 'revealRole', 'close'])
+
+// Working copy. The modal is a staging area — nothing is applied to the
+// live game state until it closes, at which point `commit` hands the final
+// values to the parent and the state layer resolves once. Editing live
+// would fire death / Kingdoms cascades on every intermediate keystroke, so
+// an over-shot entry could no longer be freely undone with the − button.
+const work = reactive({
+  commanderDamage: {},
+  commanderTax: props.seat.commanderTax || 0,
+  poison: props.seat.poison || 0,
+  isDead: !!props.seat.isDead,
+  deathOverridden: !!props.seat.deathOverridden,
+})
+// Snapshot of the values as the modal opened, so the seat can show the net
+// delta entered this session (e.g. "+5") alongside the running total.
+const orig = {}
+for (const [k, v] of Object.entries(props.seat.commanderDamage || {})) {
+  work.commanderDamage[k] = { cmd1: v.cmd1 || 0, cmd2: v.cmd2 || 0 }
+  orig[k] = { cmd1: v.cmd1 || 0, cmd2: v.cmd2 || 0 }
+}
 
 const activeSeat = ref(null)
 const activeCmd = ref(1)
-const flashSide = ref(null)
+// Which seat/commander is mid-flash, and in which direction (+1 damage vs
+// −1 correction) so the overlay can tint accordingly.
+const flashState = ref(null)
 let flashTimeout = null
-const counterEls = ref({})
 
 // Poison counter interaction
 const poisonEl = ref(null)
 const poisonFlash = ref(null)
 let poisonFlashTimeout = null
-const poisonCounter = useLifeCounter((delta) => { emit('changePoison', delta) })
+const poisonCounter = useLifeCounter((delta) => { work.poison = Math.max(0, work.poison + delta) })
 
 function poisonDown(event) {
   if (!poisonEl.value) return
@@ -52,7 +73,7 @@ function poisonUp() { poisonCounter.stop() }
 const taxEl = ref(null)
 const taxFlash = ref(null)
 let taxFlashTimeout = null
-const taxCounter = useLifeCounter((delta) => { emit('changeTax', delta) })
+const taxCounter = useLifeCounter((delta) => { work.commanderTax = Math.max(0, work.commanderTax + delta) })
 
 function taxDown(event) {
   if (!taxEl.value) return
@@ -64,27 +85,49 @@ function taxDown(event) {
 }
 function taxUp() { taxCounter.stop() }
 
-function setCounterEl(key, el) {
-  if (el) counterEls.value[key] = el
-}
+// Which dealer/commander values the user has touched this session. Drives
+// the − button's visibility: it appears only after an interaction and then
+// stays — including at 0 — so the spot under the finger keeps decrementing
+// instead of collapsing back to the increment zone (which would toggle
+// inc/dec on repeated taps). Resets when the modal remounts on close.
+const touched = reactive({})
 
-const { start, stop, getSign } = useLifeCounter((delta) => {
-  if (activeSeat.value !== null) {
-    emit('change', props.seat.index, activeSeat.value, activeCmd.value, delta)
-  }
+const { start, stop } = useLifeCounter((delta) => {
+  if (activeSeat.value === null) return
+  const d = work.commanderDamage[activeSeat.value]
+  if (!d) return
+  const key = activeCmd.value === 2 ? 'cmd2' : 'cmd1'
+  d[key] = Math.max(0, d[key] + delta)
+  touched[`${activeSeat.value}-${activeCmd.value}`] = true
 })
 
-function handleDown(event, si, cmdIdx) {
+function isTouched(si, cmd) {
+  return !!touched[`${si}-${cmd}`]
+}
+
+// Death is staged too — toggling mirrors the revive-as-override /
+// manual-kill semantics the state layer applies on commit.
+function toggleDead() {
+  if (work.isDead) {
+    work.isDead = false
+    work.deathOverridden = true
+  } else {
+    work.isDead = true
+    work.deathOverridden = false
+  }
+}
+
+// Single-action model: a press anywhere on a dealer seat adds damage
+// (sign +1), a press on the small corner button corrects it (sign −1).
+// Hold repeats in the given direction. No left/right split — that
+// ambiguity was the source of the wrong-button confusion.
+function handleDown(si, cmdIdx, sign) {
   const key = cmdIdx ? `${si}-${cmdIdx}` : String(si)
-  const el = counterEls.value[key]
-  if (!el) return
   activeSeat.value = si
   activeCmd.value = cmdIdx || 1
-  const sign = getSign(event, el, props.rotated)
-  // Reversed: left = plus (receiving damage), right = minus (correcting)
-  flashSide.value = { key, side: sign < 0 ? 'left' : 'right' }
+  flashState.value = { key, sign }
   clearTimeout(flashTimeout)
-  flashTimeout = setTimeout(() => { flashSide.value = null }, 150)
+  flashTimeout = setTimeout(() => { flashState.value = null }, 150)
   start(sign)
 }
 
@@ -101,11 +144,24 @@ function seatGradStyle(si) {
 }
 
 function cmd1From(si) {
-  return props.seat.commanderDamage[si]?.cmd1 || 0
+  return work.commanderDamage[si]?.cmd1 || 0
 }
 
 function cmd2From(si) {
-  return props.seat.commanderDamage[si]?.cmd2 || 0
+  return work.commanderDamage[si]?.cmd2 || 0
+}
+
+// Net change entered this session, relative to the snapshot on open.
+function cmd1Delta(si) {
+  return cmd1From(si) - (orig[si]?.cmd1 || 0)
+}
+
+function cmd2Delta(si) {
+  return cmd2From(si) - (orig[si]?.cmd2 || 0)
+}
+
+function fmtDelta(d) {
+  return d > 0 ? `+${d}` : `${d}`
 }
 
 function hasPartners(si) {
@@ -119,17 +175,40 @@ function hasIcons(si) {
   return (s.role && s.roleRevealed) || !!conversionIconUrl(s.roleNotes)
 }
 
-function isFlash(key, side) {
-  return flashSide.value && flashSide.value.key === key && flashSide.value.side === side
+function isFlash(key) {
+  return !!flashState.value && flashState.value.key === key
+}
+
+function isFlashMinus(key) {
+  return isFlash(key) && flashState.value.sign < 0
+}
+
+function isSelf(si) {
+  return si === props.seat.index
 }
 
 const closing = ref(false)
 
+// Closing the modal *is* the confirmation: flush any in-flight press into
+// the working copy, then hand the final values to the parent as one atomic
+// commit so the state layer resolves exactly once.
 function handleClose() {
+  if (closing.value) return
   closing.value = true
   stop()
   poisonCounter.stop()
   taxCounter.stop()
+  const commanderDamage = {}
+  for (const k of Object.keys(work.commanderDamage)) {
+    commanderDamage[k] = { cmd1: work.commanderDamage[k].cmd1, cmd2: work.commanderDamage[k].cmd2 }
+  }
+  emit('commit', {
+    commanderDamage,
+    commanderTax: work.commanderTax,
+    poison: work.poison,
+    isDead: work.isDead,
+    deathOverridden: work.deathOverridden,
+  })
   setTimeout(() => emit('close'), 300)
 }
 
@@ -175,10 +254,10 @@ onUnmounted(() => {
           </div>
         </div>
         <!-- Death toggle -->
-        <button class="counter-box reveal-role-box" :class="{ 'death-active': seat.isDead }" @click="emit('toggleDead')">
+        <button class="counter-box reveal-role-box" :class="{ 'death-active': work.isDead }" @click="toggleDead()">
           <div class="counter-center">
-            <i :class="seat.isDead ? 'ms ms-graveyard' : 'ms ms-ability-lifelink'" class="counter-icon death-icon"></i>
-            <span class="reveal-label" :class="{ active: seat.isDead }">{{ seat.isDead ? 'Dead' : 'Alive' }}</span>
+            <i :class="work.isDead ? 'ms ms-graveyard' : 'ms ms-ability-lifelink'" class="counter-icon death-icon"></i>
+            <span class="reveal-label" :class="{ active: work.isDead }">{{ work.isDead ? 'Dead' : 'Alive' }}</span>
           </div>
         </button>
         <div
@@ -194,7 +273,7 @@ onUnmounted(() => {
           <div class="counter-flash counter-flash-right" :class="{ flash: taxFlash === 'right' }"></div>
           <div class="counter-center">
             <i class="ms ms-commander counter-icon tax-icon"></i>
-            <span class="counter-val" :class="{ active: seat.commanderTax > 0 }">{{ seat.commanderTax }}</span>
+            <span class="counter-val" :class="{ active: work.commanderTax > 0 }">{{ work.commanderTax }}</span>
           </div>
           <span class="counter-hint counter-hint-left">&minus;</span>
           <span class="counter-hint counter-hint-right">+</span>
@@ -212,19 +291,26 @@ onUnmounted(() => {
           <div class="counter-flash counter-flash-right" :class="{ flash: poisonFlash === 'right' }"></div>
           <div class="counter-center">
             <i class="ms ms-ability-phyrexian counter-icon poison-icon"></i>
-            <span class="counter-val" :class="{ active: seat.poison > 0, lethal: seat.poison >= 10 }">{{ seat.poison }}</span>
+            <span class="counter-val" :class="{ active: work.poison > 0, lethal: work.poison >= 10 }">{{ work.poison }}</span>
           </div>
           <span class="counter-hint counter-hint-left">&minus;</span>
           <span class="counter-hint counter-hint-right">+</span>
         </div>
       </div>
 
+      <!-- Framing line: this modal is scoped to one victim; every seat
+           below is a potential dealer. Spelling that out removes the
+           "which direction / whose damage" ambiguity. -->
+      <p class="cmd-header">
+        <span class="cmd-header-name">{{ seat.player }}</span> takes commander damage from
+      </p>
+
       <!-- Enlarged table layout -->
       <div class="cmd-layout">
         <div v-for="(row, ri) in (rotated ? [...layoutRows].reverse() : layoutRows)" :key="ri" class="cmd-row">
           <!-- Single commander seat -->
           <template v-for="si in (rotated ? [...row.seats].reverse() : row.seats)" :key="si">
-            <div v-if="!hasPartners(si)" class="cmd-seat" :class="{ 'cmd-self': si === seat.index }">
+            <div v-if="!hasPartners(si)" class="cmd-seat" :class="{ 'cmd-self': isSelf(si) }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
               <div
                 v-if="(mode === 'cycle' && allSeats[si]?.house) || (allSeats[si]?.role && allSeats[si]?.roleRevealed) || conversionIconUrl(allSeats[si]?.roleNotes)"
@@ -249,31 +335,41 @@ onUnmounted(() => {
                   class="cmd-seat-role cmd-seat-role-conversion"
                 />
               </div>
-              <!-- Tap zone -->
+              <!-- Tap zone: a press anywhere = +1 damage, hold to repeat -->
               <div
-                :ref="(el) => setCounterEl(String(si), el)"
                 class="cmd-tap-zone"
                 @contextmenu.prevent
-                @pointerdown.prevent="handleDown($event, si)"
+                @pointerdown.prevent="handleDown(si, 0, 1)"
                 @pointerup.prevent="handleUp"
                 @pointercancel="handleUp"
                 @pointerleave="handleUp"
               >
-                <div class="cmd-flash-half cmd-flash-minus" :class="{ flash: isFlash(String(si), 'left') }">
-                  <span class="zone-hint">&minus;</span>
-                </div>
-                <div class="cmd-flash-half cmd-flash-plus" :class="{ flash: isFlash(String(si), 'right') }">
-                  <span class="zone-hint">+</span>
-                </div>
+                <div class="cmd-flash-full" :class="{ flash: isFlash(String(si)), minus: isFlashMinus(String(si)) }"></div>
               </div>
               <div class="cmd-seat-name-top" :class="{ 'has-dmg': cmd1From(si) > 0 }">{{ allSeats[si]?.player }}</div>
               <div class="cmd-seat-content">
-                <div class="cmd-seat-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
+                <div class="cmd-num-wrap">
+                  <div class="cmd-seat-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
+                  <div v-if="cmd1Delta(si) !== 0" class="cmd-delta" :class="{ neg: cmd1Delta(si) < 0 }">{{ fmtDelta(cmd1Delta(si)) }}</div>
+                </div>
               </div>
               <!-- Progress bar -->
               <div class="cmd-bar-bottom">
                 <div class="cmd-bar" :class="{ danger: cmd1From(si) >= 16 }" :style="{ width: Math.min(cmd1From(si) / 21 * 100, 100) + '%' }"></div>
               </div>
+              <!-- Correction: de-emphasized −1 (hold to repeat). Shown only
+                   after the user has touched this value this session, and
+                   then it stays (even at 0) so the finger's spot keeps
+                   decrementing rather than flipping back to increment. -->
+              <button
+                v-if="isTouched(si, 1)"
+                class="cmd-minus"
+                @contextmenu.prevent
+                @pointerdown.stop.prevent="handleDown(si, 0, -1)"
+                @pointerup.stop.prevent="handleUp"
+                @pointercancel="handleUp"
+                @pointerleave="handleUp"
+              >&minus;</button>
               <!-- Partner toggle -->
               <button class="partner-toggle" @pointerdown.stop @click.stop="emit('togglePartners', seat.index, si)">
                 <i class="ms ms-commander"></i>
@@ -281,7 +377,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Dual commander seat (split in half) -->
-            <div v-else class="cmd-seat cmd-seat-split" :class="{ 'cmd-self': si === seat.index, 'has-icons': hasIcons(si) }">
+            <div v-else class="cmd-seat cmd-seat-split" :class="{ 'cmd-self': isSelf(si), 'has-icons': hasIcons(si) }">
               <div class="cmd-seat-grad" :style="seatGradStyle(si)"></div>
               <div
                 v-if="(mode === 'cycle' && allSeats[si]?.house) || (allSeats[si]?.role && allSeats[si]?.roleRevealed) || conversionIconUrl(allSeats[si]?.roleNotes)"
@@ -306,52 +402,64 @@ onUnmounted(() => {
                   class="cmd-seat-role cmd-seat-role-conversion"
                 />
               </div>
-              <!-- Commander 1 (left half) -->
+              <!-- Commander 1 (top half): press = +1, corner − = correct -->
               <div
-                :ref="(el) => setCounterEl(`${si}-1`, el)"
                 class="cmd-split-half"
                 @contextmenu.prevent
-                @pointerdown.prevent="handleDown($event, si, 1)"
+                @pointerdown.prevent="handleDown(si, 1, 1)"
                 @pointerup.prevent="handleUp"
                 @pointercancel="handleUp"
                 @pointerleave="handleUp"
               >
-                <div class="cmd-flash-half cmd-flash-minus" :class="{ flash: isFlash(`${si}-1`, 'left') }">
-                  <span class="zone-hint">&minus;</span>
-                </div>
-                <div class="cmd-flash-half cmd-flash-plus" :class="{ flash: isFlash(`${si}-1`, 'right') }">
-                  <span class="zone-hint">+</span>
-                </div>
+                <div class="cmd-flash-full" :class="{ flash: isFlash(`${si}-1`), minus: isFlashMinus(`${si}-1`) }"></div>
                 <div class="cmd-split-content">
-                  <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
+                  <div class="cmd-num-wrap">
+                    <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd1From(si) > 0, lethal: cmd1From(si) >= 21 }">{{ cmd1From(si) }}</div>
+                    <div v-if="cmd1Delta(si) !== 0" class="cmd-delta cmd-delta-split" :class="{ neg: cmd1Delta(si) < 0 }">{{ fmtDelta(cmd1Delta(si)) }}</div>
+                  </div>
                 </div>
                 <div class="cmd-bar-bottom">
                   <div class="cmd-bar" :class="{ danger: cmd1From(si) >= 16 }" :style="{ width: Math.min(cmd1From(si) / 21 * 100, 100) + '%' }"></div>
                 </div>
+                <button
+                  v-if="isTouched(si, 1)"
+                  class="cmd-minus cmd-minus-split"
+                  @contextmenu.prevent
+                  @pointerdown.stop.prevent="handleDown(si, 1, -1)"
+                  @pointerup.stop.prevent="handleUp"
+                  @pointercancel="handleUp"
+                  @pointerleave="handleUp"
+                >&minus;</button>
               </div>
               <div class="cmd-split-divider"></div>
-              <!-- Commander 2 (right half) -->
+              <!-- Commander 2 (bottom half): press = +1, corner − = correct -->
               <div
-                :ref="(el) => setCounterEl(`${si}-2`, el)"
                 class="cmd-split-half"
                 @contextmenu.prevent
-                @pointerdown.prevent="handleDown($event, si, 2)"
+                @pointerdown.prevent="handleDown(si, 2, 1)"
                 @pointerup.prevent="handleUp"
                 @pointercancel="handleUp"
                 @pointerleave="handleUp"
               >
-                <div class="cmd-flash-half cmd-flash-minus" :class="{ flash: isFlash(`${si}-2`, 'left') }">
-                  <span class="zone-hint">&minus;</span>
-                </div>
-                <div class="cmd-flash-half cmd-flash-plus" :class="{ flash: isFlash(`${si}-2`, 'right') }">
-                  <span class="zone-hint">+</span>
-                </div>
+                <div class="cmd-flash-full" :class="{ flash: isFlash(`${si}-2`), minus: isFlashMinus(`${si}-2`) }"></div>
                 <div class="cmd-split-content">
-                  <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd2From(si) > 0, lethal: cmd2From(si) >= 21 }">{{ cmd2From(si) }}</div>
+                  <div class="cmd-num-wrap">
+                    <div class="cmd-seat-dmg cmd-split-dmg" :class="{ 'has-dmg': cmd2From(si) > 0, lethal: cmd2From(si) >= 21 }">{{ cmd2From(si) }}</div>
+                    <div v-if="cmd2Delta(si) !== 0" class="cmd-delta cmd-delta-split" :class="{ neg: cmd2Delta(si) < 0 }">{{ fmtDelta(cmd2Delta(si)) }}</div>
+                  </div>
                 </div>
                 <div class="cmd-bar-bottom">
                   <div class="cmd-bar" :class="{ danger: cmd2From(si) >= 16 }" :style="{ width: Math.min(cmd2From(si) / 21 * 100, 100) + '%' }"></div>
                 </div>
+                <button
+                  v-if="isTouched(si, 2)"
+                  class="cmd-minus cmd-minus-split"
+                  @contextmenu.prevent
+                  @pointerdown.stop.prevent="handleDown(si, 2, -1)"
+                  @pointerup.stop.prevent="handleUp"
+                  @pointercancel="handleUp"
+                  @pointerleave="handleUp"
+                >&minus;</button>
               </div>
               <!-- Player name spans both -->
               <div class="cmd-split-name">{{ allSeats[si]?.player }}</div>
@@ -587,6 +695,21 @@ onUnmounted(() => {
   color: #d95555;
 }
 
+/* Framing line above the seat grid. */
+.cmd-header {
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.7rem, 2.2cqi, 1rem);
+  color: var(--lt-text-dim);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.cmd-header-name {
+  color: var(--lt-text);
+  font-weight: 700;
+}
+
 /* Enlarged layout */
 .cmd-layout {
   display: flex;
@@ -633,8 +756,12 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+/* Your own seat: taking commander damage from your own commander only
+   happens on a steal, so it isn't the default target. Dim it to steer
+   presses elsewhere, but leave it tappable for the steal edge case. */
 .cmd-self {
   border: 2px solid #d9555566;
+  opacity: 0.5;
 }
 
 .cmd-seat-icons {
@@ -680,43 +807,67 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-.cmd-flash-half {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Full-seat flash. A press adds damage (red); the corner − corrects
+   (green). One tap target, no left/right split, so there is no
+   direction for the player to get wrong. */
+.cmd-flash-full {
+  position: absolute;
+  inset: 0;
+  background: transparent;
   transition: background-color 0.15s;
-}
-
-.cmd-flash-minus {
-  justify-content: center;
-  padding-right: 10%;
-}
-
-.cmd-flash-plus {
-  justify-content: center;
-  padding-left: 10%;
-}
-
-/* Plus = red (receiving damage), minus = green (correcting) */
-.cmd-flash-minus.flash {
-  background: color-mix(in srgb, var(--lt-role-knight) 22%, transparent);
-}
-
-.cmd-flash-plus.flash {
-  background: color-mix(in srgb, var(--lt-role-goblin) 22%, transparent);
-}
-
-.zone-hint {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(0.8rem, 15.5cqh, 2rem);
-  color: var(--lt-text);
   pointer-events: none;
 }
 
-.cmd-flash-half:active .zone-hint,
-.cmd-flash-half.flash .zone-hint {
+.cmd-flash-full.flash {
+  background: color-mix(in srgb, var(--lt-role-goblin) 22%, transparent);
+}
+
+.cmd-flash-full.flash.minus {
+  background: color-mix(in srgb, var(--lt-role-knight) 22%, transparent);
+}
+
+/* Correction button — deliberately subordinate to the primary tap so it
+   never competes for attention. Bottom-left corner keeps it clear of the
+   top name, the top-right partner toggle, and the centred damage value. */
+.cmd-minus {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  z-index: 4;
+  pointer-events: auto;
+  min-width: clamp(20px, 22cqh, 34px);
+  height: clamp(20px, 22cqh, 34px);
+  padding: 0 clamp(4px, 4cqh, 8px);
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--lt-border) 40%, transparent);
+  background: color-mix(in srgb, var(--lt-bg) 53%, transparent);
+  color: color-mix(in srgb, var(--lt-text-dim) 60%, transparent);
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.8rem, 16cqh, 1.4rem);
+  line-height: 1;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.cmd-minus:hover {
+  border-color: var(--lt-text-dim);
   color: var(--lt-text);
+}
+
+/* Split halves are shorter — shrink the button so it sits cleanly in the
+   corner of each half without crowding the divider. */
+.cmd-minus-split {
+  bottom: 4px;
+  left: 4px;
+  min-width: clamp(16px, 13cqh, 26px);
+  height: clamp(16px, 13cqh, 26px);
+  font-size: clamp(0.65rem, 10cqh, 1rem);
 }
 
 .cmd-seat-content {
@@ -761,6 +912,41 @@ onUnmounted(() => {
   font-weight: 700;
   color: color-mix(in srgb, var(--lt-text) 27%, transparent);
   line-height: 1.1;
+}
+
+/* The number stays centred in the seat; the delta hangs below it, out of
+   flow, so it never shifts the total's position. */
+.cmd-num-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Net delta entered this session. Gold = damage added, green = correction
+   (matches the tap-flash tints). Reserved red stays on the total itself for
+   the lethal state. */
+.cmd-delta {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 2px;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.6rem, 10cqh, 1.1rem);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--lt-gold);
+}
+
+.cmd-delta.neg {
+  color: var(--lt-role-knight);
+}
+
+.cmd-delta-split {
+  font-size: clamp(0.5rem, 7cqh, 0.85rem);
+  margin-top: 1px;
 }
 
 .cmd-seat-dmg.has-dmg {
@@ -841,6 +1027,7 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   pointer-events: none;

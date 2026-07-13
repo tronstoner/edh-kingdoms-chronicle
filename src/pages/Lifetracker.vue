@@ -28,8 +28,7 @@ const {
   swapCycleHouses,
   rollStartingSeat,
   changeLife,
-  changePoison,
-  changeCommanderDamage,
+  commitSeatEdits,
   toggleDeathOverride,
   runKingdomsCascades,
   advanceTurn,
@@ -255,35 +254,20 @@ function handleOpenCmdDamage(seatIndex) {
   cmdDamageTarget.value = seatIndex
 }
 
-function handleCmdDamageChange(targetSeat, fromSeat, cmdIndex, delta) {
-  changeCommanderDamage(targetSeat, fromSeat, cmdIndex, delta)
+// The commander-damage modal stages all of its edits (damage, poison, tax,
+// death) and hands the final values here on close, so state resolves once
+// instead of cascading on every intermediate keystroke.
+function handleCmdCommit(edits) {
+  if (cmdDamageTarget.value === null) return
+  commitSeatEdits(cmdDamageTarget.value, edits)
 }
 
+// Partner mode is a structural config toggle on the *dealer* seat, not a
+// staged edit of the victim — it has no resolver side effects, so it stays
+// live (the split UI needs to appear immediately for cmd1/cmd2 entry).
 function handleTogglePartners(_targetSeat, fromSeat) {
   const dealer = state.seats[fromSeat]
   dealer.hasPartners = !dealer.hasPartners
-}
-
-function handleCmdPoison(delta) {
-  changePoison(cmdDamageTarget.value, delta)
-}
-
-function handleToggleDead() {
-  const seat = state.seats[cmdDamageTarget.value]
-  if (seat.isDead) {
-    seat.isDead = false
-    seat.deathOverridden = true
-  } else {
-    seat.isDead = true
-    seat.deathOverridden = false
-    if (seat.deathTurn === null) {
-      seat.deathTurn = state.turnCount
-    }
-  }
-}
-
-function handleCmdTax(delta) {
-  state.seats[cmdDamageTarget.value].commanderTax = Math.max(0, state.seats[cmdDamageTarget.value].commanderTax + delta)
 }
 
 // Turn advance with announcement
@@ -551,12 +535,9 @@ function handleClearCycleGames() {
         :layout-rows="LAYOUTS[state.layoutId].rows"
         :rotated="LAYOUTS[state.layoutId].rows[0].seats.includes(cmdDamageTarget)"
         :mode="state.mode"
-        @change="handleCmdDamageChange"
+        @commit="handleCmdCommit"
         @toggle-partners="handleTogglePartners"
-        @change-poison="handleCmdPoison"
-        @change-tax="handleCmdTax"
         @reveal-role="openRolePicker(cmdDamageTarget)"
-        @toggle-dead="handleToggleDead"
         @close="cmdDamageTarget = null"
       />
 

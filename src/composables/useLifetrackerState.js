@@ -441,6 +441,78 @@ export function useLifetrackerState() {
     runKingdomsCascades()
   }
 
+  // Atomically apply a batch of edits staged in the commander-damage
+  // modal. That modal is a staging area: applying each keystroke live would
+  // fire death / Kingdoms cascades on every intermediate value, so an
+  // over-shot entry becomes tedious to unwind. Instead the modal hands the
+  // final intended values here on close and resolvers run exactly once.
+  //
+  // edits = { commanderDamage: { [fromSeat]: { cmd1, cmd2 } },
+  //           commanderTax, poison, isDead, deathOverridden }
+  function commitSeatEdits(seatIndex, edits) {
+    const seat = state.seats[seatIndex]
+    if (!seat) return
+    const ts = Date.now()
+
+    // Commander damage — each changed dealer/commander pair reduces life
+    // and leaves a history entry, mirroring changeCommanderDamage but
+    // collapsed to the net change per pair.
+    for (const fromSeat of Object.keys(edits.commanderDamage || {})) {
+      const cur = seat.commanderDamage[fromSeat]
+      if (!cur) continue
+      const next = edits.commanderDamage[fromSeat]
+      for (const key of ['cmd1', 'cmd2']) {
+        const target = Math.max(0, next[key] || 0)
+        const delta = target - cur[key]
+        if (delta === 0) continue
+        cur[key] = target
+        seat.life -= delta
+        seat.history.push({
+          timestamp: ts,
+          delta: -delta,
+          newTotal: seat.life,
+          source: 'commander',
+          fromSeat: Number(fromSeat),
+        })
+      }
+    }
+
+    // Poison.
+    const nextPoison = Math.max(0, edits.poison)
+    if (nextPoison !== seat.poison) {
+      seat.history.push({
+        timestamp: ts,
+        delta: nextPoison - seat.poison,
+        newTotal: nextPoison,
+        source: 'poison',
+      })
+      seat.poison = nextPoison
+    }
+
+    // Commander tax (no life / death impact).
+    seat.commanderTax = Math.max(0, edits.commanderTax)
+
+    // Death state — only touch it if the user actually changed it, so a
+    // cascade-killed seat keeps its cascade ownership otherwise. Mirrors the
+    // revive-as-override / manual-kill semantics of toggleDeathOverride+setDead.
+    const deathChanged =
+      edits.isDead !== seat.isDead || edits.deathOverridden !== seat.deathOverridden
+    if (deathChanged) {
+      seat.isDead = edits.isDead
+      seat.deathOverridden = edits.deathOverridden
+      seat.cascadeKilled = false
+      if (edits.isDead) {
+        if (seat.deathTurn === null) seat.deathTurn = state.turnCount
+      } else if (!edits.deathOverridden) {
+        seat.deathTurn = null
+      }
+    }
+
+    // Resolve once, with the final values already in place.
+    checkDeath(seat)
+    runKingdomsCascades()
+  }
+
   function advanceTurn(delta = 1) {
     state.turnCount = Math.max(0, state.turnCount + delta)
     state.lastTurnAdvanceAt = new Date().toISOString()
@@ -508,6 +580,7 @@ export function useLifetrackerState() {
     changeLife,
     changePoison,
     changeCommanderDamage,
+    commitSeatEdits,
     toggleDeathOverride,
     setWinner,
     setDead,
