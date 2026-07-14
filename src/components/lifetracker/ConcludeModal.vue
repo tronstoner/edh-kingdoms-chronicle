@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { ROLE_COLORS, roleIconUrl, lifetrackerRoleLabel } from '../../roles.js'
 import { HOUSE_COLORS, houseImageUrl, cycleRelations } from '../../lifetracker/cycle.js'
 import { applyKingdomsCascades } from '../../lifetracker/kingdoms.js'
+import { usePlayerDecks } from '../../composables/usePlayerDecks.js'
 
 const ROLES = ['King', 'Knight', 'Goblin', 'Lord', 'Clone Lord']
 const ROLE_NOTES = ['', 'Zombie', 'Clone', 'Suicide']
@@ -22,6 +23,8 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'saveAndExport', 'close'])
 
+const { decksForPlayer } = usePlayerDecks()
+
 const isCycle = computed(() => props.mode === 'cycle')
 
 // Default winner pick for Cycle: the unique alive player whose nemesis + rival are both dead.
@@ -37,6 +40,10 @@ function defaultCycleWinner(idx) {
 const rows = ref(props.seats.map((s, i) => ({
   player: s.player,
   deck: s.deck?.name || '',
+  // Colours / temp flag ride along so a corrected deck writes back a
+  // complete deck object (Cycle export needs the colours).
+  deckColors: s.deck?.colors || '',
+  deckIsTemp: !!s.deck?.isTemp,
   role: s.role || '',
   house: s.house || '',
   result: s.isWinner ? 'Win' : (isCycle.value && defaultCycleWinner(i) ? 'Win' : (s.isDead ? 'Loss' : '')),
@@ -71,6 +78,26 @@ function selectRole(i, role) {
 
 function onRoleNotesChange() {
   syncKingdomsCascades()
+}
+
+// Deck options for a row's player, always including the deck currently on
+// the row (in case it was a temp / unregistered deck used in-game).
+function deckOptionsFor(i) {
+  const row = rows.value[i]
+  const opts = decksForPlayer(row.player)
+  if (row.deck && !opts.some(d => d.name === row.deck)) {
+    opts.unshift({ name: row.deck, colors: row.deckColors, isTemp: row.deckIsTemp })
+  }
+  return opts
+}
+
+function onDeckChange(i) {
+  const row = rows.value[i]
+  const match = decksForPlayer(row.player).find(d => d.name === row.deck)
+  if (match) {
+    row.deckColors = match.colors
+    row.deckIsTemp = match.isTemp
+  }
 }
 
 // Per-row, per-role availability based on the fixed role budget.
@@ -174,7 +201,10 @@ function handleSaveAndExport() {
         <div v-for="(r, i) in rows" :key="i" class="conclude-row">
           <div class="row-top">
             <span class="row-player font-beleren">{{ r.player || `Seat ${i + 1}` }}</span>
-            <span class="row-deck">{{ r.deck }}</span>
+            <select v-model="r.deck" class="row-select row-deck-select" @change="onDeckChange(i)">
+              <option value="">— deck —</option>
+              <option v-for="d in deckOptionsFor(i)" :key="d.name" :value="d.name">{{ d.name }}</option>
+            </select>
             <span
               v-if="isCycle && r.house"
               class="row-house"
@@ -295,16 +325,11 @@ function handleSaveAndExport() {
   object-fit: contain;
 }
 
-.row-deck {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
-  color: var(--lt-text-dim);
-  font-style: italic;
+.row-deck-select {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-style: italic;
+  color: var(--lt-text-dim);
 }
 
 .row-result {

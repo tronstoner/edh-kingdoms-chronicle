@@ -2,6 +2,10 @@
 import { ref, computed } from 'vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import { HOUSE_TO_ID, turnPositionFor } from '../../lifetracker/cycle.js'
+import { usePlayerDecks } from '../../composables/usePlayerDecks.js'
+import { exportToScratchSheet } from '../../sheets-export.js'
+
+const { decksForPlayer } = usePlayerDecks()
 
 const props = defineProps({
   games: Array,
@@ -67,6 +71,24 @@ const cycleGameData = ref(props.cycleGames.map(g => ({
   })),
 })))
 
+// Deck options for a row's player, always including the deck currently on
+// the row (which may be a temp / unregistered deck used in-game). These
+// edits only shape the exported TSV — they don't rewrite the saved game.
+function deckOptions(player, current, currentColors = '') {
+  const opts = decksForPlayer(player)
+  if (current && !opts.some(d => d.name === current)) {
+    opts.unshift({ name: current, colors: currentColors, isTemp: false })
+  }
+  return opts
+}
+
+// Cycle exports the deck's colours too, so keep them in sync on change.
+function onCycleDeckChange(gi, si) {
+  const s = cycleGameData.value[gi].seats[si]
+  const match = decksForPlayer(s.player).find(d => d.name === s.deck)
+  if (match) s.colors = match.colors
+}
+
 function toggleResult(gi, si) {
   gameData.value[gi].seats[si].result = gameData.value[gi].seats[si].result === 'Win' ? 'Loss' : 'Win'
 }
@@ -75,36 +97,55 @@ function toggleCycleResult(gi, si) {
   cycleGameData.value[gi].seats[si].result = cycleGameData.value[gi].seats[si].result === 'Win' ? 'Loss' : 'Win'
 }
 
-const exportText = computed(() => {
-  return gameData.value
+// Row matrices (array of string[]) for the selected games. Column order
+// must match the HEADERS in sheets-export.js. The TSV text and the direct
+// sheet export both build from these, so they can never drift apart.
+const kingdomsRows = computed(() =>
+  gameData.value
     .filter(g => g.selected)
-    .map(g => {
-      return g.seats.map((s, i) => {
-        const d = i === 0 ? g.date : ''
-        const fko = i === 0 ? g.firstKO : ''
-        const gEnd = i === 0 ? g.gameEnd : ''
-        const gNotes = i === 0 ? g.gameNotes : ''
-        return [d, s.player, s.deck, s.role, s.result, s.roleNotes, fko, gEnd, gNotes].join('\t')
-      }).join('\n')
-    })
-    .join('\n')
-})
+    .flatMap(g => g.seats.map((s, i) => {
+      const d = i === 0 ? g.date : ''
+      const fko = i === 0 ? g.firstKO : ''
+      const gEnd = i === 0 ? g.gameEnd : ''
+      const gNotes = i === 0 ? g.gameNotes : ''
+      return [d, s.player, s.deck, s.role, s.result, s.roleNotes, fko, gEnd, gNotes]
+    })),
+)
 
-// Cycle TSV: Date | Seat | Player | Deck | Colors | House | Turn Order | Result | KO Turn | Notes
-const cycleExportText = computed(() => {
-  return cycleGameData.value
+// Cycle: Date | Seat | Player | Deck | Colors | House | Turn Order | Result | KO Turn | Notes | 1st KO | End | Game Notes
+const cycleRows = computed(() =>
+  cycleGameData.value
     .filter(g => g.selected)
-    .map(g => {
-      return g.seats.map((s, i) => {
-        const d = i === 0 ? g.date : ''
-        const fko = i === 0 ? g.firstKO : ''
-        const gEnd = i === 0 ? g.gameEnd : ''
-        const gNotes = i === 0 ? g.gameNotes : ''
-        return [d, s.seat, s.player, s.deck, s.colors, s.houseId, s.turnOrder, s.result, s.koTurn, s.notes, fko, gEnd, gNotes].join('\t')
-      }).join('\n')
-    })
-    .join('\n')
-})
+    .flatMap(g => g.seats.map((s, i) => {
+      const d = i === 0 ? g.date : ''
+      const fko = i === 0 ? g.firstKO : ''
+      const gEnd = i === 0 ? g.gameEnd : ''
+      const gNotes = i === 0 ? g.gameNotes : ''
+      return [d, s.seat, s.player, s.deck, s.colors, s.houseId, s.turnOrder, s.result, s.koTurn, s.notes, fko, gEnd, gNotes]
+    })),
+)
+
+const exportText = computed(() => kingdomsRows.value.map(r => r.join('\t')).join('\n'))
+const cycleExportText = computed(() => cycleRows.value.map(r => r.join('\t')).join('\n'))
+
+// Direct-to-sheet export state, per section.
+const sheetK = ref({ busy: false, msg: '', url: '', error: false })
+const sheetC = ref({ busy: false, msg: '', url: '', error: false })
+
+async function exportToSheet(tab, rows, statusRef) {
+  const st = statusRef.value
+  if (st.busy || !rows.length) return
+  statusRef.value = { busy: true, msg: '', url: st.url, error: false }
+  try {
+    const r = await exportToScratchSheet(tab, rows)
+    statusRef.value = { busy: false, msg: `Appended ${r.appended} rows`, url: r.url, error: false }
+  } catch (e) {
+    statusRef.value = { busy: false, msg: e.message || 'Export failed', url: st.url, error: true }
+  }
+}
+
+function exportKingdomsToSheet() { exportToSheet('Kingdoms', kingdomsRows.value, sheetK) }
+function exportCycleToSheet() { exportToSheet('The Cycle', cycleRows.value, sheetC) }
 
 async function copyText(text, flag) {
   try {
@@ -160,7 +201,10 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
           <div class="game-rows">
             <div v-for="(s, si) in g.seats" :key="si" class="export-row">
               <span class="export-player font-beleren">{{ s.player }}</span>
-              <span class="export-deck">{{ s.deck }}</span>
+              <select v-model="s.deck" class="export-select export-deck-select">
+                <option value="">— deck —</option>
+                <option v-for="d in deckOptions(s.player, s.deck)" :key="d.name" :value="d.name">{{ d.name }}</option>
+              </select>
               <select v-model="s.role" class="export-select">
                 <option v-for="r in ROLES" :key="r" :value="r">{{ r || '—' }}</option>
               </select>
@@ -210,7 +254,14 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
         <button class="export-btn export-btn-copy" @click="copyToClipboard">
           {{ copied ? 'Copied!' : 'Copy Kingdoms TSV' }}
         </button>
+        <button class="export-btn export-btn-sheet" :disabled="sheetK.busy" @click="exportKingdomsToSheet">
+          {{ sheetK.busy ? 'Exporting…' : 'Export to Sheet' }}
+        </button>
         <button class="export-btn export-btn-clear" @click="showConfirmClear = true">Clear Kingdoms Games</button>
+      </div>
+      <div v-if="games.length && sheetK.msg" class="sheet-status" :class="{ err: sheetK.error }">
+        <span>{{ sheetK.msg }}</span>
+        <a v-if="sheetK.url && !sheetK.error" :href="sheetK.url" target="_blank" rel="noopener" class="sheet-link">Open sheet ↗</a>
       </div>
 
       <!-- Cycle section -->
@@ -235,7 +286,10 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
           <div class="game-rows">
             <div v-for="(s, si) in g.seats" :key="si" class="export-row">
               <span class="export-player font-beleren">{{ s.seat }} · {{ s.player }}</span>
-              <span class="export-deck">{{ s.deck }}</span>
+              <select v-model="s.deck" class="export-select export-deck-select" @change="onCycleDeckChange(gi, si)">
+                <option value="">— deck —</option>
+                <option v-for="d in deckOptions(s.player, s.deck, s.colors)" :key="d.name" :value="d.name">{{ d.name }}</option>
+              </select>
               <span class="export-house">House {{ s.houseId }} ({{ s.house }})</span>
               <span class="export-turn">Turn {{ s.turnOrder }}</span>
               <button
@@ -284,7 +338,14 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
         <button class="export-btn export-btn-copy" @click="copyCycleToClipboard">
           {{ copiedCycle ? 'Copied!' : 'Copy Cycle TSV' }}
         </button>
+        <button class="export-btn export-btn-sheet" :disabled="sheetC.busy" @click="exportCycleToSheet">
+          {{ sheetC.busy ? 'Exporting…' : 'Export to Sheet' }}
+        </button>
         <button class="export-btn export-btn-clear" @click="showConfirmClearCycle = true">Clear Cycle Games</button>
+      </div>
+      <div v-if="cycleGames.length && sheetC.msg" class="sheet-status" :class="{ err: sheetC.error }">
+        <span>{{ sheetC.msg }}</span>
+        <a v-if="sheetC.url && !sheetC.error" :href="sheetC.url" target="_blank" rel="noopener" class="sheet-link">Open sheet ↗</a>
       </div>
 
       <!-- Close -->
@@ -480,16 +541,11 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
   min-width: 65px;
 }
 
-.export-deck {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
-  color: var(--lt-text-dim);
-  font-style: italic;
+.export-deck-select {
   flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 90px;
+  font-style: italic;
+  color: var(--lt-text-dim);
 }
 
 .export-select {
@@ -592,6 +648,47 @@ function copyCycleToClipboard() { copyText(cycleExportText.value, copiedCycle) }
 .export-btn-copy:hover {
   background: color-mix(in srgb, var(--lt-gold) 20%, transparent);
   border-color: var(--lt-gold);
+}
+
+.export-btn-sheet {
+  color: var(--lt-text);
+  border-color: var(--lt-border);
+  background: var(--lt-panel-bg);
+}
+
+.export-btn-sheet:hover:not(:disabled) {
+  border-color: var(--lt-text-dim);
+}
+
+.export-btn-sheet:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sheet-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  font-family: 'EB Garamond', serif;
+  font-size: 0.9rem;
+  color: var(--lt-text-dim);
+}
+
+.sheet-status.err {
+  color: #d95555;
+}
+
+.sheet-link {
+  color: var(--lt-gold);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--lt-gold) 40%, transparent);
+}
+
+.sheet-link:hover {
+  border-bottom-color: var(--lt-gold);
 }
 
 .export-btn-clear {

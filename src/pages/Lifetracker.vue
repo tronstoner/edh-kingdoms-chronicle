@@ -387,6 +387,11 @@ function applyConcludeData({ seats, firstKO, gameEnd }) {
     state.seats[i].roleRevealed = !!seats[i].role
     state.seats[i].isWinner = seats[i].result === 'Win'
     state.seats[i].roleNotes = seats[i].roleNotes
+    // A deck corrected on the end-game screen writes back so the saved
+    // game (and thus the export) reflects it.
+    state.seats[i].deck = seats[i].deck
+      ? { name: seats[i].deck, colors: seats[i].deckColors || '', isTemp: !!seats[i].deckIsTemp }
+      : null
   }
   state.concludeData = { firstKO, gameEnd }
 }
