@@ -235,8 +235,24 @@ function handleOpenSeat(i) {
 }
 
 function handleGameSeatSelect({ player, deck }) {
-  state.seats[editingSeatInGame.value].player = player
-  state.seats[editingSeatInGame.value].deck = deck
+  const i = editingSeatInGame.value
+  // If the chosen player already occupies another seat, swap the two seats'
+  // occupants (player + deck only — life/role/house stay with the physical
+  // position). This also covers "move into an empty seat": the old seat just
+  // receives this seat's previous (possibly empty) occupant. A missing deck
+  // means the fast one-tap path, so carry the player's existing deck.
+  const j = state.seats.findIndex((s, idx) => idx !== i && s.player === player)
+  if (j !== -1) {
+    const prevPlayer = state.seats[i].player
+    const prevDeck = state.seats[i].deck
+    state.seats[i].player = player
+    state.seats[i].deck = deck !== undefined ? deck : state.seats[j].deck
+    state.seats[j].player = prevPlayer
+    state.seats[j].deck = prevDeck
+  } else {
+    state.seats[i].player = player
+    state.seats[i].deck = deck ?? null
+  }
   editingSeatInGame.value = null
   persistSetup()
 }

@@ -49,20 +49,64 @@ const showTempDeck = ref(false)
 const tempName = ref('')
 const tempColors = ref({ W: false, U: false, B: false, R: false, G: false, C: false })
 
-const decks = computed(() => {
-  if (!selectedPlayer.value) return []
-  // Registered decks
-  const registered = data.value?.decks?.filter(d => d.owner === selectedPlayer.value) || []
-  // Session guest decks
-  const guest = sessionGuests.value.find(g => g.name === selectedPlayer.value)
-  const guestDecks = guest?.decks || []
-  return [...registered, ...guestDecks]
+// Borrowing: when set, the deck list is sourced from another player while the
+// seat still goes to selectedPlayer. null = the seated player's own decks.
+const borrowFrom = ref(null)
+const showBorrow = ref(false)
+
+// Most-recent play index per "player|deck". data.value.games is chronological
+// (oldest first), so the highest index a pair appears at is its latest play.
+const lastPlayedRank = computed(() => {
+  const map = new Map()
+  const games = data.value?.games || []
+  games.forEach((g, i) => {
+    for (const p of g.players) {
+      if (p.deck) map.set(`${p.player}|${p.deck}`, i)
+    }
+  })
+  return map
 })
 
+// Whose decks the list currently shows (borrow target or the seated player).
+const deckOwner = computed(() => borrowFrom.value || selectedPlayer.value)
+
+const decks = computed(() => {
+  const owner = deckOwner.value
+  if (!owner) return []
+  const registered = data.value?.decks?.filter(d => d.owner === owner) || []
+  const guest = sessionGuests.value.find(g => g.name === owner)
+  const guestDecks = guest?.decks || []
+  const all = [...registered, ...guestDecks]
+  const rank = lastPlayedRank.value
+  const gameCount = (data.value?.games || []).length
+  // Most-recently-played first; session temp decks rank above history (they're
+  // fresh this session); never-played decks fall to the bottom in sheet order.
+  return all
+    .map((d, idx) => ({
+      deck: d,
+      idx,
+      rank: d.isTemp ? gameCount + idx + 1 : (rank.get(`${owner}|${d.name}`) ?? -1),
+    }))
+    .sort((a, b) => b.rank - a.rank || a.idx - b.idx)
+    .map(x => x.deck)
+})
+
+// Players you can borrow a deck from (everyone but the seated player).
+const borrowablePlayers = computed(() =>
+  allPlayers.value.filter(n => n !== selectedPlayer.value))
+
 function selectPlayer(name) {
+  // Player already seated elsewhere → fast one-tap swap. Emit without a deck
+  // so the handler carries their current deck and trades the two seats.
+  if (isUsed(name)) {
+    emit('select', { player: name })
+    return
+  }
   selectedPlayer.value = name
   showTempDeck.value = false
   showAddGuest.value = false
+  borrowFrom.value = null
+  showBorrow.value = false
 }
 
 function addGuest() {
@@ -144,11 +188,11 @@ function dismissAndSave() {
           v-for="name in allPlayers"
           :key="name"
           class="player-btn"
-          :class="{ active: selectedPlayer === name, used: isUsed(name), guest: isGuest(name) }"
-          :disabled="isUsed(name)"
+          :class="{ active: selectedPlayer === name, seated: isUsed(name), guest: isGuest(name) }"
+          :title="isUsed(name) ? 'Seated elsewhere — tap to swap' : undefined"
           @click="selectPlayer(name)"
         >
-          {{ name }}
+          {{ name }}<span v-if="isUsed(name)" class="seated-mark">⇄</span>
         </button>
         <button class="player-btn player-btn-add" @click="showAddGuest = !showAddGuest">
           {{ showAddGuest ? '✕' : '+ Guest' }}
@@ -176,7 +220,35 @@ function dismissAndSave() {
 
       <!-- Deck selection -->
       <template v-if="selectedPlayer">
-        <div class="section-label mt-4">Deck</div>
+        <div class="deck-head mt-4">
+          <div class="section-label section-label-inline">
+            Deck
+            <span v-if="borrowFrom" class="borrow-tag">borrowed from {{ borrowFrom }}</span>
+          </div>
+          <button
+            v-if="borrowablePlayers.length"
+            class="borrow-toggle"
+            :class="{ active: showBorrow || borrowFrom }"
+            @click="showBorrow = !showBorrow"
+          >{{ showBorrow ? 'Close' : '⇄ Borrow' }}</button>
+        </div>
+
+        <!-- Borrow: pick whose decks to show -->
+        <div v-if="showBorrow" class="borrow-panel">
+          <button
+            class="borrow-chip"
+            :class="{ active: !borrowFrom }"
+            @click="borrowFrom = null"
+          >{{ selectedPlayer }} · own</button>
+          <button
+            v-for="name in borrowablePlayers"
+            :key="name"
+            class="borrow-chip"
+            :class="{ active: borrowFrom === name }"
+            @click="borrowFrom = name"
+          >{{ name }}</button>
+        </div>
+
         <div class="deck-list">
           <button
             v-for="d in decks"
@@ -190,14 +262,18 @@ function dismissAndSave() {
             </span>
           </button>
 
-          <!-- Temp deck toggle -->
-          <button class="deck-btn deck-btn-temp" @click="showTempDeck = !showTempDeck">
+          <div v-if="!decks.length" class="deck-empty">
+            {{ borrowFrom ? `${borrowFrom} has no decks` : 'No decks yet — add one below' }}
+          </div>
+
+          <!-- Temp deck toggle (own decks only) -->
+          <button v-if="!borrowFrom" class="deck-btn deck-btn-temp" @click="showTempDeck = !showTempDeck">
             {{ showTempDeck ? 'Cancel' : '+ New Deck' }}
           </button>
         </div>
 
         <!-- Temp deck form -->
-        <div v-if="showTempDeck" class="temp-form mt-3">
+        <div v-if="showTempDeck && !borrowFrom" class="temp-form mt-3">
           <input
             v-model="tempName"
             placeholder="Deck name"
@@ -238,10 +314,10 @@ function dismissAndSave() {
   background: var(--lt-panel-bg);
   border: 2px solid var(--lt-border);
   border-radius: 3px;
-  padding: 24px;
-  width: 90%;
-  max-width: clamp(400px, 55vw, 700px);
-  max-height: 80vh;
+  padding: 28px 32px;
+  width: 92%;
+  max-width: clamp(460px, 72vw, 900px);
+  max-height: 88vh;
   overflow-y: auto;
 }
 
@@ -282,9 +358,20 @@ function dismissAndSave() {
   color: var(--lt-gold);
 }
 
-.player-btn.used {
-  opacity: 0.3;
-  cursor: not-allowed;
+.player-btn.seated {
+  border-style: dashed;
+  color: var(--lt-text-dim);
+}
+
+.player-btn.seated:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--lt-gold) 40%, transparent);
+  color: var(--lt-text);
+}
+
+.seated-mark {
+  margin-left: 6px;
+  font-size: 0.85em;
+  opacity: 0.7;
 }
 
 .player-btn.guest {
@@ -360,10 +447,97 @@ function dismissAndSave() {
   color: var(--lt-text);
 }
 
-.deck-list {
+.deck-head {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.section-label-inline {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.borrow-tag {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--lt-gold);
+}
+
+.borrow-toggle {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  padding: 7px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--lt-border);
+  border-style: dashed;
+  background: none;
+  color: var(--lt-text-dim);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.borrow-toggle:hover,
+.borrow-toggle.active {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--lt-gold) 45%, transparent);
+  color: var(--lt-gold);
+}
+
+.borrow-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--lt-border);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--lt-bg) 60%, transparent);
+}
+
+.borrow-chip {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--lt-border);
+  background: var(--lt-bg);
+  color: var(--lt-text);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.borrow-chip:hover {
+  border-color: var(--lt-text-dim);
+}
+
+.borrow-chip.active {
+  border-color: var(--lt-gold);
+  background: color-mix(in srgb, var(--lt-gold) 13%, transparent);
+  color: var(--lt-gold);
+}
+
+.deck-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.deck-empty {
+  grid-column: 1 / -1;
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--lt-text-dim);
+  padding: 8px 2px;
 }
 
 .deck-btn {
@@ -403,6 +577,8 @@ function dismissAndSave() {
 }
 
 .deck-btn-temp {
+  grid-column: 1 / -1;
+  justify-content: center;
   color: var(--lt-text-dim);
   font-style: italic;
   border-style: dashed;
