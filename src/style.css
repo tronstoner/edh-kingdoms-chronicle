@@ -51,6 +51,9 @@ html {
   /* Prevent iOS Safari from scaling text on rotation */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Kill rubber-band overscroll so a stray pan can't detach and drag the
+     whole page (the lifetracker relies on this; harmless for scrolling pages). */
+  overscroll-behavior: none;
 }
 
 body {
@@ -58,6 +61,7 @@ body {
   background: var(--color-mtg-dark);
   /* Block double-tap-to-zoom; iOS pinch-zoom is blocked via gesture listeners in main.js */
   touch-action: manipulation;
+  overscroll-behavior: none;
 }
 
 /* Themed scrollbars */

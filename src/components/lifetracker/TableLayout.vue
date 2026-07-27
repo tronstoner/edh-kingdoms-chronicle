@@ -182,6 +182,17 @@ const layout = computed(() => LAYOUTS[props.layoutId])
   height: 100%;
   gap: 3px;
   background-color: var(--lt-border);
+  /* Lock the entire play surface against native pan/scroll. iOS decides
+     "is this a scroll?" from touch-action alone — @pointerdown.stop does NOT
+     stop it — so without this a touch landing on a panel gap, edge, or the
+     menu gap can start a page pan, which both rubber-bands the fixed page and
+     cancels/steals the life-counter tap. Taps and hold gestures still fire
+     under touch-action:none; only panning is disabled. Modals are siblings of
+     this element, so their scrolling is unaffected. */
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .table-row {

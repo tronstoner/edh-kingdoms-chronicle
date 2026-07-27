@@ -29,6 +29,11 @@ let flashTimeout = null
 
 function handleDown(event) {
   if (!el.value || props.disabled) return
+  // Capture the pointer so the whole down→up sequence is delivered here even
+  // if the finger drifts a few px off the zone — otherwise iOS can deliver the
+  // pointerup elsewhere and the tap is silently lost. Guard: throws if the
+  // pointerId is already gone.
+  try { el.value.setPointerCapture(event.pointerId) } catch { /* ignore */ }
   const sign = getSign(event, el.value, props.rotated)
   flashSide.value = sign < 0 ? 'left' : 'right'
   clearTimeout(flashTimeout)
@@ -79,6 +84,8 @@ onUnmounted(() => {
   z-index: 1;
   touch-action: none;
   -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
   cursor: pointer;
 }
 
